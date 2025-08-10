@@ -1,0 +1,625 @@
+{
+  "total_tests": 88,
+  "passed": 88,
+  "failed": 0,
+  "percentage": 100.0,
+  "duration": 1.234833002090454,
+  "results": [
+    {
+      "id": 1,
+      "name": "Main module exists",
+      "passed": true,
+      "error": "",
+      "duration": 2.6941299438476562e-05
+    },
+    {
+      "id": 2,
+      "name": "Interfaces directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 1.0013580322265625e-05
+    },
+    {
+      "id": 3,
+      "name": "Implementations directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 6.9141387939453125e-06
+    },
+    {
+      "id": 4,
+      "name": "Core directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 7.867813110351562e-06
+    },
+    {
+      "id": 5,
+      "name": "Factories directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 8.106231689453125e-06
+    },
+    {
+      "id": 6,
+      "name": "Testing directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 6.198883056640625e-06
+    },
+    {
+      "id": 7,
+      "name": "Monitoring directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 5.9604644775390625e-06
+    },
+    {
+      "id": 8,
+      "name": "Deployment directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 9.059906005859375e-06
+    },
+    {
+      "id": 9,
+      "name": "Scripts directory exists",
+      "passed": true,
+      "error": "",
+      "duration": 6.9141387939453125e-06
+    },
+    {
+      "id": 10,
+      "name": "Package __init__ exists",
+      "passed": true,
+      "error": "",
+      "duration": 6.9141387939453125e-06
+    },
+    {
+      "id": 11,
+      "name": "No God classes",
+      "passed": true,
+      "error": "",
+      "duration": 0.013194084167480469
+    },
+    {
+      "id": 12,
+      "name": "Single responsibility per class",
+      "passed": true,
+      "error": "",
+      "duration": 2.5033950805664062e-05
+    },
+    {
+      "id": 13,
+      "name": "Open/Closed compliance",
+      "passed": true,
+      "error": "",
+      "duration": 9.5367431640625e-07
+    },
+    {
+      "id": 14,
+      "name": "Liskov substitution compliance",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 15,
+      "name": "Interface segregation",
+      "passed": true,
+      "error": "",
+      "duration": 4.7206878662109375e-05
+    },
+    {
+      "id": 16,
+      "name": "Dependency inversion",
+      "passed": true,
+      "error": "",
+      "duration": 9.775161743164062e-06
+    },
+    {
+      "id": 17,
+      "name": "No direct instantiation",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 18,
+      "name": "All interfaces defined",
+      "passed": true,
+      "error": "",
+      "duration": 3.600120544433594e-05
+    },
+    {
+      "id": 19,
+      "name": "Factory pattern implemented",
+      "passed": true,
+      "error": "",
+      "duration": 9.059906005859375e-06
+    },
+    {
+      "id": 20,
+      "name": "DI container exists",
+      "passed": true,
+      "error": "",
+      "duration": 5.0067901611328125e-06
+    },
+    {
+      "id": 21,
+      "name": "Import interfaces.audio_engine",
+      "passed": true,
+      "error": "",
+      "duration": 0.006055116653442383
+    },
+    {
+      "id": 22,
+      "name": "Import interfaces.midi_controller",
+      "passed": true,
+      "error": "",
+      "duration": 5.698204040527344e-05
+    },
+    {
+      "id": 23,
+      "name": "Import interfaces.preset_manager",
+      "passed": true,
+      "error": "",
+      "duration": 2.193450927734375e-05
+    },
+    {
+      "id": 24,
+      "name": "Import interfaces.karaoke_integration",
+      "passed": true,
+      "error": "",
+      "duration": 1.8835067749023438e-05
+    },
+    {
+      "id": 25,
+      "name": "Import implementations.audio_engine",
+      "passed": true,
+      "error": "",
+      "duration": 1.1987850666046143
+    },
+    {
+      "id": 26,
+      "name": "Import implementations.midi_controller",
+      "passed": true,
+      "error": "",
+      "duration": 0.00010895729064941406
+    },
+    {
+      "id": 27,
+      "name": "Import implementations.preset_manager",
+      "passed": true,
+      "error": "",
+      "duration": 2.7894973754882812e-05
+    },
+    {
+      "id": 28,
+      "name": "Import implementations.karaoke_integration",
+      "passed": true,
+      "error": "",
+      "duration": 2.4080276489257812e-05
+    },
+    {
+      "id": 29,
+      "name": "Import core.dependency_container",
+      "passed": true,
+      "error": "",
+      "duration": 0.0012221336364746094
+    },
+    {
+      "id": 30,
+      "name": "Import core.workflow_orchestrator",
+      "passed": true,
+      "error": "",
+      "duration": 0.0015149116516113281
+    },
+    {
+      "id": 31,
+      "name": "DI container instantiation",
+      "passed": true,
+      "error": "",
+      "duration": 5.91278076171875e-05
+    },
+    {
+      "id": 32,
+      "name": "Service registration",
+      "passed": true,
+      "error": "",
+      "duration": 9.5367431640625e-07
+    },
+    {
+      "id": 33,
+      "name": "Service resolution",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 34,
+      "name": "Singleton lifetime",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 35,
+      "name": "Transient lifetime",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 36,
+      "name": "Scoped lifetime",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 37,
+      "name": "Factory pattern",
+      "passed": true,
+      "error": "",
+      "duration": 1.5020370483398438e-05
+    },
+    {
+      "id": 38,
+      "name": "Component factory exists",
+      "passed": true,
+      "error": "",
+      "duration": 6.198883056640625e-06
+    },
+    {
+      "id": 39,
+      "name": "Constructor injection",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 40,
+      "name": "No circular dependencies",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 41,
+      "name": "Interface IAudioEngine",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 42,
+      "name": "Interface IAudioEffects",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 43,
+      "name": "Interface IAudioMetrics",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 44,
+      "name": "Interface IMidiController",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 45,
+      "name": "Interface IMidiDeviceDiscovery",
+      "passed": true,
+      "error": "",
+      "duration": 9.5367431640625e-07
+    },
+    {
+      "id": 46,
+      "name": "Interface IMidiMapping",
+      "passed": true,
+      "error": "",
+      "duration": 9.5367431640625e-07
+    },
+    {
+      "id": 47,
+      "name": "Interface IPresetManager",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 48,
+      "name": "Interface IPresetValidator",
+      "passed": true,
+      "error": "",
+      "duration": 9.5367431640625e-07
+    },
+    {
+      "id": 49,
+      "name": "Interface IPresetExporter",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 50,
+      "name": "Interface IVocalProcessor",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 51,
+      "name": "Performance optimizer exists",
+      "passed": true,
+      "error": "",
+      "duration": 9.059906005859375e-06
+    },
+    {
+      "id": 52,
+      "name": "Buffer pool",
+      "passed": true,
+      "error": "",
+      "duration": 0.005423069000244141
+    },
+    {
+      "id": 53,
+      "name": "Ring buffer",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 54,
+      "name": "Cache optimization",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 55,
+      "name": "Parallel processing",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 56,
+      "name": "Adaptive quality",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 57,
+      "name": "Performance monitoring",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 58,
+      "name": "Latency < 10ms",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 59,
+      "name": "Memory efficiency",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 60,
+      "name": "CPU optimization",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 61,
+      "name": "Event-driven architecture",
+      "passed": true,
+      "error": "",
+      "duration": 3.361701965332031e-05
+    },
+    {
+      "id": 62,
+      "name": "Event bus",
+      "passed": true,
+      "error": "",
+      "duration": 0.0067539215087890625
+    },
+    {
+      "id": 63,
+      "name": "Event sourcing",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 64,
+      "name": "CQRS pattern",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 65,
+      "name": "Command bus",
+      "passed": true,
+      "error": "",
+      "duration": 9.5367431640625e-07
+    },
+    {
+      "id": 66,
+      "name": "Query bus",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 67,
+      "name": "Event handlers",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 68,
+      "name": "Event store",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 69,
+      "name": "Distributed tracing",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 70,
+      "name": "Event replay",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 71,
+      "name": "Docker configuration",
+      "passed": true,
+      "error": "",
+      "duration": 4.482269287109375e-05
+    },
+    {
+      "id": 72,
+      "name": "Docker Compose",
+      "passed": true,
+      "error": "",
+      "duration": 1.0013580322265625e-05
+    },
+    {
+      "id": 73,
+      "name": "Kubernetes manifests",
+      "passed": true,
+      "error": "",
+      "duration": 8.106231689453125e-06
+    },
+    {
+      "id": 74,
+      "name": "CI/CD pipeline",
+      "passed": true,
+      "error": "",
+      "duration": 1.0967254638671875e-05
+    },
+    {
+      "id": 75,
+      "name": "Production deployment",
+      "passed": true,
+      "error": "",
+      "duration": 8.106231689453125e-06
+    },
+    {
+      "id": 76,
+      "name": "Health checks",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 77,
+      "name": "Monitoring",
+      "passed": true,
+      "error": "",
+      "duration": 7.867813110351562e-06
+    },
+    {
+      "id": 78,
+      "name": "Auto-scaling",
+      "passed": true,
+      "error": "",
+      "duration": 9.5367431640625e-07
+    },
+    {
+      "id": 79,
+      "name": "Blue-green deployment",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 80,
+      "name": "Rollback mechanism",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 81,
+      "name": "Property-based tests",
+      "passed": true,
+      "error": "",
+      "duration": 7.867813110351562e-06
+    },
+    {
+      "id": 82,
+      "name": "Observability system",
+      "passed": true,
+      "error": "",
+      "duration": 5.245208740234375e-06
+    },
+    {
+      "id": 83,
+      "name": "Main application",
+      "passed": true,
+      "error": "",
+      "duration": 0.0008208751678466797
+    },
+    {
+      "id": 84,
+      "name": "Workflow orchestrator",
+      "passed": true,
+      "error": "",
+      "duration": 5.698204040527344e-05
+    },
+    {
+      "id": 85,
+      "name": "System integration",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 86,
+      "name": "End-to-end workflow",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 87,
+      "name": "Performance benchmarks",
+      "passed": true,
+      "error": "",
+      "duration": 0.0
+    },
+    {
+      "id": 88,
+      "name": "Production ready",
+      "passed": true,
+      "error": "",
+      "duration": 4.982948303222656e-05
+    }
+  ]
+}

@@ -1,0 +1,408 @@
+name: AG06 Mixer CI/CD Pipeline
+# Research-driven CI/CD with SOLID validation and performance testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ag06-mixer
+
+jobs:
+  # Phase 1: SOLID Compliance Check
+  solid-compliance:
+    name: SOLID Principles Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install SOLID validator
+        run: |
+          pip install ast
+          pip install pytest
+          pip install -r requirements-dev.txt
+      
+      - name: Run SOLID compliance check
+        run: |
+          python solid_compliance_validator.py ag06_mixer/
+          
+      - name: Check SOLID score
+        run: |
+          score=$(python -c "import json; data=json.load(open('solid_compliance_report.json')); print(data['average_score'])")
+          echo "SOLID Score: $score"
+          if (( $(echo "$score < 90" | bc -l) )); then
+            echo "❌ SOLID score below 90% threshold"
+            exit 1
+          fi
+          echo "✅ SOLID compliance passed"
+      
+      - name: Upload SOLID report
+        uses: actions/upload-artifact@v3
+        with:
+          name: solid-report
+          path: solid_compliance_report.json
+
+  # Phase 2: Unit Testing
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: solid-compliance
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Run unit tests
+        run: |
+          pytest tests/unit/ \
+            --cov=ag06_mixer \
+            --cov-report=xml \
+            --cov-report=html \
+            --junitxml=junit.xml
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  # Phase 3: Property-Based Testing
+  property-tests:
+    name: Property-Based Tests
+    runs-on: ubuntu-latest
+    needs: solid-compliance
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install hypothesis
+          pip install -r requirements.txt
+      
+      - name: Run property-based tests
+        run: |
+          python -m pytest testing/property_based_tests.py \
+            --hypothesis-profile=ci \
+            --hypothesis-show-statistics
+      
+      - name: Upload hypothesis database
+        uses: actions/upload-artifact@v3
+        with:
+          name: hypothesis-database
+          path: .hypothesis/
+
+  # Phase 4: Integration Testing
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, property-tests]
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev
+      
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Run integration tests
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          pytest tests/integration/ -v --tb=short
+
+  # Phase 5: Performance Testing
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install locust
+      
+      - name: Run performance tests
+        run: |
+          # Start application in background
+          python -m ag06_mixer.main &
+          APP_PID=$!
+          sleep 5
+          
+          # Run performance tests
+          locust -f tests/performance/locustfile.py \
+            --headless \
+            --users 100 \
+            --spawn-rate 10 \
+            --run-time 60s \
+            --host http://localhost:8080 \
+            --html performance-report.html
+          
+          # Stop application
+          kill $APP_PID
+      
+      - name: Check performance metrics
+        run: |
+          python scripts/check_performance_metrics.py
+      
+      - name: Upload performance report
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-report
+          path: performance-report.html
+
+  # Phase 6: Security Scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: solid-compliance
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Trivy security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Run Bandit security scan
+        run: |
+          pip install bandit
+          bandit -r ag06_mixer/ -f json -o bandit-report.json
+      
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: bandit-report.json
+
+  # Phase 7: Build Docker Images
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [integration-tests, security-scan]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: deployment/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build and push worker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: deployment/Dockerfile.worker
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}-worker:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}-worker:${{ github.sha }}
+
+  # Phase 8: Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-docker, performance-tests]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.ag06mixer.com
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+      
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f deployment/kubernetes-deployment.yaml -n staging
+          kubectl set image deployment/ag06-mixer \
+            ag06-mixer=${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -n staging
+          kubectl rollout status deployment/ag06-mixer -n staging
+      
+      - name: Run smoke tests
+        run: |
+          sleep 30
+          curl -f https://staging.ag06mixer.com/health || exit 1
+
+  # Phase 9: Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://ag06mixer.com
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+      
+      - name: Blue-Green Deployment
+        run: |
+          # Deploy to blue environment
+          kubectl apply -f deployment/kubernetes-deployment.yaml -n production-blue
+          kubectl set image deployment/ag06-mixer \
+            ag06-mixer=${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -n production-blue
+          kubectl rollout status deployment/ag06-mixer -n production-blue
+          
+          # Run production tests
+          sleep 60
+          curl -f https://blue.ag06mixer.com/health || exit 1
+          
+          # Switch traffic to blue
+          kubectl patch service ag06-mixer-service \
+            -p '{"spec":{"selector":{"version":"blue"}}}' \
+            -n production
+          
+          # Mark green as previous version
+          kubectl label deployment ag06-mixer version=previous -n production-green --overwrite
+      
+      - name: Monitor deployment
+        run: |
+          # Monitor for 5 minutes
+          for i in {1..10}; do
+            sleep 30
+            curl -f https://ag06mixer.com/health || exit 1
+            echo "Health check $i/10 passed"
+          done
+      
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            Production deployment successful
+            - SOLID Compliance: ✅
+            - Performance Tests: ✅
+            - Security Scan: ✅
+            - Integration Tests: ✅
+          draft: false
+          prerelease: false
+
+  # Phase 10: Rollback on Failure
+  rollback:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+      
+      - name: Rollback to green
+        run: |
+          # Switch traffic back to green
+          kubectl patch service ag06-mixer-service \
+            -p '{"spec":{"selector":{"version":"green"}}}' \
+            -n production
+          
+          # Alert team
+          echo "⚠️ Production deployment failed - rolled back to previous version"
