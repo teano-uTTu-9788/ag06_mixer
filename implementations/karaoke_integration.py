@@ -244,3 +244,63 @@ class MLPerformanceScoring(IPerformanceScoring):
         )
         
         return min(overall, 100.0)
+
+
+# Main integration class that combines all components
+class KaraokeIntegration:
+    """
+    Main karaoke integration class that orchestrates all karaoke components
+    """
+    
+    def __init__(self):
+        """Initialize karaoke integration"""
+        self.vocal_processor = AdvancedVocalProcessor()
+        self.effects = StudioKaraokeEffects()
+        self.lyrics_sync = AutoLyricsSync()
+        self.scoring = MLPerformanceScoring()
+    
+    async def initialize(self):
+        """Initialize all components"""
+        await self.vocal_processor.initialize()
+        # Other components initialize internally
+        return True
+    
+    async def process_karaoke_track(self, track: KaraokeTrack) -> Dict[str, Any]:
+        """Process a complete karaoke track"""
+        # Process vocals
+        processed_vocals = await self.vocal_processor.process_vocals(
+            track.audio_data, ProcessingMode.KARAOKE
+        )
+        
+        # Apply effects
+        effects_result = await self.effects.apply_vocal_effects(
+            processed_vocals, {'reverb': 0.3, 'echo': 0.2}
+        )
+        
+        return {
+            'processed_audio': effects_result,
+            'track': track,
+            'status': 'processed'
+        }
+
+
+# Export classes
+VocalProcessor = AdvancedVocalProcessor
+KaraokeEffects = StudioKaraokeEffects
+LyricsSync = AutoLyricsSync
+PerformanceScoring = MLPerformanceScoring
+
+# Export all public classes
+__all__ = [
+    'AdvancedVocalProcessor',
+    'StudioKaraokeEffects',
+    'AutoLyricsSync', 
+    'MLPerformanceScoring',
+    'KaraokeIntegration',
+    'KaraokeTrack',
+    'ProcessingMode',
+    'VocalProcessor',      # Alias
+    'KaraokeEffects',      # Alias
+    'LyricsSync',          # Alias
+    'PerformanceScoring'   # Alias
+]

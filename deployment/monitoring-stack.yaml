@@ -1,0 +1,589 @@
+# Monitoring Stack for AG06 Mixer
+# Prometheus, Grafana, AlertManager with performance thresholds
+
+---
+# Prometheus ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: ag06-mixer
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'ag06-production'
+        app: 'ag06-mixer'
+    
+    # Alertmanager configuration
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - alertmanager:9093
+    
+    # Load rules
+    rule_files:
+      - '/etc/prometheus/rules/*.yml'
+    
+    # Scrape configurations
+    scrape_configs:
+      # AG06 Mixer metrics
+      - job_name: 'ag06-mixer'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - ag06-mixer
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          action: keep
+          regex: ag06-mixer
+        - source_labels: [__meta_kubernetes_pod_label_version]
+          target_label: deployment_version
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+        metric_relabel_configs:
+        - source_labels: [__name__]
+          regex: 'audio_latency_ms|memory_usage_mb|cpu_usage_percent|request_duration_ms|error_rate'
+          action: keep
+      
+      # Kubernetes components
+      - job_name: 'kubernetes-apiservers'
+        kubernetes_sd_configs:
+        - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: default;kubernetes;https
+      
+      # Node metrics
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+        - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+)
+
+  alerts.yml: |
+    groups:
+    - name: ag06_performance
+      interval: 30s
+      rules:
+      # Latency alerts
+      - alert: AudioLatencyHigh
+        expr: audio_latency_ms > 5
+        for: 1m
+        labels:
+          severity: critical
+          team: audio
+        annotations:
+          summary: "Audio latency exceeds 5ms threshold"
+          description: "Current latency: {{ $value }}ms on {{ $labels.pod }}"
+          runbook: "https://wiki.example.com/runbooks/audio-latency"
+      
+      - alert: AudioLatencyWarning
+        expr: audio_latency_ms > 3 and audio_latency_ms <= 5
+        for: 2m
+        labels:
+          severity: warning
+          team: audio
+        annotations:
+          summary: "Audio latency approaching threshold"
+          description: "Current latency: {{ $value }}ms on {{ $labels.pod }}"
+      
+      # Memory alerts
+      - alert: MemoryPerChannelHigh
+        expr: (memory_usage_mb / channel_count) > 15
+        for: 3m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Memory usage exceeds 15MB per channel"
+          description: "Current usage: {{ $value }}MB/channel on {{ $labels.pod }}"
+          runbook: "https://wiki.example.com/runbooks/memory-optimization"
+      
+      # CPU alerts
+      - alert: CPUUsageHigh
+        expr: cpu_usage_percent > 70
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "CPU usage above 70%"
+          description: "Current CPU: {{ $value }}% on {{ $labels.pod }}"
+      
+      # Error rate alerts
+      - alert: ErrorRateHigh
+        expr: rate(http_requests_errors_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          team: api
+        annotations:
+          summary: "Error rate exceeds 1%"
+          description: "Current error rate: {{ $value | humanizePercentage }}"
+      
+      # Deployment health
+      - alert: DeploymentUnhealthy
+        expr: up{job="ag06-mixer"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "AG06 Mixer instance down"
+          description: "Instance {{ $labels.pod }} is not responding"
+      
+      # Performance regression
+      - alert: PerformanceRegression
+        expr: |
+          (audio_latency_ms - audio_latency_ms offset 1h) / audio_latency_ms offset 1h > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: audio
+        annotations:
+          summary: "Performance regression detected"
+          description: "Latency increased by {{ $value | humanizePercentage }} compared to 1 hour ago"
+
+---
+# Prometheus Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: ag06-mixer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: prometheus
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.45.0
+        args:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus/'
+          - '--storage.tsdb.retention.time=30d'
+          - '--web.enable-lifecycle'
+          - '--web.enable-admin-api'
+        ports:
+        - containerPort: 9090
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+        - name: prometheus-storage
+          mountPath: /prometheus
+        - name: prometheus-rules
+          mountPath: /etc/prometheus/rules
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-rules
+        configMap:
+          name: prometheus-config
+          items:
+          - key: alerts.yml
+            path: alerts.yml
+      - name: prometheus-storage
+        persistentVolumeClaim:
+          claimName: prometheus-pvc
+
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: ag06-mixer
+spec:
+  selector:
+    app: prometheus
+  ports:
+  - port: 9090
+    targetPort: 9090
+
+---
+# Prometheus PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: ag06-mixer
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+# Grafana ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+  namespace: ag06-mixer
+data:
+  grafana.ini: |
+    [server]
+    root_url = https://grafana.ag06mixer.example.com
+    
+    [auth]
+    disable_login_form = false
+    
+    [auth.anonymous]
+    enabled = true
+    org_role = Viewer
+    
+    [dashboards]
+    default_home_dashboard_path = /var/lib/grafana/dashboards/ag06-overview.json
+    
+    [alerting]
+    enabled = true
+    execute_alerts = true
+
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus:9090
+      isDefault: true
+      editable: false
+
+  dashboard-providers.yaml: |
+    apiVersion: 1
+    providers:
+    - name: 'AG06 Dashboards'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 10
+      allowUiUpdates: true
+      options:
+        path: /var/lib/grafana/dashboards
+
+  ag06-overview.json: |
+    {
+      "dashboard": {
+        "title": "AG06 Mixer Performance Overview",
+        "panels": [
+          {
+            "title": "Audio Latency",
+            "targets": [
+              {
+                "expr": "audio_latency_ms",
+                "legendFormat": "{{ pod }}"
+              }
+            ],
+            "alert": {
+              "conditions": [
+                {
+                  "evaluator": {
+                    "params": [5],
+                    "type": "gt"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "title": "Memory Usage per Channel",
+            "targets": [
+              {
+                "expr": "memory_usage_mb / channel_count",
+                "legendFormat": "{{ pod }}"
+              }
+            ]
+          },
+          {
+            "title": "Request Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total[5m])",
+                "legendFormat": "{{ method }} {{ status }}"
+              }
+            ]
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_errors_total[5m])",
+                "legendFormat": "{{ pod }}"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+---
+# Grafana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: ag06-mixer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:10.0.0
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secret
+              key: admin-password
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: grafana-config
+          mountPath: /etc/grafana
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: grafana-dashboard-providers
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: grafana-dashboards
+          mountPath: /var/lib/grafana/dashboards
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+      volumes:
+      - name: grafana-config
+        configMap:
+          name: grafana-config
+          items:
+          - key: grafana.ini
+            path: grafana.ini
+      - name: grafana-datasources
+        configMap:
+          name: grafana-config
+          items:
+          - key: datasources.yaml
+            path: datasources.yaml
+      - name: grafana-dashboard-providers
+        configMap:
+          name: grafana-config
+          items:
+          - key: dashboard-providers.yaml
+            path: dashboard-providers.yaml
+      - name: grafana-dashboards
+        configMap:
+          name: grafana-config
+          items:
+          - key: ag06-overview.json
+            path: ag06-overview.json
+      - name: grafana-storage
+        persistentVolumeClaim:
+          claimName: grafana-pvc
+
+---
+# Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: ag06-mixer
+spec:
+  selector:
+    app: grafana
+  ports:
+  - port: 3000
+    targetPort: 3000
+
+---
+# Grafana PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: ag06-mixer
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# AlertManager Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: ag06-mixer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+      - name: alertmanager
+        image: prom/alertmanager:v0.26.0
+        args:
+          - '--config.file=/etc/alertmanager/alertmanager.yml'
+        ports:
+        - containerPort: 9093
+        volumeMounts:
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager
+      volumes:
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+
+---
+# AlertManager ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: ag06-mixer
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+    
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'default'
+      routes:
+      - match:
+          severity: critical
+        receiver: pagerduty
+        continue: true
+      - match:
+          severity: warning
+        receiver: slack
+    
+    receivers:
+    - name: 'default'
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#ag06-alerts'
+        title: 'AG06 Mixer Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+    
+    - name: 'pagerduty'
+      pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        description: '{{ .GroupLabels.alertname }}'
+    
+    - name: 'slack'
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#ag06-warnings'
+
+---
+# AlertManager Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: ag06-mixer
+spec:
+  selector:
+    app: alertmanager
+  ports:
+  - port: 9093
+    targetPort: 9093
+
+---
+# ServiceAccount for Prometheus
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: ag06-mixer
+
+---
+# ClusterRole for Prometheus
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+
+---
+# ClusterRoleBinding for Prometheus
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: ag06-mixer

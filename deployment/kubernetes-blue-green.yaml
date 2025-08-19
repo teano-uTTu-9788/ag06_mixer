@@ -1,0 +1,389 @@
+# Blue-Green Deployment Configuration for AG06 Mixer
+# Provides zero-downtime deployments with automatic rollback
+
+---
+# Blue Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ag06-mixer-blue
+  namespace: ag06-mixer
+  labels:
+    app: ag06-mixer
+    version: blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ag06-mixer
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: ag06-mixer
+        version: blue
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: ag06-mixer
+        image: ag06-mixer:blue
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8081
+          name: websocket
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: DEPLOYMENT_VERSION
+          value: "blue"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: PERFORMANCE_MODE
+          value: "optimized"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        # Startup probe for initial validation
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 30
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        # Readiness probe with performance check
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Check basic health
+              curl -f http://localhost:8080/health/ready || exit 1
+              # Check latency is under threshold
+              latency=$(curl -s http://localhost:9090/metrics | grep audio_latency_ms | awk '{print $2}')
+              if [ $(echo "$latency > 5" | bc) -eq 1 ]; then
+                exit 1
+              fi
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 10
+          successThreshold: 2
+          failureThreshold: 2
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        - name: cache
+          mountPath: /app/cache
+      volumes:
+      - name: config
+        configMap:
+          name: ag06-config
+      - name: cache
+        emptyDir:
+          sizeLimit: 1Gi
+
+---
+# Green Deployment (identical structure, different version)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ag06-mixer-green
+  namespace: ag06-mixer
+  labels:
+    app: ag06-mixer
+    version: green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ag06-mixer
+      version: green
+  template:
+    metadata:
+      labels:
+        app: ag06-mixer
+        version: green
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: ag06-mixer
+        image: ag06-mixer:green
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8081
+          name: websocket
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: DEPLOYMENT_VERSION
+          value: "green"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: PERFORMANCE_MODE
+          value: "optimized"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              curl -f http://localhost:8080/health/ready || exit 1
+              latency=$(curl -s http://localhost:9090/metrics | grep audio_latency_ms | awk '{print $2}')
+              if [ $(echo "$latency > 5" | bc) -eq 1 ]; then
+                exit 1
+              fi
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 10
+          successThreshold: 2
+          failureThreshold: 2
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        - name: cache
+          mountPath: /app/cache
+      volumes:
+      - name: config
+        configMap:
+          name: ag06-config
+      - name: cache
+        emptyDir:
+          sizeLimit: 1Gi
+
+---
+# Service for Blue deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: ag06-mixer-blue-service
+  namespace: ag06-mixer
+  labels:
+    app: ag06-mixer
+    version: blue
+spec:
+  type: ClusterIP
+  selector:
+    app: ag06-mixer
+    version: blue
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: websocket
+    port: 8081
+    targetPort: 8081
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+
+---
+# Service for Green deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: ag06-mixer-green-service
+  namespace: ag06-mixer
+  labels:
+    app: ag06-mixer
+    version: green
+spec:
+  type: ClusterIP
+  selector:
+    app: ag06-mixer
+    version: green
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: websocket
+    port: 8081
+    targetPort: 8081
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+
+---
+# Main Service (switches between blue and green)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ag06-mixer-service
+  namespace: ag06-mixer
+  labels:
+    app: ag06-mixer
+spec:
+  type: LoadBalancer
+  selector:
+    app: ag06-mixer
+    version: blue  # Current active version
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: websocket
+    port: 8081
+    targetPort: 8081
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+
+---
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ag06-mixer-monitor
+  namespace: ag06-mixer
+spec:
+  selector:
+    matchLabels:
+      app: ag06-mixer
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_version]
+      targetLabel: deployment_version
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod_name
+
+---
+# PrometheusRule for alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ag06-mixer-alerts
+  namespace: ag06-mixer
+spec:
+  groups:
+  - name: performance
+    interval: 30s
+    rules:
+    - alert: HighLatency
+      expr: audio_latency_ms{job="ag06-mixer"} > 5
+      for: 2m
+      labels:
+        severity: critical
+        component: audio-engine
+      annotations:
+        summary: "High audio latency detected"
+        description: "Audio latency is {{ $value }}ms (threshold: 5ms) on {{ $labels.pod_name }}"
+    
+    - alert: HighMemoryUsage
+      expr: (container_memory_usage_bytes{pod=~"ag06-mixer-.*"} / container_spec_memory_limit_bytes) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+        component: system
+      annotations:
+        summary: "High memory usage"
+        description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.pod }}"
+    
+    - alert: HighErrorRate
+      expr: rate(http_requests_errors_total[5m]) > 0.01
+      for: 3m
+      labels:
+        severity: critical
+        component: api
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.pod_name }}"
+
+---
+# NetworkPolicy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ag06-mixer-network-policy
+  namespace: ag06-mixer
+spec:
+  podSelector:
+    matchLabels:
+      app: ag06-mixer
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    - podSelector:
+        matchLabels:
+          app: ag06-mixer
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8081
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53  # DNS
+    - protocol: UDP
+      port: 53  # DNS

@@ -155,3 +155,10 @@ class FlexibleMidiMapping(IMidiMapping):
     def get_cc_for_parameter(self, parameter: str) -> Optional[int]:
         """Get CC number for a parameter (helper method)"""
         return self._reverse_mappings.get(parameter)
+
+
+# Export concrete implementations
+AG06MidiController = YamahaAG06Controller
+MidiController = YamahaAG06Controller
+MidiDeviceDiscovery = UsbMidiDiscovery
+MidiMapping = FlexibleMidiMapping

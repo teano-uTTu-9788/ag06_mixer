@@ -228,3 +228,10 @@ parameters:
         for key, value in params.items():
             yaml_params.append(f"  {key}: {value}")
         return "\n".join(yaml_params)
+
+
+# Export concrete implementations
+AG06PresetManager = JsonPresetManager
+PresetManager = JsonPresetManager
+PresetValidator = SchemaPresetValidator
+PresetExporter = MultiFormatPresetExporter
