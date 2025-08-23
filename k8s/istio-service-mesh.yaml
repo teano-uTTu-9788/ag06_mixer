@@ -1,0 +1,161 @@
+# Istio service mesh configuration for advanced traffic management
+# Following Google Anthos Service Mesh best practices
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: audio-processing
+  namespace: ag06-mixer
+spec:
+  hosts:
+  - audio-processing-service
+  http:
+  - match:
+    - headers:
+        x-user-group:
+          exact: canary
+    route:
+    - destination:
+        host: audio-processing-service
+        subset: v2
+      weight: 100
+  - route:
+    - destination:
+        host: audio-processing-service
+        subset: v1
+      weight: 90
+    - destination:
+        host: audio-processing-service
+        subset: v2
+      weight: 10  # 10% canary traffic
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: audio-processing
+  namespace: ag06-mixer
+spec:
+  host: audio-processing-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 2
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+      splitExternalLocalOriginErrors: true
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 50
+  - name: v2
+    labels:
+      version: v2
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 50
+---
+# Circuit breaker configuration
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: circuit-breaker
+  namespace: ag06-mixer
+spec:
+  host: audio-processing-service
+  trafficPolicy:
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100
+      minHealthPercent: 0
+      splitExternalLocalOriginErrors: false
+---
+# Request authentication
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: audio-processing-auth
+  namespace: ag06-mixer
+spec:
+  selector:
+    matchLabels:
+      app: audio-processing
+  jwtRules:
+  - issuer: "https://accounts.google.com"
+    jwksUri: "https://www.googleapis.com/oauth2/v3/certs"
+---
+# Authorization policy
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: audio-processing-authz
+  namespace: ag06-mixer
+spec:
+  selector:
+    matchLabels:
+      app: audio-processing
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+  - to:
+    - operation:
+        paths: ["/metrics", "/health"]
+---
+# PeerAuthentication for mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: audio-processing-mtls
+  namespace: ag06-mixer
+spec:
+  selector:
+    matchLabels:
+      app: audio-processing
+  mtls:
+    mode: STRICT
+---
+# Telemetry configuration
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: audio-processing-metrics
+  namespace: ag06-mixer
+spec:
+  selector:
+    matchLabels:
+      app: audio-processing
+  metrics:
+  - providers:
+    - name: prometheus
+    dimensions:
+      request_protocol: request.protocol | "unknown"
+      response_code: response.code | 200
+      genre: request.headers["x-audio-genre"] | "unknown"
+      model_version: request.headers["x-model-version"] | "v1"
+  - providers:
+    - name: otel
+    dimensions:
+      processing_time: response.duration
+      audio_format: request.headers["x-audio-format"] | "pcm"

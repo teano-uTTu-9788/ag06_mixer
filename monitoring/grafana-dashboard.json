@@ -1,0 +1,331 @@
+{
+  "dashboard": {
+    "title": "AG06 Audio Processing - Production Dashboard",
+    "description": "Real-time monitoring for audio processing microservice",
+    "tags": ["audio", "grpc", "production", "sre"],
+    "timezone": "utc",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "5s",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(audio_chunks_processed_total[1m])) by (genre)",
+            "legendFormat": "{{genre}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 100},
+                {"color": "red", "value": 500}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Processing Latency (p50, p95, p99)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, sum(rate(audio_processing_duration_seconds_bucket[1m])) by (le))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(audio_processing_duration_seconds_bucket[1m])) by (le))",
+            "legendFormat": "p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(audio_processing_duration_seconds_bucket[1m])) by (le))",
+            "legendFormat": "p99",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "axisLabel": "Latency",
+              "drawStyle": "line",
+              "lineInterpolation": "smooth"
+            }
+          }
+        }
+      },
+      {
+        "title": "Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(audio_chunks_processed_total{status=\"error\"}[5m])) / sum(rate(audio_chunks_processed_total[5m])) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Active Streams",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "active_audio_streams",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 50},
+                {"color": "red", "value": 80}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Circuit Breaker Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "circuit_breaker_state",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"type": "value", "value": "0", "text": "CLOSED", "color": "green"},
+              {"type": "value", "value": "1", "text": "OPEN", "color": "red"},
+              {"type": "value", "value": "2", "text": "HALF_OPEN", "color": "yellow"}
+            ]
+          }
+        }
+      },
+      {
+        "title": "Model Version Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(model_version_requests_total[5m])) by (version)",
+            "legendFormat": "{{version}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Genre Detection Distribution",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(audio_chunks_processed_total[5m])) by (genre)",
+            "legendFormat": "{{genre}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "blue", "value": null}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Resource Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{pod=~\"audio-processing.*\"} / 1024 / 1024",
+            "legendFormat": "Memory (MB)",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{pod=~\"audio-processing.*\"}[1m]) * 100",
+            "legendFormat": "CPU (%)",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "Feature Flag Status",
+        "type": "table",
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "feature_flag_status",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "left",
+              "displayMode": "color-background",
+              "inspect": false
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "rollout_percentage"},
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "gradient-gauge"
+                },
+                {
+                  "id": "max",
+                  "value": 100
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "title": "Audio Quality Metrics",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 26},
+        "targets": [
+          {
+            "expr": "avg(audio_lufs)",
+            "legendFormat": "LUFS",
+            "refId": "A"
+          },
+          {
+            "expr": "avg(audio_true_peak_db)",
+            "legendFormat": "True Peak (dB)",
+            "refId": "B"
+          },
+          {
+            "expr": "avg(audio_dynamic_range)",
+            "legendFormat": "Dynamic Range",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "title": "DSP Processing Metrics",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 26},
+        "targets": [
+          {
+            "expr": "sum(rate(dsp_gate_reduction_db_bucket[5m])) by (le)",
+            "legendFormat": "Gate Reduction",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "scaleDistribution": {
+                "type": "linear"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "namespace",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(audio_chunks_processed_total, namespace)",
+          "current": {
+            "text": "ag06-mixer",
+            "value": "ag06-mixer"
+          }
+        },
+        {
+          "name": "pod",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(audio_chunks_processed_total{namespace=\"$namespace\"}, pod)",
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "changes(deployment_version{namespace=\"$namespace\"}[1m]) > 0",
+          "name": "Deployments",
+          "tagKeys": "version",
+          "titleFormat": "Deployment",
+          "iconColor": "blue"
+        },
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "ALERTS{namespace=\"$namespace\",alertstate=\"firing\"}",
+          "name": "Alerts",
+          "tagKeys": "alertname,severity",
+          "titleFormat": "Alert: {{alertname}}",
+          "iconColor": "red"
+        }
+      ]
+    },
+    "links": [
+      {
+        "title": "Runbook",
+        "url": "https://wiki.example.com/runbooks/audio-processing",
+        "icon": "doc"
+      },
+      {
+        "title": "Logs",
+        "url": "https://console.cloud.google.com/logs",
+        "icon": "cloud"
+      },
+      {
+        "title": "Traces",
+        "url": "https://console.cloud.google.com/traces",
+        "icon": "bolt"
+      }
+    ]
+  }
+}
