@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Audio Mixer - AG06</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        /* Responsive Design for Mobile and Tablets */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .subtitle {
+                font-size: 1em;
+            }
+            
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .card h2 {
+                font-size: 1.2em;
+            }
+            
+            .control-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                padding: 12px;
+            }
+            
+            .slider-container input[type="range"] {
+                width: 100%;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .spectrum-bars {
+                height: 80px;
+            }
+            
+            .preset-buttons {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media screen and (min-width: 1600px) {
+            .main-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .container {
+                max-width: 1600px;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card h2 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meter-container {
+            margin: 20px 0;
+        }
+
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .meter {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            transition: width 0.1s ease;
+            border-radius: 15px;
+        }
+
+        .meter-peak {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #ff4444;
+            transition: left 0.1s ease;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-label {
+            font-weight: 600;
+        }
+
+        .slider {
+            width: 150px;
+            accent-color: #4facfe;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .status-inactive {
+            background: #ff4444;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .spectrum {
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .spectrum-bar {
+            flex: 1;
+            background: linear-gradient(to top, #00f2fe, #4facfe);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        .voice-indicator {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .voice-confidence {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .preset-btn {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #4facfe;
+        }
+
+        .preset-btn.active {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            border-color: transparent;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .alert-warning {
+            background: rgba(255, 152, 0, 0.2);
+            border: 1px solid #ff9800;
+        }
+
+        .alert-danger {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AI Audio Mixer</h1>
+            <p class="subtitle">Intelligent Audio Processing for AG06 • SM58 • JBL 310</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Real-time Levels -->
+            <div class="card">
+                <h2>
+                    📊 Real-time Levels
+                    <span class="status-indicator status-active"></span>
+                </h2>
+                
+                <div class="meter-container">
+                    <div class="meter-label">
+                        <span>Input (SM58)</span>
+                        <span id="input-db">-∞ dB</span>
+                    </div>
+                    <div class="meter">
+                        <div class="meter-fill" id="input-meter" style="width: 0%"></div>
+                        <div class="meter-peak" id="input-peak" style="left: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="meter-container">
+                    <div class="meter-label">
+                        <span>Output (JBL 310)</span>
+                        <span id="output-db">-∞ dB</span>
+                    </div>
+                    <div class="meter">
+                        <div class="meter-fill" id="output-meter" style="width: 0%"></div>
+                        <div class="meter-peak" id="output-peak" style="left: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger" id="clipping-alert">
+                    ⚠️ CLIPPING DETECTED - Reduce gain!
+                </div>
+
+                <div class="alert alert-warning" id="quiet-alert">
+                    🔇 Signal too quiet - Increase gain or move closer to mic
+                </div>
+            </div>
+
+            <!-- AI Processing -->
+            <div class="card">
+                <h2>🧠 AI Processing</h2>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <span class="control-label">Auto Gain</span>
+                        <input type="checkbox" id="auto-gain" checked>
+                    </div>
+                    
+                    <div class="control-group">
+                        <span class="control-label">Monitor Volume</span>
+                        <input type="range" class="slider" id="volume" 
+                               min="0" max="100" value="50">
+                        <span id="volume-value">50%</span>
+                    </div>
+
+                    <div class="control-group">
+                        <span class="control-label">Input Gain (SM58)</span>
+                        <input type="range" class="slider" id="gain" 
+                               min="0" max="100" value="65">
+                        <span id="gain-value">65%</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <span class="control-label">Target Level</span>
+                        <input type="range" class="slider" id="target-level" 
+                               min="-30" max="-6" value="-18">
+                        <span id="target-level-value">-18 LUFS</span>
+                    </div>
+
+                    <div class="control-group">
+                        <span class="control-label">Compression</span>
+                        <input type="range" class="slider" id="compression" 
+                               min="1" max="10" value="3" step="0.5">
+                        <span id="compression-value">3:1</span>
+                    </div>
+
+                    <div class="control-group">
+                        <span class="control-label">Noise Gate</span>
+                        <input type="range" class="slider" id="noise-gate" 
+                               min="-60" max="-20" value="-40">
+                        <span id="noise-gate-value">-40 dB</span>
+                    </div>
+                </div>
+
+                <div class="voice-indicator">
+                    <div>Voice Detection</div>
+                    <div class="voice-confidence" id="voice-confidence">0%</div>
+                    <div id="voice-status">No voice detected</div>
+                </div>
+            </div>
+
+            <!-- Frequency Spectrum -->
+            <div class="card">
+                <h2>🎵 Frequency Analysis</h2>
+                
+                <div class="spectrum" id="spectrum">
+                    <!-- 64 spectrum bars for detailed music analysis -->
+                </div>
+
+                <div class="controls" style="margin-top: 20px">
+                    <div class="control-group">
+                        <span class="control-label">Low (50-250 Hz)</span>
+                        <input type="range" class="slider" id="eq-low" 
+                               min="-12" max="12" value="0">
+                        <span id="eq-low-value">0 dB</span>
+                    </div>
+
+                    <div class="control-group">
+                        <span class="control-label">Mid (250-4k Hz)</span>
+                        <input type="range" class="slider" id="eq-mid" 
+                               min="-12" max="12" value="0">
+                        <span id="eq-mid-value">0 dB</span>
+                    </div>
+
+                    <div class="control-group">
+                        <span class="control-label">High (4k+ Hz)</span>
+                        <input type="range" class="slider" id="eq-high" 
+                               min="-12" max="12" value="0">
+                        <span id="eq-high-value">0 dB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Presets -->
+            <div class="card">
+                <h2>🎛️ AI Presets</h2>
+                
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="applyPreset('voice')">
+                        🎙️<br>Voice/Podcast
+                    </button>
+                    <button class="preset-btn" onclick="applyPreset('music')">
+                        🎵<br>Music
+                    </button>
+                    <button class="preset-btn" onclick="applyPreset('streaming')">
+                        📹<br>Streaming
+                    </button>
+                    <button class="preset-btn" onclick="applyPreset('recording')">
+                        🎧<br>Recording
+                    </button>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="startAI()">
+                        🚀 Start AI Mixing
+                    </button>
+                    <button class="btn btn-secondary" onclick="stopAI()">
+                        ⏹️ Stop
+                    </button>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+                    <strong>SM58 Profile Active</strong><br>
+                    Dynamic mic • No phantom • High gain<br>
+                    Optimal: 2-6" from source
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+        const API_URL = 'http://192.168.1.111:5001';  // Use network IP for cross-device compatibility
+
+        // Initialize 64 spectrum bars on page load
+        function initializeSpectrum() {
+            const spectrumContainer = document.getElementById('spectrum');
+            spectrumContainer.innerHTML = ''; // Clear existing bars
+            
+            // Create 64 bars for detailed music analysis
+            for (let i = 0; i < 64; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'spectrum-bar';
+                bar.style.height = '5%';  // Start with minimal height
+                spectrumContainer.appendChild(bar);
+            }
+        }
+
+        // Update UI with real-time data
+        function updateMeters(data) {
+            // Input level
+            const inputDb = data.input_level.rms;
+            const inputPercent = Math.max(0, Math.min(100, (inputDb + 60) * 1.67));
+            document.getElementById('input-meter').style.width = inputPercent + '%';
+            document.getElementById('input-db').textContent = inputDb.toFixed(1) + ' dB';
+
+            // Peak indicator
+            const peakDb = data.input_level.peak;
+            const peakPercent = Math.max(0, Math.min(100, (peakDb + 60) * 1.67));
+            document.getElementById('input-peak').style.left = peakPercent + '%';
+
+            // Clipping alert
+            if (data.input_level.clipping) {
+                document.getElementById('clipping-alert').style.display = 'block';
+            } else {
+                document.getElementById('clipping-alert').style.display = 'none';
+            }
+
+            // Quiet alert
+            if (data.input_level.too_quiet) {
+                document.getElementById('quiet-alert').style.display = 'block';
+            } else {
+                document.getElementById('quiet-alert').style.display = 'none';
+            }
+
+            // Voice detection
+            const voicePercent = Math.round(data.voice.confidence * 100);
+            document.getElementById('voice-confidence').textContent = voicePercent + '%';
+            
+            // Update status to show both voice and music
+            let statusText = '';
+            if (data.music && data.music.detected) {
+                const musicPercent = Math.round(data.music.confidence * 100);
+                statusText = `🎵 Music detected (${musicPercent}%)`;
+            } else if (data.voice.detected) {
+                statusText = `🎙️ Voice detected (${voicePercent}%)`;
+            } else {
+                statusText = '❌ No audio detected';
+            }
+            document.getElementById('voice-status').textContent = statusText;
+        }
+
+        // Update spectrum display
+        function updateSpectrum(spectrumData) {
+            const bars = document.querySelectorAll('.spectrum-bar');
+            if (Array.isArray(spectrumData) && spectrumData.length === bars.length) {
+                bars.forEach((bar, index) => {
+                    const height = Math.max(5, spectrumData[index] * 100);
+                    bar.style.height = height + '%';
+                });
+            } else {
+                // Fallback animation
+                bars.forEach(bar => {
+                    bar.style.height = `${20 + Math.random() * 80}%`;
+                });
+            }
+        }
+
+        // Poll backend for real-time status
+        async function pollStatus() {
+            if (!isProcessing) return;
+            try {
+                const res = await fetch(`${API_URL}/api/status`);
+                const data = await res.json();
+                updateMeters(data);
+                updateSpectrum(data.spectrum);
+            } catch (err) {
+                console.error('Status poll failed:', err);
+            }
+            setTimeout(pollStatus, 100);
+        }
+
+        // Send volume update to backend
+        async function sendVolume(value) {
+            await fetch(`${API_URL}/api/set_volume`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ value })
+            });
+        }
+
+        // Send gain update to backend
+        async function sendGain(value) {
+            await fetch(`${API_URL}/api/set_gain`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ value })
+            });
+        }
+
+        // Send compression update to backend
+        async function sendCompression(value) {
+            await fetch(`${API_URL}/api/set_compression`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ value })
+            });
+        }
+
+        // Send noise gate update to backend
+        async function sendNoiseGate(value) {
+            await fetch(`${API_URL}/api/set_noise_gate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ value })
+            });
+        }
+
+        // Send EQ update to backend
+        async function sendEQ(band, value) {
+            const data = {};
+            data[band] = value;
+            await fetch(`${API_URL}/api/set_eq`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+        }
+
+        // Apply preset
+        async function applyPreset(preset) {
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            switch(preset) {
+                case 'voice':
+                    document.getElementById('compression').value = 3;
+                    document.getElementById('noise-gate').value = -35;
+                    document.getElementById('eq-low').value = -2;
+                    document.getElementById('eq-mid').value = 2;
+                    document.getElementById('eq-high').value = 1;
+                    break;
+                case 'music':
+                    document.getElementById('compression').value = 2;
+                    document.getElementById('noise-gate').value = -45;
+                    document.getElementById('eq-low').value = 0;
+                    document.getElementById('eq-mid').value = 0;
+                    document.getElementById('eq-high').value = 0;
+                    break;
+                case 'streaming':
+                    document.getElementById('compression').value = 4;
+                    document.getElementById('noise-gate').value = -30;
+                    document.getElementById('eq-low').value = -1;
+                    document.getElementById('eq-mid').value = 3;
+                    document.getElementById('eq-high').value = 2;
+                    break;
+                case 'recording':
+                    document.getElementById('compression').value = 1.5;
+                    document.getElementById('noise-gate').value = -50;
+                    document.getElementById('eq-low').value = 0;
+                    document.getElementById('eq-mid').value = 0;
+                    document.getElementById('eq-high').value = 0;
+                    break;
+            }
+            updateSliderValues();
+        }
+
+        // Update slider values
+        function updateSliderValues() {
+            document.getElementById('volume-value').textContent = 
+                document.getElementById('volume').value + '%';
+            document.getElementById('gain-value').textContent = 
+                document.getElementById('gain').value + '%';
+            document.getElementById('target-level-value').textContent = 
+                document.getElementById('target-level').value + ' LUFS';
+            document.getElementById('compression-value').textContent = 
+                document.getElementById('compression').value + ':1';
+            document.getElementById('noise-gate-value').textContent = 
+                document.getElementById('noise-gate').value + ' dB';
+            document.getElementById('eq-low-value').textContent = 
+                document.getElementById('eq-low').value + ' dB';
+            document.getElementById('eq-mid-value').textContent = 
+                document.getElementById('eq-mid').value + ' dB';
+            document.getElementById('eq-high-value').textContent = 
+                document.getElementById('eq-high').value + ' dB';
+        }
+
+        // Start AI processing - connects to REAL audio monitor
+        async function startAI() {
+            console.log('Starting REAL audio monitoring...');
+            try {
+                const response = await fetch(`${API_URL}/api/start`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    isProcessing = true;
+                    pollStatus();
+                    console.log('Real audio monitoring started:', data.message);
+                    if (data.ag06 === false) {
+                        alert('WARNING: AG06 not detected - check USB connection');
+                    }
+                } else {
+                    alert('Failed to start: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error starting monitoring:', error);
+                alert('Cannot connect to backend on port 5001. Run: python3 real_audio_monitor.py');
+            }
+        }
+
+        // Stop AI processing
+        async function stopAI() {
+            console.log('Stopping audio monitoring...');
+            try {
+                await fetch(`${API_URL}/api/stop`, { method: 'POST' });
+                isProcessing = false;
+                console.log('Monitoring stopped');
+            } catch (error) {
+                console.error('Error stopping:', error);
+            }
+            isProcessing = false;
+        }
+
+        // Poll for REAL status updates from backend
+        async function pollStatus() {
+            if (!isProcessing) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/status`);
+                const data = await response.json();
+                updateMeters(data);
+                updateSpectrum(data.spectrum);
+                setTimeout(pollStatus, 100);
+            } catch (error) {
+                console.error('Backend not responding - is real_audio_monitor.py running?');
+                // No fallback - we want REAL data only
+                setTimeout(pollStatus, 1000); // Retry slower
+            }
+        }
+
+        // Initialize sliders with backend communication
+        document.getElementById('volume').addEventListener('input', async (e) => {
+            const value = parseFloat(e.target.value);
+            await sendVolume(value);
+            updateSliderValues();
+        });
+
+        document.getElementById('gain').addEventListener('input', async (e) => {
+            const value = parseFloat(e.target.value);
+            await sendGain(value);
+            updateSliderValues();
+        });
+
+        document.getElementById('target-level').addEventListener('input', (e) => {
+            updateSliderValues();
+        });
+        
+        document.getElementById('compression').addEventListener('input', async (e) => {
+            const value = parseFloat(e.target.value);
+            await sendCompression(value);
+            updateSliderValues();
+        });
+        
+        document.getElementById('noise-gate').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            sendNoiseGate(value);
+            updateSliderValues();
+        });
+        
+        document.getElementById('eq-low').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            sendEQ('low', value);
+            updateSliderValues();
+        });
+        
+        document.getElementById('eq-mid').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            sendEQ('mid', value);
+            updateSliderValues();
+        });
+        
+        document.getElementById('eq-high').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            sendEQ('high', value);
+            updateSliderValues();
+        });
+
+        // Initial update
+        updateSliderValues();
+        
+        // Initialize 64-band spectrum display
+        initializeSpectrum();
+        
+        // Auto-start monitoring on page load
+        setTimeout(() => {
+            console.log('Auto-starting enhanced music monitoring...');
+            startAI();
+        }, 1000);
+    </script>
+</body>
+</html>

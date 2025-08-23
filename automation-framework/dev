@@ -1,0 +1,363 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
+
+# Find the framework root directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FRAMEWORK_ROOT="${SCRIPT_DIR}"
+LIB_DIR="${FRAMEWORK_ROOT}/scripts/lib"
+
+# Validate lib directory exists
+[[ -d "$LIB_DIR" ]] || { echo "Missing scripts/lib directory"; exit 1; }
+
+# Source all libraries
+# shellcheck source=./scripts/lib/log.sh
+source "$LIB_DIR/log.sh"
+# shellcheck source=./scripts/lib/utils.sh
+source "$LIB_DIR/utils.sh"
+# shellcheck source=./scripts/lib/brew.sh
+source "$LIB_DIR/brew.sh"
+# shellcheck source=./scripts/lib/ci.sh
+source "$LIB_DIR/ci.sh"
+# shellcheck source=./scripts/lib/git.sh
+source "$LIB_DIR/git.sh"
+# shellcheck source=./scripts/lib/python.sh
+source "$LIB_DIR/python.sh"
+# shellcheck source=./scripts/lib/notion.sh
+source "$LIB_DIR/notion.sh"
+
+# Version
+readonly VERSION="2.0.0"
+
+usage() {
+  cat <<USAGE
+${_color}$(printf '\033[1m')dev${_reset} — developer CLI v${VERSION}
+
+${_color}$(printf '\033[1m')Usage:${_reset} dev <command> [args]
+
+${_color}$(printf '\033[1m')Commands:${_reset}
+  ${_color}green${_reset}doctor${_reset}          Check environment (brew, tools, git, gh)
+  ${_color}green${_reset}bootstrap${_reset}       Install dev deps (Brewfile + uv env)
+  ${_color}green${_reset}fmt${_reset}             Format shell + Python (shfmt, ruff format)
+  ${_color}green${_reset}lint${_reset}            ShellCheck + ruff
+  ${_color}green${_reset}typecheck${_reset}       mypy (if configured)
+  ${_color}green${_reset}test${_reset}            pytest (via uv)
+  ${_color}green${_reset}ci${_reset}              Lint + fmt check + test (local CI parity)
+  ${_color}green${_reset}pr:create${_reset} [t]   Create PR via gh
+  ${_color}green${_reset}notion:status${_reset} <page> <status>   Update Notion page status
+  ${_color}green${_reset}agent:install${_reset}   Install persistent macOS agent (launchd)
+  ${_color}green${_reset}help${_reset}            Show this help
+
+${_color}$(printf '\033[1m')Environment Variables:${_reset}
+  LOG_LEVEL       Set to 'debug' for verbose output
+  NO_COLOR        Disable colored output
+  NOTION_TOKEN    Notion API token
+  NOTION_PAGE_ID  Default Notion page ID
+
+${_color}$(printf '\033[1m')Examples:${_reset}
+  dev doctor
+  dev bootstrap
+  dev ci
+  dev pr:create "feat: add new feature"
+  dev notion:status \$PAGE_ID "In Progress"
+
+${_color}$(printf '\033[1m')Configuration:${_reset}
+  Framework root: ${FRAMEWORK_ROOT}
+  Config dir: ${FRAMEWORK_ROOT}/config
+USAGE
+}
+
+cmd_doctor() {
+  log_info "Running system health check..."
+  
+  # System info
+  log_info "Shell: $SHELL"
+  log_info "Branch: $(current_branch)"
+  
+  if is_macos; then
+    log_info "macOS: $(sw_vers -productVersion)"
+  fi
+  
+  if is_ci; then
+    log_info "Running in CI environment"
+  fi
+  
+  # Check required tools
+  local tools=("git" "curl" "jq")
+  local missing=0
+  
+  for tool in "${tools[@]}"; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      log_ok "✓ $tool installed"
+    else
+      log_error "✗ $tool missing"
+      ((missing++))
+    fi
+  done
+  
+  # Check optional tools
+  local optional=("brew" "gh" "yq" "shfmt" "shellcheck" "uv" "ruff" "mypy")
+  
+  for tool in "${optional[@]}"; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      log_ok "✓ $tool installed (optional)"
+    else
+      log_warn "○ $tool not installed (optional)"
+    fi
+  done
+  
+  # Check Homebrew health
+  if command -v brew >/dev/null 2>&1; then
+    brew_doctor_check || true
+  fi
+  
+  if [[ $missing -eq 0 ]]; then
+    log_ok "System health check passed!"
+  else
+    die "Missing $missing required tool(s)"
+  fi
+}
+
+cmd_bootstrap() {
+  log_info "Bootstrapping development environment..."
+  
+  # Install Homebrew if needed
+  if ! command -v brew >/dev/null 2>&1; then
+    if is_macos; then
+      brew_install
+    else
+      log_warn "Skipping Homebrew (not on macOS)"
+    fi
+  fi
+  
+  # Install tools via Homebrew
+  if command -v brew >/dev/null 2>&1; then
+    brew_ensure jq
+    brew_ensure yq
+    brew_ensure shellcheck
+    brew_ensure shfmt
+    brew_bundle || true
+  fi
+  
+  # Set up Python environment
+  if [[ -f "pyproject.toml" ]] || [[ -f "python/pyproject.toml" ]]; then
+    python_bootstrap
+  fi
+  
+  log_ok "Bootstrap complete!"
+}
+
+cmd_fmt() {
+  log_info "Formatting code..."
+  
+  # Format shell scripts
+  if command -v shfmt >/dev/null 2>&1; then
+    shfmt -w -i 2 -ci scripts dev 2>/dev/null || true
+    log_ok "Shell scripts formatted"
+  fi
+  
+  # Format Python code
+  if [[ -f "pyproject.toml" ]] || [[ -f "python/pyproject.toml" ]]; then
+    python_format
+  fi
+  
+  log_ok "Formatting complete"
+}
+
+cmd_lint() {
+  log_info "Running linters..."
+  
+  ci_shell
+  
+  if [[ -f "pyproject.toml" ]] || [[ -f "python/pyproject.toml" ]]; then
+    python_lint
+  fi
+  
+  log_ok "Linting complete"
+}
+
+cmd_typecheck() {
+  python_typecheck
+}
+
+cmd_test() {
+  python_run_tests
+  
+  # Run BATS tests if available
+  if [[ -d "test/bats" ]] && command -v bats >/dev/null 2>&1; then
+    log_info "Running BATS tests"
+    bats test/bats/*.bats
+  fi
+}
+
+cmd_ci() {
+  log_info "Running CI checks..."
+  
+  # Install dependencies first
+  if command -v brew >/dev/null 2>&1; then
+    brew_bundle || true
+  fi
+  
+  # Run full CI suite
+  ci_full
+  
+  log_ok "CI checks complete"
+}
+
+cmd_pr_create() {
+  local title="${1:-chore: automation update}"
+  
+  if ! command -v gh >/dev/null 2>&1; then
+    die "GitHub CLI (gh) not installed"
+  fi
+  
+  if ! is_repo; then
+    die "Not in a git repository"
+  fi
+  
+  create_pull_request "$title" "Automated via dev CLI"
+}
+
+cmd_notion_status() {
+  local page_id="${1:-}"
+  local status="${2:-}"
+  
+  notion_update_status "$page_id" "$status"
+}
+
+cmd_agent_install() {
+  log_info "Installing persistent macOS agent..."
+  
+  if ! is_macos; then
+    die "Agent installation only supported on macOS"
+  fi
+  
+  # Run agent installation scripts
+  if [[ -f "scripts/tasks/agent_install.sh" ]]; then
+    bash "scripts/tasks/agent_install.sh"
+  else
+    log_error "Agent installation script not found"
+    log_info "Creating agent installation script..."
+    
+    # Create the agent installation script
+    mkdir -p scripts/tasks
+    cat > scripts/tasks/agent_install.sh <<'EOF'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Install launchd agent for persistent background tasks
+AGENT_PLIST="$HOME/Library/LaunchAgents/com.aican.devagent.plist"
+AGENT_SCRIPT="$HOME/.local/bin/aican-agent.sh"
+
+# Create agent script
+mkdir -p "$HOME/.local/bin"
+cat > "$AGENT_SCRIPT" <<'AGENT'
+#!/usr/bin/env bash
+# Persistent agent for automation tasks
+
+while true; do
+  # Check for tasks every 60 seconds
+  sleep 60
+  
+  # Add task processing logic here
+  # Could poll GitHub issues, S3, or other task queue
+done
+AGENT
+
+chmod +x "$AGENT_SCRIPT"
+
+# Create launchd plist
+cat > "$AGENT_PLIST" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.aican.devagent</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/env</string>
+    <string>bash</string>
+    <string>$HOME/.local/bin/aican-agent.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/aican-agent.out</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/aican-agent.err</string>
+</dict>
+</plist>
+PLIST
+
+# Load the agent
+launchctl load "$AGENT_PLIST"
+
+echo "Agent installed and started"
+EOF
+    chmod +x scripts/tasks/agent_install.sh
+    bash scripts/tasks/agent_install.sh
+  fi
+  
+  log_ok "Agent installation complete"
+}
+
+main() {
+  local cmd="${1:-help}"
+  shift || true
+  
+  case "$cmd" in
+    doctor)
+      cmd_doctor "$@"
+      ;;
+    bootstrap)
+      cmd_bootstrap "$@"
+      ;;
+    fmt|format)
+      cmd_fmt "$@"
+      ;;
+    lint)
+      cmd_lint "$@"
+      ;;
+    typecheck)
+      cmd_typecheck "$@"
+      ;;
+    test)
+      cmd_test "$@"
+      ;;
+    ci)
+      cmd_ci "$@"
+      ;;
+    pr:create|pr)
+      cmd_pr_create "$@"
+      ;;
+    notion:status|notion)
+      cmd_notion_status "$@"
+      ;;
+    agent:install|agent)
+      cmd_agent_install "$@"
+      ;;
+    help|-h|--help)
+      usage
+      ;;
+    version|--version)
+      echo "dev version ${VERSION}"
+      ;;
+    *)
+      log_error "Unknown command: $cmd"
+      usage
+      exit 2
+      ;;
+  esac
+}
+
+# Run main function
+main "$@"

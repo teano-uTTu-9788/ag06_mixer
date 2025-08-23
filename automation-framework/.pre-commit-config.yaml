@@ -1,0 +1,55 @@
+ci:
+  autofix_prs: true
+  autoupdate_commit_msg: 'chore: pre-commit autoupdate'
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+        args: ["--severity=warning", "-x"]
+        exclude: ^\.venv/
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.7.0-1
+    hooks:
+      - id: shfmt
+        args: ["-i", "2", "-ci", "-w"]
+        exclude: ^\.venv/
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^python/
+      - id: ruff-format
+        files: ^python/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        files: ^python/src/
+        additional_dependencies: [types-requests]
+
+  - repo: local
+    hooks:
+      - id: dev-doctor
+        name: dev doctor
+        entry: ./dev
+        args: [doctor]
+        language: script
+        pass_filenames: false
+        always_run: true

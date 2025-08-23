@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AiCan Automation Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #f0fff4;
+            color: #38a169;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fff5f5;
+            color: #e53e3e;
+            border: 1px solid #feb2b2;
+        }
+
+        .status.loading {
+            background: #ebf8ff;
+            color: #3182ce;
+            border: 1px solid #90cdf4;
+        }
+
+        .logs {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AiCan Automation Dashboard</h1>
+            <p>Remote control for your macOS terminal automation framework</p>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Quick Actions
+                </h3>
+                
+                <div class="form-group">
+                    <label for="task">Task</label>
+                    <select id="task" class="form-control">
+                        <option value="doctor">System Health Check</option>
+                        <option value="ci">Run CI Suite</option>
+                        <option value="test">Run Tests</option>
+                        <option value="lint">Lint Code</option>
+                        <option value="fmt">Format Code</option>
+                        <option value="bootstrap">Bootstrap Environment</option>
+                    </select>
+                </div>
+
+                <button id="runTask" class="btn">Execute Task</button>
+                <div id="taskStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                    Notion Integration
+                </h3>
+                
+                <div class="form-group">
+                    <label for="notionPageId">Notion Page ID</label>
+                    <input type="text" id="notionPageId" class="form-control" 
+                           placeholder="Enter Notion page ID">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notionStatus">Status</label>
+                    <select id="notionStatus" class="form-control">
+                        <option value="Not started">Not started</option>
+                        <option value="In progress">In progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Blocked">Blocked</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <button id="updateNotion" class="btn">Update Status</button>
+                <div id="notionStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Configuration
+                </h3>
+                
+                <div class="form-group">
+                    <label for="githubToken">GitHub Token</label>
+                    <input type="password" id="githubToken" class="form-control" 
+                           placeholder="ghp_...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="githubRepo">Repository</label>
+                    <input type="text" id="githubRepo" class="form-control" 
+                           placeholder="username/repo">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notionToken">Notion Token</label>
+                    <input type="password" id="notionToken" class="form-control" 
+                           placeholder="secret_...">
+                </div>
+
+                <button id="saveConfig" class="btn">Save Configuration</button>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M9 3V1h6v2h5v2h-2v16h-2V5H8v16H6V5H4V3h5zM11 7v2h2V7h-2zm0 4v6h2v-6h-2z"/>
+                    </svg>
+                    System Status
+                </h3>
+                
+                <div id="systemInfo">
+                    <p><strong>Framework:</strong> Ready</p>
+                    <p><strong>GitHub API:</strong> <span id="githubStatus">Not configured</span></p>
+                    <p><strong>Notion API:</strong> <span id="notionApiStatus">Not configured</span></p>
+                    <p><strong>Last Action:</strong> <span id="lastAction">None</span></p>
+                </div>
+                
+                <button id="checkStatus" class="btn">Refresh Status</button>
+            </div>
+
+            <div class="card full-width">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M2 17h20v2H2zm1.15-4.05L4 11l4 4 4-4 4 4 4-4 1.15 1.95L16.5 18 14 15.5 10 19.5 6.5 16 2 20.5l-.85-1.55z"/>
+                    </svg>
+                    Action Logs
+                </h3>
+                
+                <div id="logs" class="logs">
+                    Welcome to AiCan Automation Dashboard!
+                    
+                    Ready to execute commands...
+                </div>
+                
+                <button id="clearLogs" class="btn" style="margin-top: 15px; width: auto;">Clear Logs</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

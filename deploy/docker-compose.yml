@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  ag06:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: ag06-mixer:local
+    container_name: ag06-mixer
+    ports:
+      - "8001:8001"  # Web interface
+      - "8080:8080"  # Monitoring dashboard
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      - AG06_ENV=production
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - ag06-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ag06-prometheus  
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - ag06-network
+
+networks:
+  ag06-network:
+    driver: bridge
+
+volumes:
+  logs:

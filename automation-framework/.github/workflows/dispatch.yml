@@ -1,0 +1,127 @@
+name: Remote Control
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "dev task to run"
+        required: true
+        default: "ci"
+        type: choice
+        options:
+          - "ci"
+          - "doctor"
+          - "test"
+          - "bootstrap"
+          - "lint"
+          - "fmt"
+      notion_page:
+        description: "Notion page ID (optional)"
+        required: false
+        type: string
+      environment:
+        description: "Environment"
+        required: false
+        default: "development"
+        type: choice
+        options:
+          - "development"
+          - "staging"
+          - "production"
+          
+  repository_dispatch:
+    types: [aican-remote-run]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  run-task:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    environment: ${{ inputs.environment || 'development' }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        
+      - name: Install dependencies
+        run: |
+          brew install jq yq shellcheck shfmt
+          if [[ -f Brewfile ]]; then
+            brew bundle --no-lock || true
+          fi
+          
+      - name: Setup Python + uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          
+      - name: Bootstrap if needed
+        if: inputs.task == 'bootstrap'
+        run: ./dev bootstrap
+        
+      - name: Execute task
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_PAGE_ID: ${{ inputs.notion_page }}
+          LOG_LEVEL: debug
+        run: |
+          echo "🚀 Executing task: ${{ inputs.task }}"
+          ./dev "${{ inputs.task }}"
+          
+      - name: Update Notion status (success)
+        if: success() && inputs.notion_page
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_PAGE_ID: ${{ inputs.notion_page }}
+        run: |
+          echo "✅ Updating Notion status to: Completed"
+          ./dev notion:status "${{ inputs.notion_page }}" "Completed"
+          
+      - name: Update Notion status (failure)
+        if: failure() && inputs.notion_page
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_PAGE_ID: ${{ inputs.notion_page }}
+        run: |
+          echo "❌ Updating Notion status to: Failed"
+          ./dev notion:status "${{ inputs.notion_page }}" "Failed"
+          
+  repository-dispatch:
+    if: github.event_name == 'repository_dispatch'
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup environment
+        uses: Homebrew/actions/setup-homebrew@master
+        
+      - name: Install dependencies
+        run: |
+          brew install jq yq shellcheck shfmt
+          
+      - name: Setup Python + uv
+        uses: astral-sh/setup-uv@v3
+        
+      - name: Execute repository dispatch task
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          task="${{ github.event.client_payload.task || 'ci' }}"
+          page_id="${{ github.event.client_payload.notion_page || '' }}"
+          
+          echo "🚀 Repository dispatch task: $task"
+          ./dev "$task"
+          
+          if [[ -n "$page_id" ]]; then
+            ./dev notion:status "$page_id" "Completed"
+          fi

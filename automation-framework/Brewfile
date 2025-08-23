@@ -1,0 +1,32 @@
+# macOS Terminal Automation Framework Dependencies
+
+# Core utilities
+brew "git"
+brew "curl"
+brew "jq"
+brew "yq"
+
+# Shell development tools
+brew "shellcheck"
+brew "shfmt"
+brew "bats-core"
+
+# Python development
+brew "python@3.12"
+
+# GitHub CLI for automation
+brew "gh"
+
+# Optional developer tools
+brew "tree"
+brew "htop"
+brew "watch"
+brew "ripgrep"
+brew "fd"
+brew "bat"
+brew "exa"
+
+# Development applications (casks)
+tap "homebrew/cask"
+cask "iterm2" unless system "test -d /Applications/iTerm.app"
+cask "visual-studio-code" unless system "test -d '/Applications/Visual Studio Code.app'"

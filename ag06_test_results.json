@@ -1,0 +1,13 @@
+{
+  "summary": {
+    "total_tests": 88,
+    "passed_tests": 0,
+    "failed_tests": 0,
+    "success_rate": 0.0,
+    "manu_compliant": false
+  },
+  "test_details": [],
+  "timestamp": "2025-08-22T19:39:49.916021",
+  "system": "AG06 Enhanced Workflow System",
+  "version": "3.0.0"
+}

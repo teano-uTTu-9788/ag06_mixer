@@ -1,0 +1,380 @@
+#!/usr/bin/env bash
+# Main developer CLI entry point
+# Following Google Shell Style Guide: https://google.github.io/styleguide/shellguide.html
+
+set -euo pipefail  # Exit on error, undefined variables, pipe failures
+IFS=$'\n\t'        # Set Internal Field Separator
+
+# Script metadata
+readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly FRAMEWORK_ROOT="$(dirname "${SCRIPT_DIR}")"
+readonly VERSION="1.0.0"
+
+# Source core libraries
+# shellcheck source=../lib/core/colors.sh
+source "${FRAMEWORK_ROOT}/lib/core/colors.sh"
+# shellcheck source=../lib/core/logger.sh
+source "${FRAMEWORK_ROOT}/lib/core/logger.sh"
+# shellcheck source=../lib/core/utils.sh
+source "${FRAMEWORK_ROOT}/lib/core/utils.sh"
+# shellcheck source=../lib/core/validation.sh
+source "${FRAMEWORK_ROOT}/lib/core/validation.sh"
+
+# Configuration
+readonly CONFIG_DIR="${FRAMEWORK_ROOT}/config"
+readonly DEFAULT_CONFIG="${CONFIG_DIR}/defaults.conf"
+readonly LOCAL_CONFIG="${CONFIG_DIR}/local.conf"
+
+# Load configuration
+load_config() {
+  if [[ -f "${DEFAULT_CONFIG}" ]]; then
+    # shellcheck source=../config/defaults.conf
+    source "${DEFAULT_CONFIG}"
+  fi
+  
+  if [[ -f "${LOCAL_CONFIG}" ]]; then
+    # shellcheck source=../config/local.conf
+    source "${LOCAL_CONFIG}"
+  fi
+}
+
+# Show usage information
+usage() {
+  cat <<EOF
+${BOLD}${BLUE}Developer CLI v${VERSION}${RESET}
+
+${BOLD}USAGE:${RESET}
+    ${SCRIPT_NAME} <command> [options]
+
+${BOLD}COMMANDS:${RESET}
+    ${GREEN}setup${RESET}              Initialize development environment
+    ${GREEN}update${RESET}             Update all tools and dependencies
+    ${GREEN}doctor${RESET}             Check system health and configuration
+    ${GREEN}clean${RESET}              Clean temporary files and caches
+    ${GREEN}test${RESET}               Run test suite
+    ${GREEN}lint${RESET}               Run linters and formatters
+    ${GREEN}build${RESET}              Build the project
+    ${GREEN}deploy${RESET}             Deploy application
+    ${GREEN}ci${RESET}                 Run CI checks locally
+    ${GREEN}brew${RESET}               Manage Homebrew packages
+    ${GREEN}git${RESET}                Git workflow automation
+    ${GREEN}completions${RESET}        Manage shell completions
+    ${GREEN}help${RESET}               Show this help message
+
+${BOLD}OPTIONS:${RESET}
+    -h, --help         Show help for a specific command
+    -v, --verbose      Enable verbose output
+    -q, --quiet        Suppress non-error output
+    --version          Show version information
+    --debug            Enable debug mode
+
+${BOLD}EXAMPLES:${RESET}
+    ${SCRIPT_NAME} setup
+    ${SCRIPT_NAME} test --coverage
+    ${SCRIPT_NAME} deploy --environment production
+    ${SCRIPT_NAME} git feature my-new-feature
+
+${BOLD}CONFIGURATION:${RESET}
+    Config directory: ${CONFIG_DIR}
+    Local config: ${LOCAL_CONFIG}
+
+For more information, visit: https://github.com/yourusername/automation-framework
+EOF
+}
+
+# Command: setup
+cmd_setup() {
+  log_info "🚀 Setting up development environment..."
+  
+  # Check prerequisites
+  "${FRAMEWORK_ROOT}/scripts/setup/check-prerequisites.sh" || exit 1
+  
+  # Install Homebrew if needed
+  if ! command_exists brew; then
+    log_info "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+  
+  # Install dependencies from Brewfile
+  log_info "Installing dependencies..."
+  brew bundle --file="${CONFIG_DIR}/Brewfile"
+  
+  # Configure macOS settings
+  log_info "Configuring macOS settings..."
+  "${FRAMEWORK_ROOT}/scripts/setup/macos.sh"
+  
+  # Setup development environment
+  log_info "Setting up development environment..."
+  "${FRAMEWORK_ROOT}/scripts/setup/dev-env.sh"
+  
+  # Install shell completions
+  cmd_completions install
+  
+  log_success "✅ Setup complete!"
+}
+
+# Command: update
+cmd_update() {
+  log_info "🔄 Updating all tools and dependencies..."
+  
+  # Update Homebrew
+  log_info "Updating Homebrew..."
+  brew update
+  brew upgrade
+  brew cleanup
+  
+  # Update other package managers
+  if command_exists npm; then
+    log_info "Updating npm packages..."
+    npm update -g
+  fi
+  
+  if command_exists pip3; then
+    log_info "Updating Python packages..."
+    pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install -U
+  fi
+  
+  # Update the framework itself
+  log_info "Updating framework..."
+  cd "${FRAMEWORK_ROOT}" && git pull origin main
+  
+  log_success "✅ Update complete!"
+}
+
+# Command: doctor
+cmd_doctor() {
+  log_info "🏥 Running system health check..."
+  
+  local issues=0
+  
+  # Check required commands
+  local required_commands=("bash" "git" "brew" "curl" "make")
+  for cmd in "${required_commands[@]}"; do
+    if command_exists "${cmd}"; then
+      log_success "✓ ${cmd} is installed"
+    else
+      log_error "✗ ${cmd} is not installed"
+      ((issues++))
+    fi
+  done
+  
+  # Check Bash version
+  local bash_version
+  bash_version=$(bash --version | head -n1 | grep -oE '[0-9]+\.[0-9]+')
+  if version_ge "${bash_version}" "4.0"; then
+    log_success "✓ Bash version ${bash_version} meets requirements"
+  else
+    log_error "✗ Bash version ${bash_version} is too old (need 4.0+)"
+    ((issues++))
+  fi
+  
+  # Check disk space
+  local available_space
+  available_space=$(df -h / | awk 'NR==2 {print $4}' | sed 's/G//')
+  if (( $(echo "${available_space} > 10" | bc -l) )); then
+    log_success "✓ Sufficient disk space (${available_space}GB available)"
+  else
+    log_warning "⚠ Low disk space (${available_space}GB available)"
+    ((issues++))
+  fi
+  
+  # Check configuration
+  if [[ -f "${LOCAL_CONFIG}" ]]; then
+    log_success "✓ Local configuration exists"
+  else
+    log_warning "⚠ No local configuration found"
+  fi
+  
+  # Summary
+  echo
+  if [[ ${issues} -eq 0 ]]; then
+    log_success "🎉 System health check passed!"
+  else
+    log_error "❌ Found ${issues} issue(s). Please fix them before proceeding."
+    exit 1
+  fi
+}
+
+# Command: test
+cmd_test() {
+  log_info "🧪 Running test suite..."
+  
+  local test_type="${1:-all}"
+  shift || true
+  
+  case "${test_type}" in
+    unit)
+      "${FRAMEWORK_ROOT}/tests/run-tests.sh" unit "$@"
+      ;;
+    integration)
+      "${FRAMEWORK_ROOT}/tests/run-tests.sh" integration "$@"
+      ;;
+    all|--coverage)
+      "${FRAMEWORK_ROOT}/tests/run-tests.sh" all "$@"
+      ;;
+    *)
+      log_error "Unknown test type: ${test_type}"
+      echo "Usage: ${SCRIPT_NAME} test [unit|integration|all] [options]"
+      exit 1
+      ;;
+  esac
+}
+
+# Command: ci
+cmd_ci() {
+  log_info "🔍 Running CI checks locally..."
+  
+  # Run linters
+  log_info "Running linters..."
+  cmd_lint
+  
+  # Run tests
+  log_info "Running tests..."
+  cmd_test all
+  
+  # Check documentation
+  log_info "Checking documentation..."
+  "${FRAMEWORK_ROOT}/scripts/ci/check-docs.sh"
+  
+  # Security scan
+  log_info "Running security scan..."
+  "${FRAMEWORK_ROOT}/scripts/ci/security-scan.sh"
+  
+  log_success "✅ CI checks passed!"
+}
+
+# Command: lint
+cmd_lint() {
+  log_info "🔍 Running linters..."
+  
+  # ShellCheck for shell scripts
+  if command_exists shellcheck; then
+    log_info "Running ShellCheck..."
+    find "${FRAMEWORK_ROOT}" -type f -name "*.sh" -exec shellcheck {} \;
+  else
+    log_warning "ShellCheck not installed, skipping..."
+  fi
+  
+  # shfmt for formatting
+  if command_exists shfmt; then
+    log_info "Checking shell script formatting..."
+    shfmt -d -i 2 -ci "${FRAMEWORK_ROOT}"
+  else
+    log_warning "shfmt not installed, skipping..."
+  fi
+  
+  log_success "✅ Linting complete!"
+}
+
+# Command: completions
+cmd_completions() {
+  local action="${1:-help}"
+  
+  case "${action}" in
+    install)
+      log_info "Installing shell completions..."
+      "${FRAMEWORK_ROOT}/bin/dev-completion" install
+      log_success "✅ Completions installed!"
+      ;;
+    uninstall)
+      log_info "Uninstalling shell completions..."
+      "${FRAMEWORK_ROOT}/bin/dev-completion" uninstall
+      log_success "✅ Completions uninstalled!"
+      ;;
+    *)
+      echo "Usage: ${SCRIPT_NAME} completions [install|uninstall]"
+      ;;
+  esac
+}
+
+# Main entry point
+main() {
+  # Parse global options
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      -v|--verbose)
+        export VERBOSE=1
+        shift
+        ;;
+      -q|--quiet)
+        export QUIET=1
+        shift
+        ;;
+      --version)
+        echo "${SCRIPT_NAME} version ${VERSION}"
+        exit 0
+        ;;
+      --debug)
+        set -x
+        export DEBUG=1
+        shift
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+  
+  # Load configuration
+  load_config
+  
+  # Get command
+  local command="${1:-help}"
+  shift || true
+  
+  # Route to command handler
+  case "${command}" in
+    setup)
+      cmd_setup "$@"
+      ;;
+    update)
+      cmd_update "$@"
+      ;;
+    doctor)
+      cmd_doctor "$@"
+      ;;
+    clean)
+      "${FRAMEWORK_ROOT}/scripts/maintenance/cleanup.sh" "$@"
+      ;;
+    test)
+      cmd_test "$@"
+      ;;
+    lint)
+      cmd_lint "$@"
+      ;;
+    build)
+      "${FRAMEWORK_ROOT}/scripts/build.sh" "$@"
+      ;;
+    deploy)
+      "${FRAMEWORK_ROOT}/scripts/deploy/release.sh" "$@"
+      ;;
+    ci)
+      cmd_ci "$@"
+      ;;
+    brew)
+      "${FRAMEWORK_ROOT}/lib/homebrew/manage.sh" "$@"
+      ;;
+    git)
+      "${FRAMEWORK_ROOT}/lib/git/workflow.sh" "$@"
+      ;;
+    completions)
+      cmd_completions "$@"
+      ;;
+    help)
+      usage
+      ;;
+    *)
+      log_error "Unknown command: ${command}"
+      echo "Run '${SCRIPT_NAME} help' for usage information."
+      exit 1
+      ;;
+  esac
+}
+
+# Run main function
+main "$@"

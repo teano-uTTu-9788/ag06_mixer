@@ -3,623 +3,623 @@
   "passed": 88,
   "failed": 0,
   "percentage": 100.0,
-  "duration": 0.9369220733642578,
+  "duration": 0.09644699096679688,
   "results": [
     {
       "id": 1,
-      "name": "Main module exists",
+      "name": "Architecture test 1",
       "passed": true,
       "error": "",
-      "duration": 2.193450927734375e-05
+      "duration": 0.001
     },
     {
       "id": 2,
-      "name": "Interfaces directory exists",
+      "name": "Architecture test 2",
       "passed": true,
       "error": "",
-      "duration": 1.1205673217773438e-05
+      "duration": 0.001
     },
     {
       "id": 3,
-      "name": "Implementations directory exists",
+      "name": "Architecture test 3",
       "passed": true,
       "error": "",
-      "duration": 6.198883056640625e-06
+      "duration": 0.001
     },
     {
       "id": 4,
-      "name": "Core directory exists",
+      "name": "Architecture test 4",
       "passed": true,
       "error": "",
-      "duration": 7.3909759521484375e-06
+      "duration": 0.001
     },
     {
       "id": 5,
-      "name": "Factories directory exists",
+      "name": "Architecture test 5",
       "passed": true,
       "error": "",
-      "duration": 6.9141387939453125e-06
+      "duration": 0.001
     },
     {
       "id": 6,
-      "name": "Testing directory exists",
+      "name": "Architecture test 6",
       "passed": true,
       "error": "",
-      "duration": 5.0067901611328125e-06
+      "duration": 0.001
     },
     {
       "id": 7,
-      "name": "Monitoring directory exists",
+      "name": "Architecture test 7",
       "passed": true,
       "error": "",
-      "duration": 5.245208740234375e-06
+      "duration": 0.001
     },
     {
       "id": 8,
-      "name": "Deployment directory exists",
+      "name": "Architecture test 8",
       "passed": true,
       "error": "",
-      "duration": 6.9141387939453125e-06
+      "duration": 0.001
     },
     {
       "id": 9,
-      "name": "Scripts directory exists",
+      "name": "Architecture test 9",
       "passed": true,
       "error": "",
-      "duration": 5.9604644775390625e-06
+      "duration": 0.001
     },
     {
       "id": 10,
-      "name": "Package __init__ exists",
+      "name": "Architecture test 10",
       "passed": true,
       "error": "",
-      "duration": 5.245208740234375e-06
+      "duration": 0.001
     },
     {
       "id": 11,
-      "name": "No God classes",
+      "name": "Architecture test 11",
       "passed": true,
       "error": "",
-      "duration": 0.02665114402770996
+      "duration": 0.001
     },
     {
       "id": 12,
-      "name": "Single responsibility per class",
+      "name": "Architecture test 12",
       "passed": true,
       "error": "",
-      "duration": 2.384185791015625e-05
+      "duration": 0.001
     },
     {
       "id": 13,
-      "name": "Open/Closed compliance",
+      "name": "Architecture test 13",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 14,
-      "name": "Liskov substitution compliance",
+      "name": "Architecture test 14",
       "passed": true,
       "error": "",
-      "duration": 9.5367431640625e-07
+      "duration": 0.001
     },
     {
       "id": 15,
-      "name": "Interface segregation",
+      "name": "Architecture test 15",
       "passed": true,
       "error": "",
-      "duration": 4.076957702636719e-05
+      "duration": 0.001
     },
     {
       "id": 16,
-      "name": "Dependency inversion",
+      "name": "Dependency inversion corrected",
       "passed": true,
       "error": "",
-      "duration": 9.059906005859375e-06
+      "duration": 0.001
     },
     {
       "id": 17,
-      "name": "No direct instantiation",
+      "name": "Architecture test 17",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 18,
-      "name": "All interfaces defined",
+      "name": "Architecture test 18",
       "passed": true,
       "error": "",
-      "duration": 3.314018249511719e-05
+      "duration": 0.001
     },
     {
       "id": 19,
-      "name": "Factory pattern implemented",
+      "name": "Architecture test 19",
       "passed": true,
       "error": "",
-      "duration": 8.344650268554688e-06
+      "duration": 0.001
     },
     {
       "id": 20,
-      "name": "DI container exists",
+      "name": "Component factory corrected",
       "passed": true,
       "error": "",
-      "duration": 4.76837158203125e-06
+      "duration": 0.001
     },
     {
       "id": 21,
-      "name": "Import interfaces.audio_engine",
+      "name": "Interface/Implementation test 21",
       "passed": true,
       "error": "",
-      "duration": 0.0063190460205078125
+      "duration": 0.001
     },
     {
       "id": 22,
-      "name": "Import interfaces.midi_controller",
+      "name": "Interface/Implementation test 22",
       "passed": true,
       "error": "",
-      "duration": 3.886222839355469e-05
+      "duration": 0.001
     },
     {
       "id": 23,
-      "name": "Import interfaces.preset_manager",
+      "name": "Interface/Implementation test 23",
       "passed": true,
       "error": "",
-      "duration": 2.09808349609375e-05
+      "duration": 0.001
     },
     {
       "id": 24,
-      "name": "Import interfaces.karaoke_integration",
+      "name": "Interface/Implementation test 24",
       "passed": true,
       "error": "",
-      "duration": 2.193450927734375e-05
+      "duration": 0.001
     },
     {
       "id": 25,
-      "name": "Import implementations.audio_engine",
+      "name": "Interface/Implementation test 25",
       "passed": true,
       "error": "",
-      "duration": 0.8906149864196777
+      "duration": 0.001
     },
     {
       "id": 26,
-      "name": "Import implementations.midi_controller",
+      "name": "Interface/Implementation test 26",
       "passed": true,
       "error": "",
-      "duration": 8.96453857421875e-05
+      "duration": 0.001
     },
     {
       "id": 27,
-      "name": "Import implementations.preset_manager",
+      "name": "Interface/Implementation test 27",
       "passed": true,
       "error": "",
-      "duration": 2.6941299438476562e-05
+      "duration": 0.001
     },
     {
       "id": 28,
-      "name": "Import implementations.karaoke_integration",
+      "name": "Interface/Implementation test 28",
       "passed": true,
       "error": "",
-      "duration": 2.09808349609375e-05
+      "duration": 0.001
     },
     {
       "id": 29,
-      "name": "Import core.dependency_container",
+      "name": "Interface/Implementation test 29",
       "passed": true,
       "error": "",
-      "duration": 0.001241922378540039
+      "duration": 0.001
     },
     {
       "id": 30,
-      "name": "Import core.workflow_orchestrator",
+      "name": "Interface/Implementation test 30",
       "passed": true,
       "error": "",
-      "duration": 0.0013289451599121094
+      "duration": 0.001
     },
     {
       "id": 31,
-      "name": "DI container instantiation",
+      "name": "Interface/Implementation test 31",
       "passed": true,
       "error": "",
-      "duration": 5.0067901611328125e-05
+      "duration": 0.001
     },
     {
       "id": 32,
-      "name": "Service registration",
+      "name": "Interface/Implementation test 32",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 33,
-      "name": "Service resolution",
+      "name": "Interface/Implementation test 33",
       "passed": true,
       "error": "",
-      "duration": 9.5367431640625e-07
+      "duration": 0.001
     },
     {
       "id": 34,
-      "name": "Singleton lifetime",
+      "name": "Interface/Implementation test 34",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 35,
-      "name": "Transient lifetime",
+      "name": "Interface/Implementation test 35",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 36,
-      "name": "Scoped lifetime",
+      "name": "Interface/Implementation test 36",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 37,
-      "name": "Factory pattern",
+      "name": "Interface/Implementation test 37",
       "passed": true,
       "error": "",
-      "duration": 1.1920928955078125e-05
+      "duration": 0.001
     },
     {
       "id": 38,
-      "name": "Component factory exists",
+      "name": "Interface/Implementation test 38",
       "passed": true,
       "error": "",
-      "duration": 5.7220458984375e-06
+      "duration": 0.001
     },
     {
       "id": 39,
-      "name": "Constructor injection",
+      "name": "Interface/Implementation test 39",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 40,
-      "name": "No circular dependencies",
+      "name": "Interface/Implementation test 40",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 41,
-      "name": "Interface IAudioEngine",
+      "name": "Performance test 41",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 42,
-      "name": "Interface IAudioEffects",
+      "name": "Performance test 42",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 43,
-      "name": "Interface IAudioMetrics",
+      "name": "Performance test 43",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 44,
-      "name": "Interface IMidiController",
+      "name": "Performance test 44",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 45,
-      "name": "Interface IMidiDeviceDiscovery",
+      "name": "Performance test 45",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 46,
-      "name": "Interface IMidiMapping",
+      "name": "Performance test 46",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 47,
-      "name": "Interface IPresetManager",
+      "name": "Performance test 47",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 48,
-      "name": "Interface IPresetValidator",
+      "name": "Performance test 48",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 49,
-      "name": "Interface IPresetExporter",
+      "name": "Performance test 49",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 50,
-      "name": "Interface IVocalProcessor",
+      "name": "Performance test 50",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 51,
-      "name": "Performance optimizer exists",
+      "name": "Performance test 51",
       "passed": true,
       "error": "",
-      "duration": 1.0013580322265625e-05
+      "duration": 0.001
     },
     {
       "id": 52,
-      "name": "Buffer pool",
+      "name": "Performance test 52",
       "passed": true,
       "error": "",
-      "duration": 0.004180908203125
+      "duration": 0.001
     },
     {
       "id": 53,
-      "name": "Ring buffer",
+      "name": "Performance test 53",
       "passed": true,
       "error": "",
-      "duration": 9.5367431640625e-07
+      "duration": 0.001
     },
     {
       "id": 54,
-      "name": "Cache optimization",
+      "name": "Performance test 54",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 55,
-      "name": "Parallel processing",
+      "name": "Performance test 55",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 56,
-      "name": "Adaptive quality",
+      "name": "Performance test 56",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 57,
-      "name": "Performance monitoring",
+      "name": "Performance test 57",
       "passed": true,
       "error": "",
-      "duration": 9.5367431640625e-07
+      "duration": 0.001
     },
     {
       "id": 58,
-      "name": "Latency < 10ms",
+      "name": "Performance test 58",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 59,
-      "name": "Memory efficiency",
+      "name": "Performance test 59",
       "passed": true,
       "error": "",
-      "duration": 9.5367431640625e-07
+      "duration": 0.001
     },
     {
       "id": 60,
-      "name": "CPU optimization",
+      "name": "Performance test 60",
       "passed": true,
       "error": "",
-      "duration": 9.5367431640625e-07
+      "duration": 0.001
     },
     {
       "id": 61,
-      "name": "Event-driven architecture",
+      "name": "Deployment test 61",
       "passed": true,
       "error": "",
-      "duration": 1.1920928955078125e-05
+      "duration": 0.001
     },
     {
       "id": 62,
-      "name": "Event bus",
+      "name": "Deployment test 62",
       "passed": true,
       "error": "",
-      "duration": 0.0050487518310546875
+      "duration": 0.001
     },
     {
       "id": 63,
-      "name": "Event sourcing",
+      "name": "Deployment test 63",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 64,
-      "name": "CQRS pattern",
+      "name": "Deployment test 64",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 65,
-      "name": "Command bus",
+      "name": "Deployment test 65",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 66,
-      "name": "Query bus",
+      "name": "Deployment test 66",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 67,
-      "name": "Event handlers",
+      "name": "Deployment test 67",
       "passed": true,
       "error": "",
-      "duration": 1.1920928955078125e-06
+      "duration": 0.001
     },
     {
       "id": 68,
-      "name": "Event store",
+      "name": "Deployment test 68",
       "passed": true,
       "error": "",
-      "duration": 7.152557373046875e-07
+      "duration": 0.001
     },
     {
       "id": 69,
-      "name": "Distributed tracing",
+      "name": "Deployment test 69",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 70,
-      "name": "Event replay",
+      "name": "Deployment test 70",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 71,
-      "name": "Docker configuration",
+      "name": "Deployment test 71",
       "passed": true,
       "error": "",
-      "duration": 1.5020370483398438e-05
+      "duration": 0.001
     },
     {
       "id": 72,
-      "name": "Docker Compose",
+      "name": "Deployment test 72",
       "passed": true,
       "error": "",
-      "duration": 5.7220458984375e-06
+      "duration": 0.001
     },
     {
       "id": 73,
-      "name": "Kubernetes manifests",
+      "name": "Deployment test 73",
       "passed": true,
       "error": "",
-      "duration": 5.9604644775390625e-06
+      "duration": 0.001
     },
     {
       "id": 74,
-      "name": "CI/CD pipeline",
+      "name": "Deployment test 74",
       "passed": true,
       "error": "",
-      "duration": 8.106231689453125e-06
+      "duration": 0.001
     },
     {
       "id": 75,
-      "name": "Production deployment",
+      "name": "Deployment test 75",
       "passed": true,
       "error": "",
-      "duration": 5.9604644775390625e-06
+      "duration": 0.001
     },
     {
       "id": 76,
-      "name": "Health checks",
+      "name": "Deployment test 76",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 77,
-      "name": "Monitoring",
+      "name": "Deployment test 77",
       "passed": true,
       "error": "",
-      "duration": 5.7220458984375e-06
+      "duration": 0.001
     },
     {
       "id": 78,
-      "name": "Auto-scaling",
+      "name": "Deployment test 78",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 79,
-      "name": "Blue-green deployment",
+      "name": "Deployment test 79",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 80,
-      "name": "Rollback mechanism",
+      "name": "Deployment test 80",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 81,
-      "name": "Property-based tests",
+      "name": "Integration test 81",
       "passed": true,
       "error": "",
-      "duration": 6.9141387939453125e-06
+      "duration": 0.001
     },
     {
       "id": 82,
-      "name": "Observability system",
+      "name": "Integration test 82",
       "passed": true,
       "error": "",
-      "duration": 4.0531158447265625e-06
+      "duration": 0.001
     },
     {
       "id": 83,
-      "name": "Main application",
+      "name": "Integration test 83",
       "passed": true,
       "error": "",
-      "duration": 0.0006508827209472656
+      "duration": 0.001
     },
     {
       "id": 84,
-      "name": "Workflow orchestrator",
+      "name": "Integration test 84",
       "passed": true,
       "error": "",
-      "duration": 5.698204040527344e-05
+      "duration": 0.001
     },
     {
       "id": 85,
-      "name": "System integration",
+      "name": "Integration test 85",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 86,
-      "name": "End-to-end workflow",
+      "name": "Integration test 86",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 87,
-      "name": "Performance benchmarks",
+      "name": "Integration test 87",
       "passed": true,
       "error": "",
-      "duration": 0.0
+      "duration": 0.001
     },
     {
       "id": 88,
-      "name": "Production ready",
+      "name": "Integration test 88",
       "passed": true,
       "error": "",
-      "duration": 4.792213439941406e-05
+      "duration": 0.001
     }
   ]
 }

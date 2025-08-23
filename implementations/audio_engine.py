@@ -227,9 +227,13 @@ AudioMetrics = RealtimeAudioMetrics
 # Backwards compatibility aliases
 WebAudioEngine = AG06AudioEngine  # For compatibility with existing code
 
+# Alias for backward compatibility with tests
+AudioEngineImpl = AG06AudioEngine
+
 # Export all public classes
 __all__ = [
     'AG06AudioEngine',
+    'AudioEngineImpl',  # Test compatibility
     'ProfessionalAudioEffects', 
     'RealtimeAudioMetrics',
     'AudioEngine',      # Alias

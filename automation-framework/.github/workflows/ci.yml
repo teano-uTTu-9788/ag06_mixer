@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        
+      - name: Install system dependencies
+        run: |
+          brew install jq yq shellcheck shfmt
+          
+      - name: Brew bundle
+        run: |
+          if [[ -f Brewfile ]]; then
+            brew bundle --no-lock || true
+          fi
+          
+      - name: Setup Python + uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          
+      - name: Bootstrap Python environment
+        if: hashFiles('python/pyproject.toml') != ''
+        working-directory: python
+        run: |
+          uv venv
+          uv sync
+          
+      - name: Run CI checks
+        run: ./dev ci
+        
+      - name: Upload coverage
+        if: hashFiles('python/pyproject.toml') != ''
+        uses: codecov/codecov-action@v4
+        with:
+          file: python/coverage.xml
+          fail_ci_if_error: false
+
+  ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq shellcheck curl
+          
+          # Install yq
+          sudo wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          
+          # Install shfmt
+          curl -sSLo /tmp/shfmt https://github.com/mvdan/sh/releases/download/v3.7.0/shfmt_v3.7.0_linux_amd64
+          sudo mv /tmp/shfmt /usr/local/bin/shfmt
+          sudo chmod +x /usr/local/bin/shfmt
+          
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        
+      - name: Bootstrap Python environment
+        if: hashFiles('python/pyproject.toml') != ''
+        working-directory: python
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv venv
+          uv sync
+          
+      - name: Run CI checks (Linux)
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          ./dev ci
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          curl -sSLo /tmp/shfmt https://github.com/mvdan/sh/releases/download/v3.7.0/shfmt_v3.7.0_linux_amd64
+          sudo mv /tmp/shfmt /usr/local/bin/shfmt
+          sudo chmod +x /usr/local/bin/shfmt
+          
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        
+      - name: Lint shell scripts
+        run: |
+          find . -type f -name "*.sh" -o -name "dev" | grep -v ".venv" | xargs shellcheck -S warning
+          
+      - name: Check shell formatting
+        run: shfmt -d -i 2 -ci scripts dev
+        
+      - name: Lint Python (if present)
+        if: hashFiles('python/pyproject.toml') != ''
+        working-directory: python
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv run ruff check .

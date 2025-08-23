@@ -1,0 +1,233 @@
+name: sample_deployment_workflow
+description: Sample workflow demonstrating framework capabilities
+version: 1.0.0
+execution_mode: sequential
+
+# Workflow triggers
+triggers:
+  - manual
+  - api
+  - schedule: "0 2 * * *"  # Daily at 2 AM
+
+# Environment variables
+environment:
+  APP_NAME: sample-app
+  DEPLOY_ENV: staging
+  MAX_RETRIES: 3
+
+# Workflow tags for organization
+tags:
+  - deployment
+  - automated
+  - staging
+
+# Pre-flight checks
+pre_checks:
+  - name: verify_environment
+    command: |
+      echo "Verifying environment..."
+      test -f .env || { echo "Missing .env file"; exit 1; }
+      command -v docker >/dev/null 2>&1 || { echo "Docker not found"; exit 1; }
+    critical: true
+
+# Main workflow steps
+steps:
+  - name: checkout_code
+    command: |
+      echo "Checking out latest code..."
+      git fetch origin
+      git checkout main
+      git pull origin main
+    timeout: 60
+    retry_count: 2
+    ai_enhanced: false
+
+  - name: install_dependencies
+    command: |
+      echo "Installing dependencies..."
+      if [[ -f package.json ]]; then
+        npm ci --production
+      elif [[ -f requirements.txt ]]; then
+        pip install -r requirements.txt
+      elif [[ -f go.mod ]]; then
+        go mod download
+      fi
+    timeout: 300
+    depends_on: [checkout_code]
+    cache_key: "deps-{{ checksum 'package-lock.json' }}"
+
+  - name: run_tests
+    command: |
+      echo "Running test suite..."
+      npm test -- --coverage --ci
+    timeout: 600
+    depends_on: [install_dependencies]
+    parallel: true
+    ai_enhanced: true
+    on_failure: notify_team
+
+  - name: build_application
+    command: |
+      echo "Building application..."
+      npm run build
+      docker build -t ${APP_NAME}:${BUILD_ID:-latest} .
+    timeout: 900
+    depends_on: [run_tests]
+    artifacts:
+      - path: dist/
+        name: build-artifacts
+      - path: coverage/
+        name: test-coverage
+
+  - name: security_scan
+    command: |
+      echo "Running security scan..."
+      # Run vulnerability scanning
+      npm audit --production
+      # Scan Docker image
+      docker scan ${APP_NAME}:${BUILD_ID:-latest} || true
+    timeout: 300
+    depends_on: [build_application]
+    continue_on_error: true
+
+  - name: deploy_staging
+    command: |
+      echo "Deploying to staging environment..."
+      # Deploy using kubectl or docker-compose
+      if [[ -f k8s/deployment.yaml ]]; then
+        kubectl apply -f k8s/deployment.yaml
+        kubectl rollout status deployment/${APP_NAME}
+      else
+        docker-compose up -d
+      fi
+    timeout: 600
+    depends_on: [build_application, security_scan]
+    environment:
+      DEPLOY_ENV: staging
+    approval_required: true
+
+  - name: smoke_tests
+    command: |
+      echo "Running smoke tests..."
+      # Wait for service to be ready
+      sleep 10
+      # Run basic health checks
+      curl -f http://localhost:8080/health || exit 1
+      # Run smoke test suite
+      npm run test:smoke
+    timeout: 300
+    depends_on: [deploy_staging]
+    retry_count: 3
+    retry_delay: 30
+
+  - name: performance_tests
+    command: |
+      echo "Running performance tests..."
+      # Run load testing
+      ab -n 1000 -c 10 http://localhost:8080/
+      # Check response times
+      curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8080/
+    timeout: 600
+    depends_on: [smoke_tests]
+    parallel: true
+    metrics:
+      - response_time
+      - throughput
+      - error_rate
+
+  - name: rollback_check
+    command: |
+      echo "Checking if rollback is needed..."
+      # Check error rates
+      ERROR_RATE=$(curl -s http://localhost:8080/metrics | jq '.error_rate')
+      if (( $(echo "$ERROR_RATE > 0.05" | bc -l) )); then
+        echo "High error rate detected: $ERROR_RATE"
+        exit 1
+      fi
+    timeout: 60
+    depends_on: [performance_tests]
+    on_failure: trigger_rollback
+
+# Post-execution hooks
+post_hooks:
+  - name: cleanup
+    command: |
+      echo "Cleaning up temporary files..."
+      rm -rf /tmp/build-*
+      docker image prune -f
+    always_run: true
+
+  - name: send_notifications
+    command: |
+      echo "Sending deployment notifications..."
+      # Send to Slack/Teams/Email
+      curl -X POST $SLACK_WEBHOOK -d "{\"text\":\"Deployment completed: ${APP_NAME}\"}"
+    condition: success
+
+# Rollback configuration
+rollback:
+  enabled: true
+  strategy: blue_green
+  steps:
+    - name: switch_to_previous
+      command: |
+        echo "Rolling back to previous version..."
+        kubectl rollout undo deployment/${APP_NAME}
+        kubectl rollout status deployment/${APP_NAME}
+    
+    - name: verify_rollback
+      command: |
+        echo "Verifying rollback..."
+        curl -f http://localhost:8080/health
+
+# Notification settings
+notifications:
+  on_success:
+    - type: webhook
+      url: ${SLACK_WEBHOOK}
+      message: "✅ Deployment successful: ${APP_NAME}"
+  
+  on_failure:
+    - type: email
+      to: team@example.com
+      subject: "❌ Deployment failed: ${APP_NAME}"
+  
+  on_rollback:
+    - type: pagerduty
+      service_key: ${PAGERDUTY_KEY}
+      severity: warning
+
+# Metrics collection
+metrics:
+  enabled: true
+  collectors:
+    - type: prometheus
+      endpoint: /metrics
+      interval: 30s
+    
+    - type: custom
+      command: |
+        echo "{\"deployment_time\": $(date +%s), \"version\": \"${BUILD_ID}\"}"
+
+# Resource requirements
+resources:
+  cpu: 2
+  memory: 4G
+  disk: 10G
+  
+# Scheduling configuration
+schedule:
+  cron: "0 2 * * *"  # Daily at 2 AM
+  timezone: UTC
+  max_concurrent: 1
+  
+# AI enhancement configuration
+ai_config:
+  enabled: true
+  models:
+    - name: code_review
+      trigger: pull_request
+    - name: test_generation
+      trigger: code_change
+    - name: performance_optimization
+      trigger: metrics_threshold
