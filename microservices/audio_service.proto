@@ -1,0 +1,358 @@
+// gRPC service definitions for audio processing microservice
+// Following Google's API design guide: https://cloud.google.com/apis/design
+
+syntax = "proto3";
+
+package audio.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+
+option go_package = "github.com/ag06_mixer/api/audio/v1;audiov1";
+option java_package = "com.ag06mixer.audio.v1";
+
+// AudioProcessingService handles real-time audio processing
+service AudioProcessingService {
+  // Stream audio for real-time processing
+  rpc StreamAudio(stream AudioChunk) returns (stream ProcessedAudio) {
+    option (google.api.http) = {
+      post: "/v1/audio:stream"
+      body: "*"
+    };
+  }
+
+  // Process a single audio buffer
+  rpc ProcessAudio(ProcessAudioRequest) returns (ProcessAudioResponse) {
+    option (google.api.http) = {
+      post: "/v1/audio:process"
+      body: "*"
+    };
+  }
+
+  // Get current processing metrics
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {
+    option (google.api.http) = {
+      get: "/v1/metrics"
+    };
+  }
+}
+
+// MixingService handles AI-powered mixing decisions
+service MixingService {
+  // Get mixing recommendation
+  rpc GetMixingProfile(GetMixingProfileRequest) returns (MixingProfile) {
+    option (google.api.http) = {
+      post: "/v1/mixing:analyze"
+      body: "*"
+    };
+  }
+
+  // Apply mixing profile
+  rpc ApplyMixing(ApplyMixingRequest) returns (ApplyMixingResponse) {
+    option (google.api.http) = {
+      post: "/v1/mixing:apply"
+      body: "*"
+    };
+  }
+}
+
+// AudioChunk represents a chunk of audio data
+message AudioChunk {
+  // Unique identifier for this stream
+  string stream_id = 1 [(google.api.field_behavior) = REQUIRED];
+  
+  // Audio data in PCM format
+  bytes pcm_data = 2 [(google.api.field_behavior) = REQUIRED];
+  
+  // Sample rate in Hz
+  int32 sample_rate = 3;
+  
+  // Number of channels
+  int32 channels = 4;
+  
+  // Timestamp of this chunk
+  google.protobuf.Timestamp timestamp = 5;
+  
+  // Sequence number for ordering
+  int64 sequence_number = 6;
+}
+
+// ProcessedAudio contains processed audio and metadata
+message ProcessedAudio {
+  // Processed audio data
+  bytes pcm_data = 1;
+  
+  // Applied processing profile
+  string profile_name = 2;
+  
+  // Processing metrics
+  ProcessingMetrics metrics = 3;
+  
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+// ProcessingMetrics contains real-time processing metrics
+message ProcessingMetrics {
+  // RMS level in dB
+  float rms_db = 1;
+  
+  // Peak level in dB
+  float peak_db = 2;
+  
+  // LUFS measurement
+  float lufs = 3;
+  
+  // Processing latency
+  google.protobuf.Duration latency = 4;
+  
+  // Detected genre
+  string genre = 5;
+  
+  // Genre confidence score
+  float confidence = 6;
+  
+  // DSP reduction levels
+  DSPMetrics dsp_metrics = 7;
+}
+
+// DSPMetrics for processing chain
+message DSPMetrics {
+  float gate_reduction_db = 1;
+  float compressor_reduction_db = 2;
+  float limiter_reduction_db = 3;
+  float headroom_db = 4;
+}
+
+// ProcessAudioRequest for single buffer processing
+message ProcessAudioRequest {
+  // Audio buffer to process
+  AudioChunk audio = 1 [(google.api.field_behavior) = REQUIRED];
+  
+  // Processing options
+  ProcessingOptions options = 2;
+}
+
+// ProcessingOptions for customization
+message ProcessingOptions {
+  // Enable AI mixing
+  bool enable_ai_mixing = 1;
+  
+  // Target loudness standard
+  LoudnessTarget loudness_target = 2;
+  
+  // Manual genre override
+  string genre_override = 3;
+  
+  // Enable effects processing
+  bool enable_effects = 4;
+}
+
+// LoudnessTarget enumeration
+enum LoudnessTarget {
+  LOUDNESS_TARGET_UNSPECIFIED = 0;
+  STREAMING = 1;  // -14 LUFS
+  BROADCAST = 2;  // -23 LUFS
+  PODCAST = 3;    // -16 LUFS
+  CINEMA = 4;     // -27 LUFS
+}
+
+// ProcessAudioResponse
+message ProcessAudioResponse {
+  // Processed audio
+  ProcessedAudio audio = 1;
+  
+  // Request ID for tracing
+  string request_id = 2;
+}
+
+// GetMetricsRequest
+message GetMetricsRequest {
+  // Time window for metrics
+  google.protobuf.Duration window = 1;
+  
+  // Specific metric types to retrieve
+  repeated string metric_types = 2;
+}
+
+// GetMetricsResponse
+message GetMetricsResponse {
+  // Current system metrics
+  map<string, MetricValue> metrics = 1;
+  
+  // System health status
+  HealthStatus health = 2;
+}
+
+// MetricValue
+message MetricValue {
+  oneof value {
+    double double_value = 1;
+    int64 int64_value = 2;
+    string string_value = 3;
+    bool bool_value = 4;
+  }
+  
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+// HealthStatus
+message HealthStatus {
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    HEALTHY = 1;
+    DEGRADED = 2;
+    UNHEALTHY = 3;
+  }
+  
+  Status status = 1;
+  string message = 2;
+}
+
+// GetMixingProfileRequest
+message GetMixingProfileRequest {
+  // Audio features for analysis
+  AudioFeatures features = 1 [(google.api.field_behavior) = REQUIRED];
+  
+  // Model version to use (for A/B testing)
+  string model_version = 2;
+}
+
+// AudioFeatures
+message AudioFeatures {
+  // Spectral features
+  repeated float spectrum = 1;
+  
+  // MFCC coefficients
+  repeated float mfcc = 2;
+  
+  // Temporal features
+  float zero_crossing_rate = 3;
+  float spectral_centroid = 4;
+  float spectral_rolloff = 5;
+  
+  // Energy features
+  float rms_energy = 6;
+  float peak_energy = 7;
+}
+
+// MixingProfile
+message MixingProfile {
+  // Profile name
+  string name = 1;
+  
+  // Detected genre
+  string genre = 2;
+  
+  // Confidence score
+  float confidence = 3;
+  
+  // DSP parameters
+  DSPParameters dsp_params = 4;
+  
+  // Effects parameters
+  EffectsParameters effects_params = 5;
+}
+
+// DSPParameters
+message DSPParameters {
+  GateParams gate = 1;
+  CompressorParams compressor = 2;
+  repeated EQBand eq_bands = 3;
+  LimiterParams limiter = 4;
+}
+
+// GateParams
+message GateParams {
+  float threshold_db = 1;
+  float ratio = 2;
+  float attack_ms = 3;
+  float release_ms = 4;
+  float range_db = 5;
+}
+
+// CompressorParams
+message CompressorParams {
+  float threshold_db = 1;
+  float ratio = 2;
+  float attack_ms = 3;
+  float release_ms = 4;
+  float knee_db = 5;
+  float makeup_gain_db = 6;
+}
+
+// EQBand
+message EQBand {
+  float frequency_hz = 1;
+  float gain_db = 2;
+  float q_factor = 3;
+  string type = 4;  // bell, shelf, pass
+}
+
+// LimiterParams
+message LimiterParams {
+  float ceiling_db = 1;
+  float release_ms = 2;
+  float lookahead_ms = 3;
+}
+
+// EffectsParameters
+message EffectsParameters {
+  ReverbParams reverb = 1;
+  DelayParams delay = 2;
+  ChorusParams chorus = 3;
+  StereoImagerParams stereo_imager = 4;
+}
+
+// ReverbParams
+message ReverbParams {
+  float room_size = 1;
+  float damping = 2;
+  float wet_level = 3;
+  float dry_level = 4;
+  float pre_delay_ms = 5;
+}
+
+// DelayParams
+message DelayParams {
+  float delay_time_ms = 1;
+  float feedback = 2;
+  float mix = 3;
+  bool tempo_sync = 4;
+  float bpm = 5;
+}
+
+// ChorusParams
+message ChorusParams {
+  float rate_hz = 1;
+  float depth_ms = 2;
+  float mix = 3;
+  int32 voices = 4;
+}
+
+// StereoImagerParams
+message StereoImagerParams {
+  float width = 1;
+  float bass_mono_freq = 2;
+  float high_freq_width = 3;
+}
+
+// ApplyMixingRequest
+message ApplyMixingRequest {
+  // Audio to process
+  AudioChunk audio = 1 [(google.api.field_behavior) = REQUIRED];
+  
+  // Mixing profile to apply
+  MixingProfile profile = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// ApplyMixingResponse
+message ApplyMixingResponse {
+  // Processed audio
+  ProcessedAudio audio = 1;
+  
+  // Applied profile details
+  MixingProfile applied_profile = 2;
+}

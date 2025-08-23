@@ -147,6 +147,18 @@ class RealAG06Processor:
 # Initialize processor
 processor = RealAG06Processor()
 
+@app.route('/api/spectrum')
+def get_spectrum():
+    """Get current spectrum data for music analysis"""
+    return jsonify({
+        'spectrum': processor.current_data['spectrum'],
+        'level_db': processor.current_data['rms'],
+        'peak_db': processor.current_data['peak'],
+        'classification': processor.current_data['classification'],
+        'peak_frequency': 440.0,  # Default A4 note
+        'timestamp': time.time()  # Return current time, not stored timestamp
+    })
+
 @app.route('/api/status')
 def get_status():
     """Get REAL audio status - not simulated!"""
@@ -171,7 +183,7 @@ def get_status():
             'confidence': 0.9 if processor.current_data['voice_detected'] else 0.0
         },
         'processing': processor.is_running,
-        'timestamp': processor.current_data['timestamp']
+        'timestamp': time.time()  # Return current time
     })
 
 @app.route('/api/start', methods=['POST'])
