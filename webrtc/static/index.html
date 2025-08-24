@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG06 AI Mixer - WebRTC Audio Streaming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        
+        .container {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .right-panel {
+            width: 350px;
+        }
+        
+        .control-section {
+            margin-bottom: 25px;
+        }
+        
+        .control-section h3 {
+            margin-bottom: 15px;
+            font-weight: 400;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        button.danger {
+            background: linear-gradient(135deg, #f93b3b 0%, #d92121 100%);
+        }
+        
+        button.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+        
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        select {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        select option {
+            background: #333;
+            color: white;
+        }
+        
+        #audioVisualizer {
+            width: 100%;
+            height: 200px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .status-bar {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #connectionIndicator {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .connection-connected {
+            background: #38ef7d;
+            color: #0a4f3c;
+        }
+        
+        .connection-connecting {
+            background: #ffd93d;
+            color: #7a6200;
+        }
+        
+        .connection-disconnected,
+        .connection-failed {
+            background: #f93b3b;
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        #membersList {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        #membersList li {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        #errorMessage {
+            background: rgba(249, 59, 59, 0.2);
+            border: 1px solid rgba(249, 59, 59, 0.5);
+        }
+        
+        #infoMessage {
+            background: rgba(56, 239, 125, 0.2);
+            border: 1px solid rgba(56, 239, 125, 0.5);
+        }
+        
+        .audio-controls {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .slider-group {
+            margin-bottom: 15px;
+        }
+        
+        .slider-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .right-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎵 AG06 AI Mixer - Real-Time Audio Streaming</h1>
+    </header>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="panel">
+                <div class="status-bar">
+                    <span id="status">Disconnected</span>
+                    <span id="connectionIndicator" class="connection-disconnected">Offline</span>
+                </div>
+                
+                <canvas id="audioVisualizer"></canvas>
+                
+                <div class="control-section">
+                    <h3>Connection</h3>
+                    <div class="button-group">
+                        <button id="connectBtn" onclick="handleConnect()">Connect</button>
+                        <button id="disconnectBtn" onclick="handleDisconnect()" disabled class="danger">Disconnect</button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>Room Management</h3>
+                    <div class="input-group">
+                        <input type="text" id="roomInput" placeholder="Enter room ID (or leave empty for new room)">
+                        <button id="joinRoomBtn" onclick="handleJoinRoom()" disabled>Join Room</button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>Audio Streaming</h3>
+                    <div class="button-group">
+                        <button id="publishBtn" onclick="handleStartPublishing()" disabled class="success">
+                            🎤 Start Broadcasting
+                        </button>
+                        <button id="subscribeBtn" onclick="handleStartSubscribing()" disabled>
+                            🎧 Listen to Stream
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="audio-controls">
+                    <h3>AI Mixing Settings</h3>
+                    <div class="slider-group">
+                        <label for="genreSelect">Genre Detection</label>
+                        <select id="genreSelect" onchange="updateGenre()">
+                            <option value="auto">Auto-Detect</option>
+                            <option value="speech">Speech/Podcast</option>
+                            <option value="rock">Rock</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="electronic">Electronic</option>
+                            <option value="classical">Classical</option>
+                        </select>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label for="gateThreshold">Noise Gate: <span id="gateValue">-40</span> dB</label>
+                        <input type="range" id="gateThreshold" min="-60" max="-20" value="-40" 
+                               oninput="updateSlider('gate', this.value)">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label for="compRatio">Compression: <span id="compValue">4</span>:1</label>
+                        <input type="range" id="compRatio" min="1" max="20" value="4" 
+                               oninput="updateSlider('comp', this.value)">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label for="reverbMix">Reverb Mix: <span id="reverbValue">15</span>%</label>
+                        <input type="range" id="reverbMix" min="0" max="100" value="15" 
+                               oninput="updateSlider('reverb', this.value)">
+                    </div>
+                </div>
+                
+                <audio id="remoteAudio" autoplay></audio>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel">
+                <h3>Room Members</h3>
+                <ul id="membersList">
+                    <li>No members yet</li>
+                </ul>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Bitrate</div>
+                        <div class="stat-value" id="bitrate">0 kbps</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Latency</div>
+                        <div class="stat-value" id="latency">0 ms</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Packet Loss</div>
+                        <div class="stat-value" id="packetLoss">0%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Audio Level</div>
+                        <div class="stat-value" id="audioLevel">0 dB</div>
+                    </div>
+                </div>
+                
+                <div id="errorMessage" class="message"></div>
+                <div id="infoMessage" class="message"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="webrtc_client.js"></script>
+    <script>
+        let client = null;
+        let statsInterval = null;
+        
+        async function handleConnect() {
+            if (!client) {
+                client = new AudioStreamingClient();
+            }
+            
+            try {
+                await client.connect();
+                
+                // Update UI
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                document.getElementById('joinRoomBtn').disabled = false;
+                
+                // Start stats monitoring
+                startStatsMonitoring();
+                
+            } catch (error) {
+                console.error('Connection failed:', error);
+                alert('Failed to connect: ' + error.message);
+            }
+        }
+        
+        async function handleDisconnect() {
+            if (client) {
+                await client.disconnect();
+                client = null;
+            }
+            
+            // Update UI
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('disconnectBtn').disabled = true;
+            document.getElementById('joinRoomBtn').disabled = true;
+            document.getElementById('publishBtn').disabled = true;
+            document.getElementById('subscribeBtn').disabled = true;
+            
+            // Stop stats monitoring
+            if (statsInterval) {
+                clearInterval(statsInterval);
+                statsInterval = null;
+            }
+        }
+        
+        async function handleJoinRoom() {
+            const roomId = document.getElementById('roomInput').value || 
+                          'room-' + Math.random().toString(36).substr(2, 9);
+            
+            try {
+                await client.joinRoom(roomId);
+                
+                // Update UI
+                document.getElementById('roomInput').value = roomId;
+                document.getElementById('publishBtn').disabled = false;
+                document.getElementById('subscribeBtn').disabled = false;
+                
+            } catch (error) {
+                console.error('Failed to join room:', error);
+                alert('Failed to join room: ' + error.message);
+            }
+        }
+        
+        async function handleStartPublishing() {
+            try {
+                await client.startPublishing();
+                
+                // Update UI
+                document.getElementById('publishBtn').disabled = true;
+                document.getElementById('subscribeBtn').disabled = true;
+                
+            } catch (error) {
+                console.error('Failed to start publishing:', error);
+                alert('Failed to start publishing: ' + error.message);
+            }
+        }
+        
+        async function handleStartSubscribing() {
+            try {
+                await client.startSubscribing();
+                
+                // Update UI
+                document.getElementById('subscribeBtn').disabled = true;
+                document.getElementById('publishBtn').disabled = true;
+                
+            } catch (error) {
+                console.error('Failed to start subscribing:', error);
+                alert('Failed to subscribe: ' + error.message);
+            }
+        }
+        
+        function updateGenre() {
+            const genre = document.getElementById('genreSelect').value;
+            if (client) {
+                client.updateAudioSettings({ genre });
+            }
+        }
+        
+        function updateSlider(type, value) {
+            const displays = {
+                'gate': 'gateValue',
+                'comp': 'compValue',
+                'reverb': 'reverbValue'
+            };
+            
+            const element = document.getElementById(displays[type]);
+            if (element) {
+                if (type === 'gate') {
+                    element.textContent = value;
+                } else if (type === 'comp') {
+                    element.textContent = value;
+                } else if (type === 'reverb') {
+                    element.textContent = value;
+                }
+            }
+            
+            // Send to server
+            if (client) {
+                const settings = {};
+                settings[type] = parseFloat(value);
+                client.updateAudioSettings(settings);
+            }
+        }
+        
+        function startStatsMonitoring() {
+            statsInterval = setInterval(async () => {
+                if (client && client.peerConnection) {
+                    const stats = await client.getAudioStats();
+                    if (stats) {
+                        updateStatsDisplay(stats);
+                    }
+                }
+            }, 1000);
+        }
+        
+        function updateStatsDisplay(stats) {
+            if (stats.inbound) {
+                const bitrate = Math.round((stats.inbound.bytesReceived * 8) / 1000);
+                document.getElementById('bitrate').textContent = bitrate + ' kbps';
+                
+                const jitter = Math.round(stats.inbound.jitter * 1000);
+                document.getElementById('latency').textContent = jitter + ' ms';
+                
+                const loss = stats.inbound.packetsLost / 
+                           (stats.inbound.packetsReceived + stats.inbound.packetsLost) * 100;
+                document.getElementById('packetLoss').textContent = loss.toFixed(1) + '%';
+                
+                if (stats.inbound.audioLevel !== undefined) {
+                    const level = Math.round(20 * Math.log10(stats.inbound.audioLevel));
+                    document.getElementById('audioLevel').textContent = level + ' dB';
+                }
+            } else if (stats.outbound) {
+                const bitrate = Math.round((stats.outbound.bytesSent * 8) / 1000);
+                document.getElementById('bitrate').textContent = bitrate + ' kbps';
+                
+                if (stats.outbound.audioLevel !== undefined) {
+                    const level = Math.round(20 * Math.log10(stats.outbound.audioLevel));
+                    document.getElementById('audioLevel').textContent = level + ' dB';
+                }
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for WebRTC support
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Your browser does not support WebRTC audio streaming.');
+                document.getElementById('connectBtn').disabled = true;
+            }
+            
+            // Request microphone permission early (optional)
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'microphone' }).then(result => {
+                    if (result.state === 'denied') {
+                        alert('Microphone access is denied. Please enable it in your browser settings.');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

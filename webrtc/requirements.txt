@@ -1,0 +1,22 @@
+# WebRTC Audio Streaming Requirements
+
+# Core WebRTC
+aiortc>=1.6.0
+av>=10.0.0
+
+# Web Server
+aiohttp>=3.9.0
+aiohttp-cors>=0.7.0
+python-socketio>=5.10.0
+aioredis>=2.0.0
+
+# Audio Processing (already in main requirements)
+numpy>=1.21.0
+scipy>=1.7.0
+
+# Optional: For advanced audio analysis
+librosa>=0.10.0
+
+# Development/Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
