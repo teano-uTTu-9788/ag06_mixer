@@ -1,0 +1,31 @@
+# ML Model Optimization Requirements
+
+# Core ML Libraries
+tensorflow>=2.13.0           # TensorFlow for model creation and TFLite conversion
+tensorflow-lite>=2.13.0      # TensorFlow Lite for mobile optimization
+onnx>=1.14.0                 # ONNX format support
+onnxruntime>=1.15.0          # ONNX inference runtime
+onnxoptimizer>=0.3.0         # ONNX model optimization
+
+# Traditional ML (lightweight alternative)
+scikit-learn>=1.3.0         # Lightweight ML models
+joblib>=1.3.0               # Model serialization
+
+# Audio Processing
+numpy>=1.21.0               # Already in main requirements
+scipy>=1.7.0                # Already in main requirements
+librosa>=0.10.0             # Advanced audio feature extraction (optional)
+
+# Performance and Utilities
+threading-extensions>=0.1.0  # Enhanced threading utilities (optional)
+psutil>=5.9.0               # System monitoring
+memory-profiler>=0.60.0     # Memory usage profiling (optional)
+
+# Model Quantization (advanced)
+tensorflow-model-optimization>=0.7.0  # Advanced TensorFlow optimization
+neural-compressor>=2.0      # Intel Neural Compressor (optional)
+
+# Development and Testing
+pytest>=7.0.0
+pytest-benchmark>=4.0.0     # Performance benchmarking
+matplotlib>=3.5.0           # Visualization for model analysis
