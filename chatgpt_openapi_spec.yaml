@@ -14,7 +14,7 @@ info:
     url: http://localhost:8090/docs
 
 servers:
-  - url: https://olive-animals-watch.loca.lt
+  - url: https://ag06-chatgpt.loca.lt
     description: Public tunnel endpoint (LIVE - ready for ChatGPT)
   - url: http://localhost:8090
     description: Local development server

@@ -3,7 +3,7 @@
 ## ✅ System Status: LIVE AND READY
 
 **🚀 Enterprise API Server:** Running on port 8090  
-**🌐 Public Tunnel:** https://olive-animals-watch.loca.lt  
+**🌐 Public Tunnel:** https://ag06-chatgpt.loca.lt  
 **🔑 API Token:** `cgt_9374d891cc8d42d78987583378c71bb3`  
 **📋 OpenAPI Spec:** Updated with live URL  
 
@@ -61,7 +61,7 @@ When users ask you to run code:
 
 ### 4. Server Configuration
 The OpenAPI spec is already configured with:
-- **Live Server URL:** `https://olive-animals-watch.loca.lt`
+- **Live Server URL:** `https://ag06-chatgpt.loca.lt`
 - All endpoints properly defined
 - Authentication configured
 
@@ -109,8 +109,8 @@ After setup, your Custom GPT will:
 
 ## 🌐 Live URLs
 
-- **API Base:** https://olive-animals-watch.loca.lt
-- **Health Check:** https://olive-animals-watch.loca.lt/health
+- **API Base:** https://ag06-chatgpt.loca.lt
+- **Health Check:** https://ag06-chatgpt.loca.lt/health
 - **Local Server:** http://localhost:8090
 
 ## 🎉 Ready for ChatGPT Integration!
