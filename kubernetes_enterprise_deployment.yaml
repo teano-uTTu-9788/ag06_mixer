@@ -1,0 +1,435 @@
+# Kubernetes Enterprise Deployment - Google GKE Best Practices
+# Following Google's production deployment patterns
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chatgpt-enterprise
+  labels:
+    name: chatgpt-enterprise
+    tier: production
+    managed-by: kubernetes
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatgpt-config
+  namespace: chatgpt-enterprise
+data:
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+  RATE_LIMIT_REQUESTS: "100"
+  RATE_LIMIT_WINDOW: "60"
+  CIRCUIT_BREAKER_THRESHOLD: "5"
+  CIRCUIT_BREAKER_TIMEOUT: "60"
+  FEATURE_FLAGS: |
+    {
+      "enhanced_security": {"enabled": true, "rollout_percent": 100},
+      "streaming_response": {"enabled": true, "rollout_percent": 100},
+      "advanced_telemetry": {"enabled": true, "rollout_percent": 100},
+      "chaos_engineering": {"enabled": false, "rollout_percent": 0}
+    }
+
+---
+# Secret for sensitive configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: chatgpt-secrets
+  namespace: chatgpt-enterprise
+type: Opaque
+data:
+  # Base64 encoded values - replace with actual secrets
+  CHATGPT_API_TOKEN: Y2d0XzEyMzQ1Njc4OTA= # cgt_1234567890
+  API_SECRET_KEY: c2VjcmV0XzEyMzQ1Njc4OTA= # secret_1234567890
+  JAEGER_ENDPOINT: aHR0cDovL2phZWdlcjoxNDI2OA== # http://jaeger:14268
+
+---
+# Deployment with Google best practices
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatgpt-api
+  namespace: chatgpt-enterprise
+  labels:
+    app: chatgpt-api
+    version: v2025.1
+    component: api-server
+spec:
+  replicas: 3 # High availability
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: chatgpt-api
+  template:
+    metadata:
+      labels:
+        app: chatgpt-api
+        version: v2025.1
+        component: api-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8090"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: chatgpt-api
+        image: chatgpt-enterprise:2025.1 # Build and push your image
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8090
+          name: http
+          protocol: TCP
+        env:
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: chatgpt-config
+              key: APP_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: chatgpt-config
+              key: LOG_LEVEL
+        - name: CHATGPT_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: chatgpt-secrets
+              key: CHATGPT_API_TOKEN
+        - name: API_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chatgpt-secrets
+              key: API_SECRET_KEY
+        - name: JAEGER_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: chatgpt-secrets
+              key: JAEGER_ENDPOINT
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        # Google SRE: Resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        # Volume mounts for temporary files
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: code-execution-tmp
+          mountPath: /app/tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: code-execution-tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      # Google: Pod topology spread
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: chatgpt-api
+
+---
+# Service for load balancing
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatgpt-api-service
+  namespace: chatgpt-enterprise
+  labels:
+    app: chatgpt-api
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb # For AWS
+    cloud.google.com/load-balancer-type: External # For GCP
+spec:
+  type: LoadBalancer
+  selector:
+    app: chatgpt-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8090
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 8090
+    protocol: TCP
+
+---
+# HorizontalPodAutoscaler - Google best practice
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: chatgpt-api-hpa
+  namespace: chatgpt-enterprise
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: chatgpt-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+
+---
+# PodDisruptionBudget - Google reliability pattern
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chatgpt-api-pdb
+  namespace: chatgpt-enterprise
+spec:
+  selector:
+    matchLabels:
+      app: chatgpt-api
+  maxUnavailable: 1
+
+---
+# NetworkPolicy for security - Google security best practice
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: chatgpt-api-netpol
+  namespace: chatgpt-enterprise
+spec:
+  podSelector:
+    matchLabels:
+      app: chatgpt-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8090
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+
+---
+# ServiceMonitor for Prometheus - Google observability
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: chatgpt-api-metrics
+  namespace: chatgpt-enterprise
+  labels:
+    app: chatgpt-api
+spec:
+  selector:
+    matchLabels:
+      app: chatgpt-api
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+# Ingress with TLS - Google security best practice
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chatgpt-api-ingress
+  namespace: chatgpt-enterprise
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://chat.openai.com,https://chatgpt.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+spec:
+  tls:
+  - hosts:
+    - chatgpt-api.yourdomain.com
+    secretName: chatgpt-api-tls
+  rules:
+  - host: chatgpt-api.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chatgpt-api-service
+            port:
+              number: 80
+
+---
+# PrometheusRule for alerting - Google SRE pattern
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: chatgpt-api-alerts
+  namespace: chatgpt-enterprise
+  labels:
+    app: chatgpt-api
+spec:
+  groups:
+  - name: chatgpt-api.rules
+    rules:
+    # SLO: 99.9% availability
+    - alert: ChatGPTAPIHighErrorRate
+      expr: |
+        (
+          sum(rate(chatgpt_api_requests_total{status!~"2.."}[5m]))
+          /
+          sum(rate(chatgpt_api_requests_total[5m]))
+        ) > 0.001
+      for: 5m
+      labels:
+        severity: critical
+        service: chatgpt-api
+      annotations:
+        summary: "ChatGPT API error rate is above SLO"
+        description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+    # SLO: 95% of requests under 1s
+    - alert: ChatGPTAPIHighLatency
+      expr: |
+        histogram_quantile(0.95, rate(chatgpt_api_request_duration_seconds_bucket[5m])) > 1.0
+      for: 10m
+      labels:
+        severity: warning
+        service: chatgpt-api
+      annotations:
+        summary: "ChatGPT API latency is above SLO"
+        description: "95th percentile latency is {{ $value }}s for the last 10 minutes"
+
+    # Circuit breaker open
+    - alert: ChatGPTCircuitBreakerOpen
+      expr: chatgpt_circuit_breaker_state == 2
+      for: 1m
+      labels:
+        severity: critical
+        service: chatgpt-api
+      annotations:
+        summary: "ChatGPT API circuit breaker is open"
+        description: "Circuit breaker has been open for more than 1 minute"
+
+    # High memory usage
+    - alert: ChatGPTAPIHighMemoryUsage
+      expr: |
+        (
+          container_memory_working_set_bytes{container="chatgpt-api"}
+          /
+          container_spec_memory_limit_bytes{container="chatgpt-api"}
+        ) > 0.9
+      for: 10m
+      labels:
+        severity: warning
+        service: chatgpt-api
+      annotations:
+        summary: "ChatGPT API high memory usage"
+        description: "Memory usage is {{ $value | humanizePercentage }} of limit"
+
+    # Pod restart rate
+    - alert: ChatGPTAPIPodRestarts
+      expr: |
+        increase(kube_pod_container_status_restarts_total{container="chatgpt-api"}[1h]) > 3
+      for: 0m
+      labels:
+        severity: warning
+        service: chatgpt-api
+      annotations:
+        summary: "ChatGPT API pod restarting frequently"
+        description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last hour"
