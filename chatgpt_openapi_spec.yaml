@@ -14,10 +14,10 @@ info:
     url: http://localhost:8090/docs
 
 servers:
+  - url: https://olive-animals-watch.loca.lt
+    description: Public tunnel endpoint (LIVE - ready for ChatGPT)
   - url: http://localhost:8090
     description: Local development server
-  - url: https://your-tunnel-domain.ngrok.io
-    description: Public tunnel endpoint (replace with your actual tunnel URL)
 
 security:
   - ApiKeyAuth: []
