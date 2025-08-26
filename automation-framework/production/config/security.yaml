@@ -1,0 +1,20 @@
+network_policies:
+  default_deny: true
+  egress_rules:
+  - dns
+  - https
+  enabled: true
+rbac:
+  enabled: true
+  least_privilege: true
+  service_accounts:
+  - ag06-app
+  - ag06-monitor
+secrets_management:
+  encryption_at_rest: true
+  rotation_enabled: true
+  vault_enabled: true
+security_scanning:
+  compliance_scanning: true
+  container_scanning: true
+  vulnerability_scanning: true

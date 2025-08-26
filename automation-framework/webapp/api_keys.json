@@ -1,0 +1,14 @@
+{
+  "ag06_vkfabLsOab8mrnAI8UUeRxXhG60lOPyqW1uw2seGZ7s": {
+    "user_id": "demo",
+    "api_key_hash": "25ae8bb9510fd0998da36f4b4c13fc7842d984aba67ba236eeac8ad9d39d33b9",
+    "permissions": [
+      "read",
+      "write"
+    ],
+    "created_at": "2025-08-25T10:18:53.990112",
+    "last_used": "2025-08-25T10:58:55.947934",
+    "usage_count": 1,
+    "active": true
+  }
+}

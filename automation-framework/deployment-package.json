@@ -1,0 +1,16 @@
+{
+  "name": "ag06mixer-production-deployment",
+  "version": "1.0.0",
+  "description": "Complete production deployment package for AG06 Mixer Enterprise",
+  "generated_at": "2025-08-25T01:03:46.911567",
+  "deployment_id": "real-deploy-1756058626",
+  "target_domain": "ag06mixer.com",
+  "cloud_provider": "AWS",
+  "region": "us-east-1",
+  "components": {
+    "terraform_files": 8,
+    "kubernetes_manifests": 9,
+    "deployment_scripts": 4,
+    "documentation_files": 3
+  }
+}

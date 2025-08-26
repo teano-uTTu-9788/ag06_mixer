@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AiOke">
+    <link rel="manifest" href="/manifest.json">
+    <title>AiOke - AI Karaoke System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #4ade80, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Search Section */
+        .search-section {
+            padding: 20px;
+        }
+        
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            outline: none;
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        .voice-btn {
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0,0,0,0.2);
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .voice-btn.listening {
+            background: #ef4444;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        
+        /* Player Section */
+        .player-section {
+            padding: 0 20px 20px;
+            display: none;
+        }
+        
+        .player-section.active {
+            display: block;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            background: black;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        #player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .now-playing {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .song-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .song-info {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        /* Mixer Controls */
+        .mixer-section {
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .mixer-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .effects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .effect-btn {
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .effect-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .effect-btn.active {
+            background: linear-gradient(135deg, #4ade80, #3b82f6);
+            border-color: transparent;
+        }
+        
+        .slider-container {
+            margin: 15px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        /* Results Section */
+        .results-section {
+            padding: 20px;
+            display: none;
+        }
+        
+        .results-section.active {
+            display: block;
+        }
+        
+        .results-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .video-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        
+        .video-card:active {
+            transform: scale(0.98);
+        }
+        
+        .video-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+        }
+        
+        .video-info {
+            padding: 12px;
+        }
+        
+        .video-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .video-channel {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        /* Queue Section */
+        .queue-section {
+            padding: 20px;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .queue-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .queue-item {
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .effects-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logo {
+                font-size: 24px;
+            }
+        }
+        
+        /* iPad optimizations */
+        @supports (-webkit-touch-callout: none) {
+            .search-input {
+                font-size: 16px; /* Prevents zoom on focus */
+            }
+            
+            .effect-btn {
+                -webkit-user-select: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">🎤 AiOke</div>
+            <div class="status">
+                <span class="status-dot"></span>
+                <span id="statusText">Connected</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-container">
+            <input type="text" 
+                   class="search-input" 
+                   id="searchInput" 
+                   placeholder="Search for a song to sing..."
+                   autocomplete="off">
+            <button class="voice-btn" id="voiceBtn" title="Voice search">🎙️</button>
+            <button class="search-btn" id="searchBtn">🔍</button>
+        </div>
+    </div>
+    
+    <!-- Player Section -->
+    <div class="player-section" id="playerSection">
+        <div class="video-container">
+            <div id="player"></div>
+        </div>
+        <div class="now-playing">
+            <div class="song-title" id="nowPlayingTitle">No song playing</div>
+            <div class="song-info" id="nowPlayingInfo">Select a song to start</div>
+        </div>
+    </div>
+    
+    <!-- Mixer Controls -->
+    <div class="mixer-section">
+        <div class="mixer-title">🎛️ AI Mixer Controls</div>
+        
+        <div class="effects-grid">
+            <button class="effect-btn" data-effect="reverb">🎵 Reverb</button>
+            <button class="effect-btn" data-effect="no_vocals">🚫 No Vocals</button>
+            <button class="effect-btn" data-effect="party">🎉 Party</button>
+            <button class="effect-btn" data-effect="clean">🔄 Reset</button>
+        </div>
+        
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>🎤 Reverb</span>
+                <span id="reverbValue">30%</span>
+            </div>
+            <input type="range" class="slider" id="reverbSlider" min="0" max="100" value="30">
+        </div>
+        
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>🔊 Bass Boost</span>
+                <span id="bassValue">0%</span>
+            </div>
+            <input type="range" class="slider" id="bassSlider" min="0" max="100" value="0">
+        </div>
+        
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>👤 Vocal Reduction</span>
+                <span id="vocalValue">50%</span>
+            </div>
+            <input type="range" class="slider" id="vocalSlider" min="0" max="100" value="50">
+        </div>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Searching for karaoke videos...</div>
+    </div>
+    
+    <!-- Results Section -->
+    <div class="results-section" id="resultsSection">
+        <div class="results-title">🎵 Select a Song</div>
+        <div class="video-grid" id="videoGrid"></div>
+    </div>
+    
+    <!-- Queue Section -->
+    <div class="queue-section">
+        <div class="queue-title">📋 Up Next</div>
+        <div class="queue-list" id="queueList">
+            <div class="queue-item">Queue is empty</div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <script>
+        // Configuration
+        const API_BASE = window.location.origin;
+        
+        // State
+        let player = null;
+        let currentVideoId = null;
+        let isListening = false;
+        let recognition = null;
+        let connectionStatus = true;
+        let queue = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+        
+        async function init() {
+            // Check connection
+            await checkConnection();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Setup voice recognition
+            setupVoiceRecognition();
+            
+            // Load initial mixer settings
+            await loadMixerSettings();
+            
+            // Check for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js');
+            }
+            
+            // Update stats periodically
+            setInterval(updateStats, 30000);
+        }
+        
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    connectionStatus = true;
+                    updateStatus('Connected', true);
+                    
+                    // Show if in demo mode
+                    if (!data.youtube_api) {
+                        showNotification('Running in demo mode - YouTube API not configured');
+                    }
+                } else {
+                    connectionStatus = false;
+                    updateStatus('Connection Error', false);
+                }
+            } catch (error) {
+                connectionStatus = false;
+                updateStatus('Offline', false);
+            }
+        }
+        
+        function setupEventListeners() {
+            // Search
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performSearch();
+            });
+            
+            // Voice
+            document.getElementById('voiceBtn').addEventListener('click', toggleVoice);
+            
+            // Effects
+            document.querySelectorAll('.effect-btn').forEach(btn => {
+                btn.addEventListener('click', () => applyEffect(btn.dataset.effect));
+            });
+            
+            // Sliders
+            setupSlider('reverb');
+            setupSlider('bass');
+            setupSlider('vocal');
+        }
+        
+        function setupSlider(name) {
+            const slider = document.getElementById(`${name}Slider`);
+            const value = document.getElementById(`${name}Value`);
+            
+            slider.addEventListener('input', () => {
+                value.textContent = slider.value + '%';
+                updateMixerSetting(name, slider.value / 100);
+            });
+        }
+        
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/youtube/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResults(data.results);
+                    
+                    // Track search
+                    trackEvent('search', query);
+                } else {
+                    showNotification('Search failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                showNotification('Search error. Check connection.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function displayResults(results) {
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '';
+            
+            if (!results || results.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; padding: 40px;">No results found</div>';
+                return;
+            }
+            
+            results.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.onclick = () => playVideo(video);
+                
+                card.innerHTML = `
+                    <img src="${video.thumbnail}" alt="${video.title}" class="video-thumbnail">
+                    <div class="video-info">
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-channel">${video.channel}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            document.getElementById('resultsSection').classList.add('active');
+        }
+        
+        async function playVideo(video) {
+            currentVideoId = video.video_id;
+            
+            // Show player section
+            document.getElementById('playerSection').classList.add('active');
+            
+            // Update now playing
+            document.getElementById('nowPlayingTitle').textContent = video.title;
+            document.getElementById('nowPlayingInfo').textContent = video.channel;
+            
+            // Initialize or update player
+            if (!player) {
+                createPlayer(video.video_id);
+            } else {
+                player.loadVideoById(video.video_id);
+            }
+            
+            // Add to queue and apply AI mix
+            try {
+                const response = await fetch(`${API_BASE}/api/youtube/queue`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        video_id: video.video_id,
+                        title: video.title
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateMixerFromSettings(data.mixer_settings);
+                    showNotification('AI mix applied for this song');
+                }
+            } catch (error) {
+                console.error('Queue error:', error);
+            }
+            
+            // Track play
+            trackEvent('play', video.title);
+            
+            // Scroll to player
+            document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function createPlayer(videoId) {
+            player = new YT.Player('player', {
+                height: '100%',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'autoplay': 1,
+                    'playsinline': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+        
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
+        
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.ENDED) {
+                // Play next in queue if available
+                if (queue.length > 0) {
+                    const next = queue.shift();
+                    playVideo(next);
+                }
+            }
+        }
+        
+        async function applyEffect(effect) {
+            try {
+                const response = await fetch(`${API_BASE}/api/effects`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ effect })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateMixerFromSettings(data.settings);
+                    
+                    // Update button states
+                    document.querySelectorAll('.effect-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.effect === effect);
+                    });
+                    
+                    showNotification(`${effect.replace('_', ' ')} applied`);
+                }
+            } catch (error) {
+                console.error('Effect error:', error);
+            }
+        }
+        
+        async function updateMixerSetting(name, value) {
+            const settings = {};
+            
+            if (name === 'reverb') settings.reverb = value;
+            if (name === 'bass') settings.bass_boost = value;
+            if (name === 'vocal') settings.vocal_reduction = value;
+            
+            try {
+                await fetch(`${API_BASE}/api/mix`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+            } catch (error) {
+                console.error('Mixer update error:', error);
+            }
+        }
+        
+        async function loadMixerSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/api/mix`);
+                if (response.ok) {
+                    const settings = await response.json();
+                    updateMixerFromSettings(settings);
+                }
+            } catch (error) {
+                console.error('Load settings error:', error);
+            }
+        }
+        
+        function updateMixerFromSettings(settings) {
+            // Update sliders
+            document.getElementById('reverbSlider').value = settings.reverb * 100;
+            document.getElementById('reverbValue').textContent = Math.round(settings.reverb * 100) + '%';
+            
+            document.getElementById('bassSlider').value = settings.bass_boost * 100;
+            document.getElementById('bassValue').textContent = Math.round(settings.bass_boost * 100) + '%';
+            
+            document.getElementById('vocalSlider').value = settings.vocal_reduction * 100;
+            document.getElementById('vocalValue').textContent = Math.round(settings.vocal_reduction * 100) + '%';
+        }
+        
+        function setupVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                console.log('Voice recognition not supported');
+                return;
+            }
+            
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onresult = async (event) => {
+                const command = event.results[0][0].transcript;
+                document.getElementById('searchInput').value = command;
+                
+                // Process voice command
+                await processVoiceCommand(command);
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('Voice error:', event.error);
+                isListening = false;
+                updateVoiceButton(false);
+            };
+            
+            recognition.onend = () => {
+                isListening = false;
+                updateVoiceButton(false);
+            };
+        }
+        
+        function toggleVoice() {
+            if (!recognition) {
+                showNotification('Voice not supported on this device');
+                return;
+            }
+            
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+            } else {
+                recognition.start();
+                isListening = true;
+                showNotification('Listening...');
+            }
+            
+            updateVoiceButton(isListening);
+        }
+        
+        function updateVoiceButton(listening) {
+            const btn = document.getElementById('voiceBtn');
+            btn.classList.toggle('listening', listening);
+        }
+        
+        async function processVoiceCommand(command) {
+            try {
+                const response = await fetch(`${API_BASE}/api/voice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showNotification(data.response);
+                    
+                    // If it's a play command, search for the song
+                    if (command.toLowerCase().includes('play')) {
+                        performSearch();
+                    }
+                }
+            } catch (error) {
+                console.error('Voice command error:', error);
+            }
+        }
+        
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('active', show);
+        }
+        
+        function updateStatus(text, connected) {
+            document.getElementById('statusText').textContent = text;
+            document.querySelector('.status-dot').style.background = connected ? '#4ade80' : '#ef4444';
+        }
+        
+        async function updateStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                if (response.ok) {
+                    const stats = await response.json();
+                    console.log('Stats:', stats);
+                }
+            } catch (error) {
+                console.error('Stats error:', error);
+            }
+        }
+        
+        function trackEvent(action, label) {
+            // Simple event tracking
+            console.log('Event:', action, label);
+        }
+    </script>
+</body>
+</html>

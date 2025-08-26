@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: ag06-production
+  labels:
+    app.kubernetes.io/name: ag06
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: ag06-deployer
+    app.kubernetes.io/part-of: ag06-platform
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress

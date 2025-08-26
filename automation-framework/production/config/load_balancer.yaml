@@ -1,0 +1,13 @@
+algorithm: least_conn
+fail_timeout: 30
+health_check_interval: 10
+max_fails: 3
+rate_limiting:
+  burst: 100
+  requests_per_minute: 1000
+ssl_termination: true
+type: nginx
+upstream_servers:
+- ag06-app-1.internal:8080
+- ag06-app-2.internal:8080
+- ag06-app-3.internal:8080

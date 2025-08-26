@@ -1,0 +1,191 @@
+name: Deploy to Azure Container Apps
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINER_REGISTRY: ag06mixeracr
+  CONTAINER_APP_NAME: ag06-mixer-backend
+  CONTAINER_APP_ENV: ag06-mixer-env
+  RESOURCE_GROUP: ag06-mixer-rg
+  IMAGE_NAME: ag06-mixer
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # OIDC Authentication - No secrets needed!
+    - name: Azure Login with OIDC
+      uses: azure/login@v1
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Get ACR credentials
+      id: acr
+      run: |
+        ACR_LOGIN_SERVER=$(az acr show --name ${{ env.AZURE_CONTAINER_REGISTRY }} --query loginServer -o tsv)
+        echo "login_server=$ACR_LOGIN_SERVER" >> $GITHUB_OUTPUT
+        
+        # Get credentials for Docker login
+        ACR_USERNAME=$(az acr credential show --name ${{ env.AZURE_CONTAINER_REGISTRY }} --query username -o tsv)
+        ACR_PASSWORD=$(az acr credential show --name ${{ env.AZURE_CONTAINER_REGISTRY }} --query passwords[0].value -o tsv)
+        echo "::add-mask::$ACR_PASSWORD"
+        echo "username=$ACR_USERNAME" >> $GITHUB_OUTPUT
+        echo "password=$ACR_PASSWORD" >> $GITHUB_OUTPUT
+
+    - name: Login to Azure Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ steps.acr.outputs.login_server }}
+        username: ${{ steps.acr.outputs.username }}
+        password: ${{ steps.acr.outputs.password }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:latest
+          ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Deploy to Container Apps
+      run: |
+        az containerapp update \
+          --name ${{ env.CONTAINER_APP_NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --image ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+    - name: Get deployment URL
+      id: deploy
+      run: |
+        APP_URL=$(az containerapp show \
+          --name ${{ env.CONTAINER_APP_NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --query properties.configuration.ingress.fqdn -o tsv)
+        echo "app_url=https://$APP_URL" >> $GITHUB_OUTPUT
+
+    - name: Health check
+      run: |
+        echo "Waiting for deployment to be ready..."
+        sleep 30
+        
+        echo "Testing health endpoint..."
+        curl -f ${{ steps.deploy.outputs.app_url }}/health || exit 1
+        
+        echo "✅ Deployment successful!"
+        echo "🌐 Backend URL: ${{ steps.deploy.outputs.app_url }}"
+
+    - name: Create deployment summary
+      if: success()
+      run: |
+        echo "## 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📱 Backend API" >> $GITHUB_STEP_SUMMARY
+        echo "- **URL**: ${{ steps.deploy.outputs.app_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Health**: ${{ steps.deploy.outputs.app_url }}/health" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ steps.deploy.outputs.app_url }}/api/status" >> $GITHUB_STEP_SUMMARY
+        echo "- **SSE Stream**: ${{ steps.deploy.outputs.app_url }}/api/stream" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🏷️ Image Tags" >> $GITHUB_STEP_SUMMARY
+        echo "- `latest`" >> $GITHUB_STEP_SUMMARY
+        echo "- `${{ github.sha }}`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ⚡ Performance" >> $GITHUB_STEP_SUMMARY
+        echo "- Auto-scaling: 0-3 replicas" >> $GITHUB_STEP_SUMMARY
+        echo "- Resources: 0.25 vCPU, 0.5GB RAM" >> $GITHUB_STEP_SUMMARY
+        echo "- Scale to zero when idle" >> $GITHUB_STEP_SUMMARY
+
+  # Optional: Run tests after deployment
+  test-deployment:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install test dependencies
+      run: |
+        pip install requests pytest
+
+    - name: Get deployment URL
+      id: url
+      run: |
+        # Azure login for getting URL
+        az login --service-principal \
+          -u ${{ vars.AZURE_CLIENT_ID }} \
+          -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+          --tenant ${{ vars.AZURE_TENANT_ID }}
+        
+        APP_URL=$(az containerapp show \
+          --name ${{ env.CONTAINER_APP_NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --query properties.configuration.ingress.fqdn -o tsv)
+        echo "app_url=https://$APP_URL" >> $GITHUB_OUTPUT
+
+    - name: Run integration tests
+      run: |
+        cat > test_deployment.py << 'EOF'
+        import requests
+        import time
+        
+        def test_health_endpoint():
+            response = requests.get(f"${{ steps.url.outputs.app_url }}/health")
+            assert response.status_code == 200
+            data = response.json()
+            assert data['status'] == 'healthy'
+        
+        def test_status_endpoint():
+            response = requests.get(f"${{ steps.url.outputs.app_url }}/api/status")
+            assert response.status_code == 200
+            data = response.json()
+            assert 'processing' in data
+            assert 'cloud' in data
+        
+        def test_spectrum_endpoint():
+            response = requests.get(f"${{ steps.url.outputs.app_url }}/api/spectrum")
+            assert response.status_code == 200
+            data = response.json()
+            assert 'spectrum' in data
+            assert len(data['spectrum']) == 64
+        
+        if __name__ == "__main__":
+            test_health_endpoint()
+            print("✅ Health endpoint test passed")
+            
+            test_status_endpoint()
+            print("✅ Status endpoint test passed")
+            
+            test_spectrum_endpoint()
+            print("✅ Spectrum endpoint test passed")
+            
+            print("\n🎉 All integration tests passed!")
+        EOF
+        
+        python test_deployment.py

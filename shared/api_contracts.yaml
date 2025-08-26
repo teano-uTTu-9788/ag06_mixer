@@ -1,0 +1,118 @@
+# AI Mixer Mobile API Contracts
+# Shared specification for all instances to follow
+
+api_version: "1.0.0"
+base_url: "https://api.aimixer.com/mobile/v1"
+
+authentication:
+  type: "bearer_token"
+  header: "Authorization: Bearer {token}"
+  
+endpoints:
+  # Real-time audio processing
+  process_audio:
+    path: "/process"
+    method: "POST"
+    request:
+      content_type: "application/octet-stream"
+      max_size_bytes: 1048576  # 1MB
+      sample_rate: 48000
+      frame_size: 960
+    response:
+      content_type: "application/json"
+      schema:
+        processed_buffer: "base64"
+        metrics:
+          peak_db: "number"
+          rms_db: "number"
+          lufs: "number"
+          genre: "string"
+          confidence: "number"
+    
+  # Streaming audio
+  stream_audio:
+    path: "/stream"
+    method: "WebSocket"
+    protocol: "wss"
+    message_format:
+      input:
+        type: "binary"
+        chunk_size: 960
+      output:
+        type: "json"
+        schema:
+          timestamp: "number"
+          processed_chunk: "base64"
+          metrics: "object"
+    
+  # User session management
+  create_session:
+    path: "/session"
+    method: "POST"
+    request:
+      device_id: "string"
+      platform: "ios|android"
+      app_version: "string"
+    response:
+      session_id: "string"
+      token: "string"
+      expires_at: "timestamp"
+      
+  # User preferences
+  get_preferences:
+    path: "/preferences"
+    method: "GET"
+    response:
+      genre_preference: "string"
+      dsp_settings:
+        noise_gate: "object"
+        compressor: "object"
+        eq: "object"
+        limiter: "object"
+        
+  update_preferences:
+    path: "/preferences"
+    method: "PUT"
+    request:
+      genre_preference: "string"
+      dsp_settings: "object"
+      
+  # Subscription management
+  get_subscription:
+    path: "/subscription"
+    method: "GET"
+    response:
+      tier: "free|pro|studio"
+      expires_at: "timestamp"
+      features: "array"
+      
+  # Analytics (anonymized)
+  track_usage:
+    path: "/analytics/usage"
+    method: "POST"
+    request:
+      session_duration: "number"
+      genres_processed: "array"
+      features_used: "array"
+      
+# Error responses
+error_codes:
+  400: "Bad Request - Invalid audio format"
+  401: "Unauthorized - Invalid token"
+  402: "Payment Required - Subscription needed"
+  413: "Payload Too Large - Audio file exceeds limit"
+  429: "Too Many Requests - Rate limit exceeded"
+  500: "Internal Server Error"
+  503: "Service Unavailable - Maintenance mode"
+
+# Rate limiting
+rate_limits:
+  free_tier:
+    requests_per_minute: 60
+    processing_minutes_per_day: 30
+  pro_tier:
+    requests_per_minute: 300
+    processing_minutes_per_day: 480
+  studio_tier:
+    requests_per_minute: 1000
+    processing_minutes_per_day: "unlimited"

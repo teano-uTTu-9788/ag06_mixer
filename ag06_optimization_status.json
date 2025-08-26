@@ -1,11 +1,11 @@
 {
   "running": true,
   "metrics_count": 100,
-  "optimizations": 5553,
+  "optimizations": 454,
   "last_metric": {
-    "timestamp": "2025-08-19T15:58:49.370343",
-    "cpu_percent": 31.3,
-    "memory_percent": 62.5,
+    "timestamp": "2025-08-24T20:47:30.942829",
+    "cpu_percent": 94.0,
+    "memory_percent": 80.7,
     "status": "needs_optimization"
   }
 }

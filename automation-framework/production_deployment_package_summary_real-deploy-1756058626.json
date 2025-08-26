@@ -1,0 +1,41 @@
+{
+  "deployment_metadata": {
+    "deployment_id": "real-deploy-1756058626",
+    "generated_at": "2025-08-25T01:03:46.917482",
+    "target_domain": "ag06mixer.com",
+    "cloud_provider": "AWS",
+    "region": "us-east-1",
+    "environment": "production"
+  },
+  "generated_files": [
+    "infrastructure/main.tf",
+    "infrastructure/vpc.tf",
+    "infrastructure/dns-ssl.tf",
+    "infrastructure/eks.tf",
+    "infrastructure/rds.tf",
+    "infrastructure/load-balancer.tf",
+    "infrastructure/outputs.tf",
+    "infrastructure/variables.tf",
+    "k8s-manifests/01-namespace.yaml",
+    "k8s-manifests/02-configmap.yaml",
+    "k8s-manifests/03-secrets.yaml",
+    "k8s-manifests/04-rbac.yaml",
+    "k8s-manifests/05-deployment.yaml",
+    "k8s-manifests/06-service.yaml",
+    "k8s-manifests/07-ingress.yaml",
+    "k8s-manifests/08-hpa.yaml",
+    "k8s-manifests/09-network-policy.yaml",
+    "deployment-scripts/deploy.sh",
+    "deployment-scripts/setup-infrastructure.sh",
+    "deployment-scripts/cleanup.sh",
+    "deployment-scripts/setup-monitoring.sh",
+    "deployment-docs/README.md",
+    "deployment-docs/INFRASTRUCTURE.md",
+    "deployment-docs/KUBERNETES.md",
+    "deployment-package.json",
+    "DEPLOYMENT_CHECKLIST.md",
+    "PRODUCTION_READINESS_CHECKLIST.md"
+  ],
+  "total_files": 27,
+  "deployment_ready": true
+}

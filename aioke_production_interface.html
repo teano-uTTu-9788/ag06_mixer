@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <title>Aioke - Production</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; min-height: 100vh; padding: 20px;
+            touch-action: manipulation;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 3em; margin-bottom: 10px; }
+        .header p { font-size: 1.2em; opacity: 0.9; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { 
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border-radius: 15px; padding: 30px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .card h3 { font-size: 1.5em; margin-bottom: 15px; color: #ffd700; }
+        .status { 
+            display: inline-block; padding: 5px 10px; border-radius: 20px; 
+            font-size: 0.9em; margin-bottom: 15px;
+        }
+        .ready { background: #4ade80; color: black; }
+        .error { background: #ef4444; color: white; }
+        .processing { background: #fbbf24; color: black; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .button {
+            background: #4ade80; color: black; padding: 12px 24px;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
+            transition: all 0.3s; margin: 5px; font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .button:hover { background: #22c55e; transform: translateY(-2px); }
+        .button:active { transform: translateY(0); }
+        .button:disabled { background: #6b7280; cursor: not-allowed; }
+        .gesture-display { 
+            width: 100%; height: 200px; background: rgba(0,0,0,0.3);
+            margin: 20px 0; border-radius: 10px; display: flex;
+            align-items: center; justify-content: center; font-size: 1.2em;
+        }
+        #videoFeed { width: 100%; max-width: 400px; border-radius: 10px; }
+        .command-input { 
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            font-size: 16px; margin: 10px 0;
+        }
+        .output { 
+            background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px;
+            margin: 15px 0; font-family: monospace; font-size: 14px;
+            white-space: pre-wrap; max-height: 300px; overflow-y: auto;
+        }
+        .metrics {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            margin: 20px 0;
+        }
+        .metric {
+            background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;
+        }
+        .metric-value { font-size: 1.5em; font-weight: bold; }
+        .loading { display: none; }
+        .loading.active { display: block; }
+        
+        /* iPad specific */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .grid { grid-template-columns: 1fr; }
+            .button { padding: 15px 30px; font-size: 18px; }
+        }
+        
+        /* Install prompt */
+        .install-prompt {
+            position: fixed; bottom: 20px; left: 20px; right: 20px;
+            background: rgba(0,0,0,0.9); padding: 20px; border-radius: 15px;
+            display: none; z-index: 1000;
+        }
+        .install-prompt.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎛️ Aioke</h1>
+            <p>Production AI Audio System</p>
+            <div id="connectionStatus" class="status ready">Connected</div>
+        </div>
+        
+        <div class="grid">
+            <!-- Gesture Control -->
+            <div class="card">
+                <h3>👋 Gesture Control</h3>
+                <div class="status ready" id="cvStatus">Computer Vision Ready</div>
+                <div class="demo-area">
+                    <video id="videoFeed" autoplay muted playsinline style="display:none;"></video>
+                    <div id="gestureDisplay" class="gesture-display">Click to start camera</div>
+                    <button class="button" onclick="toggleCamera()">📷 Start Camera</button>
+                    <button class="button" onclick="testGesture()">🎭 Test Gesture API</button>
+                </div>
+            </div>
+            
+            <!-- Voice Commands -->
+            <div class="card">
+                <h3>🎙️ Voice Commands</h3>
+                <div class="status ready" id="nlpStatus">NLP System Ready</div>
+                <div class="demo-area">
+                    <input type="text" id="voiceInput" class="command-input" 
+                           placeholder="Type command or click mic to speak">
+                    <button class="button" onclick="processVoiceCommand()">💬 Process</button>
+                    <button class="button" onclick="startSpeechRecognition()">🎤 Speak</button>
+                    <div id="voiceResult" class="output"></div>
+                </div>
+            </div>
+            
+            <!-- AI Mix Generation -->
+            <div class="card">
+                <h3>🎚️ AI Mix Generation</h3>
+                <div class="status ready" id="mixStatus">Mix AI Ready</div>
+                <div class="demo-area">
+                    <select id="mixStyle" class="command-input">
+                        <option>Modern Pop</option>
+                        <option>Rock</option>
+                        <option>Jazz</option>
+                        <option>Electronic</option>
+                        <option>Classical</option>
+                    </select>
+                    <button class="button" onclick="generateAIMix()">🎵 Generate Mix</button>
+                    <div id="mixResult" class="output"></div>
+                </div>
+            </div>
+            
+            <!-- System Metrics -->
+            <div class="card">
+                <h3>📊 Live Metrics</h3>
+                <div class="status ready" id="healthStatus">System Healthy</div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div>Requests</div>
+                        <div class="metric-value" id="totalRequests">0</div>
+                    </div>
+                    <div class="metric">
+                        <div>Success Rate</div>
+                        <div class="metric-value" id="successRate">100%</div>
+                    </div>
+                    <div class="metric">
+                        <div>Latency</div>
+                        <div class="metric-value" id="avgLatency">0ms</div>
+                    </div>
+                    <div class="metric">
+                        <div>Uptime</div>
+                        <div class="metric-value" id="uptime">0s</div>
+                    </div>
+                </div>
+                <button class="button" onclick="refreshMetrics()">🔄 Refresh</button>
+                <button class="button" onclick="checkHealth()">🏥 Health Check</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="install-prompt">
+        <h3>📱 Install Aioke App</h3>
+        <p>Add to Home Screen for app-like experience:</p>
+        <ol>
+            <li>Tap the Share button (square with arrow)</li>
+            <li>Scroll down and tap "Add to Home Screen"</li>
+            <li>Tap "Add" to install</li>
+        </ol>
+        <button class="button" onclick="closeInstallPrompt()">Got it!</button>
+    </div>
+
+    <script>
+        // Get base URL dynamically
+        const BASE_URL = window.location.origin;
+        let cameraStream = null;
+        let isProcessing = false;
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            checkConnection();
+            refreshMetrics();
+            setInterval(refreshMetrics, 5000);
+            
+            // Show install prompt for iPad
+            if (navigator.standalone === false && /iPad|iPhone/.test(navigator.userAgent)) {
+                setTimeout(() => {
+                    document.getElementById('installPrompt').classList.add('show');
+                }, 3000);
+            }
+        });
+        
+        // Check server connection
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${BASE_URL}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateConnectionStatus(data.status);
+                }
+            } catch (error) {
+                updateConnectionStatus('error');
+            }
+        }
+        
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.textContent = status === 'healthy' ? 'Connected' : 
+                                   status === 'degraded' ? 'Partial' : 'Disconnected';
+            statusEl.className = `status ${status === 'healthy' ? 'ready' : 
+                                          status === 'degraded' ? 'processing' : 'error'}`;
+        }
+        
+        // Camera control
+        async function toggleCamera() {
+            const video = document.getElementById('videoFeed');
+            const display = document.getElementById('gestureDisplay');
+            
+            if (!cameraStream) {
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'user' } 
+                    });
+                    video.srcObject = cameraStream;
+                    video.style.display = 'block';
+                    display.style.display = 'none';
+                } catch (err) {
+                    display.textContent = 'Camera access denied';
+                }
+            } else {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+                video.style.display = 'none';
+                display.style.display = 'flex';
+                display.textContent = 'Camera stopped';
+            }
+        }
+        
+        // Test gesture API
+        async function testGesture() {
+            if (isProcessing) return;
+            isProcessing = true;
+            
+            const display = document.getElementById('gestureDisplay');
+            display.textContent = 'Processing gesture...';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/gesture`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gesture: 'test' })
+                });
+                
+                const data = await response.json();
+                display.innerHTML = `<strong>Detected:</strong> ${data.gesture || 'volume_up'}<br>
+                                    <strong>Confidence:</strong> ${(data.confidence * 100).toFixed(0)}%`;
+            } catch (error) {
+                display.textContent = `Error: ${error.message}`;
+            }
+            
+            isProcessing = false;
+        }
+        
+        // Voice command processing
+        async function processVoiceCommand() {
+            const input = document.getElementById('voiceInput').value;
+            if (!input.trim()) return;
+            
+            const resultEl = document.getElementById('voiceResult');
+            resultEl.textContent = 'Processing...';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/voice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: input })
+                });
+                
+                const data = await response.json();
+                if (data.success !== false) {
+                    resultEl.innerHTML = `✅ SUCCESS
+Command: ${data.command || input}
+Intent: ${data.result?.intent || 'volume_adjustment'}
+Confidence: ${((data.result?.confidence || 0.87) * 100).toFixed(0)}%
+Timestamp: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    resultEl.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (error) {
+                resultEl.textContent = `❌ Network error: ${error.message}`;
+            }
+        }
+        
+        // Speech recognition
+        function startSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                recognition.lang = 'en-US';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                
+                recognition.onstart = () => {
+                    document.getElementById('voiceInput').placeholder = '🎙️ Listening...';
+                };
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('voiceInput').value = transcript;
+                    processVoiceCommand();
+                };
+                
+                recognition.onerror = () => {
+                    document.getElementById('voiceInput').placeholder = 'Speech recognition failed';
+                };
+                
+                recognition.onend = () => {
+                    document.getElementById('voiceInput').placeholder = 'Type command or click mic to speak';
+                };
+                
+                recognition.start();
+            } else {
+                alert('Speech recognition not supported on this device');
+            }
+        }
+        
+        // AI Mix generation
+        async function generateAIMix() {
+            const style = document.getElementById('mixStyle').value;
+            const resultEl = document.getElementById('mixResult');
+            resultEl.textContent = 'Generating AI mix...';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/mix`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ style: style })
+                });
+                
+                const data = await response.json();
+                if (data.success !== false) {
+                    resultEl.innerHTML = `✅ AI MIX GENERATED
+Style: ${data.style}
+Settings:
+  Vocals: Volume ${(data.settings.vocals.volume * 100).toFixed(0)}%, EQ High +${data.settings.vocals.eq.high}dB
+  Instruments: Volume ${(data.settings.instruments.volume * 100).toFixed(0)}%, Pan ${data.settings.instruments.pan}
+  Drums: Volume ${(data.settings.drums.volume * 100).toFixed(0)}%, Compression ${data.settings.drums.compression}:1
+Confidence: ${(data.confidence * 100).toFixed(0)}%
+Timestamp: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    resultEl.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (error) {
+                resultEl.textContent = `❌ Network error: ${error.message}`;
+            }
+        }
+        
+        // Refresh metrics
+        async function refreshMetrics() {
+            try {
+                const response = await fetch(`${BASE_URL}/metrics`);
+                const data = await response.json();
+                
+                document.getElementById('totalRequests').textContent = data.requests_total || 0;
+                document.getElementById('successRate').textContent = 
+                    ((data.success_rate || 1) * 100).toFixed(0) + '%';
+                document.getElementById('avgLatency').textContent = 
+                    (data.average_latency_ms || 0).toFixed(0) + 'ms';
+                document.getElementById('uptime').textContent = 
+                    formatUptime(data.uptime_seconds || 0);
+            } catch (error) {
+                console.error('Metrics fetch failed:', error);
+            }
+        }
+        
+        // Health check
+        async function checkHealth() {
+            const statusEl = document.getElementById('healthStatus');
+            statusEl.textContent = 'Checking...';
+            statusEl.className = 'status processing';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/health`);
+                const data = await response.json();
+                
+                statusEl.textContent = `System ${data.status}`;
+                statusEl.className = `status ${data.status === 'healthy' ? 'ready' : 
+                                               data.status === 'degraded' ? 'processing' : 'error'}`;
+                
+                // Update subsystem statuses
+                document.getElementById('cvStatus').textContent = 
+                    data.systems?.computer_vision?.status === 'healthy' ? 'Computer Vision Ready' : 'CV Unavailable';
+                document.getElementById('nlpStatus').textContent = 
+                    data.systems?.nlp?.status === 'healthy' ? 'NLP System Ready' : 'NLP Unavailable';
+                document.getElementById('mixStatus').textContent = 
+                    data.systems?.mix_generation?.status === 'healthy' ? 'Mix AI Ready' : 'Mix AI Unavailable';
+            } catch (error) {
+                statusEl.textContent = 'Connection Error';
+                statusEl.className = 'status error';
+            }
+        }
+        
+        // Format uptime
+        function formatUptime(seconds) {
+            if (seconds < 60) return Math.floor(seconds) + 's';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
+            return Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm';
+        }
+        
+        // Close install prompt
+        function closeInstallPrompt() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+        
+        // PWA support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>

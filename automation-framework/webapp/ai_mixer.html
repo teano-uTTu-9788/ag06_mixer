@@ -503,7 +503,7 @@
 
     <script>
         let isProcessing = false;
-        const API_URL = 'http://192.168.1.111:5001';  // Use network IP for cross-device compatibility
+        const API_URL = window.location.origin;  // Use same origin as the page
 
         // Initialize 64 spectrum bars on page load
         function initializeSpectrum() {
@@ -718,7 +718,7 @@
                 }
             } catch (error) {
                 console.error('Error starting monitoring:', error);
-                alert('Cannot connect to backend on port 5001. Run: python3 real_audio_monitor.py');
+                alert('Cannot connect to backend. Please check server is running.');
             }
         }
 

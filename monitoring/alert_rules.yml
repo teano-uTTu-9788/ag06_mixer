@@ -1,0 +1,132 @@
+groups:
+  - name: ai_mixer_critical
+    rules:
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(ai_mixer_processing_duration_seconds_bucket[5m])) by (le, region)) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High processing latency detected"
+          description: "95th percentile latency is {{ $value }}s in region {{ $labels.region }}, exceeding 100ms threshold"
+
+      - alert: HighErrorRate
+        expr: sum(rate(ai_mixer_requests_total{status!="200"}[5m])) by (region) / sum(rate(ai_mixer_requests_total[5m])) by (region) > 0.01
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} in region {{ $labels.region }}, exceeding 1% threshold"
+
+      - alert: PodRestarts
+        expr: increase(kube_pod_container_status_restarts_total[5m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod restart detected"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last 5 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes{container!="POD",container!=""} / container_spec_memory_limit_bytes) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_avail_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"} > 0.85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High disk usage"
+          description: "Disk usage is {{ $value | humanizePercentage }} on node {{ $labels.instance }}"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} is down"
+
+  - name: ai_mixer_performance
+    rules:
+      - alert: LowThroughput
+        expr: sum(rate(ai_mixer_requests_total[5m])) by (region) < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low request throughput"
+          description: "Request rate is {{ $value }} req/s in region {{ $labels.region }}, below expected baseline of 10 req/s"
+
+      - alert: AudioQualityDegradation
+        expr: ai_mixer_audio_peak_db > -3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Audio peak levels too high"
+          description: "Audio peak level is {{ $value }}dB, exceeding -3dB safety threshold"
+
+      - alert: GenreClassificationAccuracy
+        expr: ai_mixer_genre_accuracy < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Genre classification accuracy degraded"
+          description: "Genre classification accuracy is {{ $value | humanizePercentage }}, below 80% threshold"
+
+      - alert: StreamingBufferUnderruns
+        expr: increase(ai_mixer_buffer_underruns_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Audio buffer underruns detected"
+          description: "{{ $value }} buffer underruns detected in the last 5 minutes, may cause audio artifacts"
+
+  - name: ai_mixer_infrastructure
+    rules:
+      - alert: KubernetesPodCrashLooping
+        expr: increase(kube_pod_container_status_restarts_total[15m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod crash looping"
+          description: "Pod {{ $labels.pod }} is crash looping with {{ $value }} restarts in 15 minutes"
+
+      - alert: LoadBalancerDown
+        expr: probe_success{job="health-checks"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Load balancer endpoint down"
+          description: "Health check failed for {{ $labels.instance }}"
+
+      - alert: CloudflareWorkerErrors
+        expr: cloudflare_worker_error_rate > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in Cloudflare Workers"
+          description: "Cloudflare Worker error rate is {{ $value | humanizePercentage }}, exceeding 5% threshold"
+
+      - alert: RegionalFailover
+        expr: sum(up{job="ai-mixer"}) by (region) == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Complete regional failure"
+          description: "All services in region {{ $labels.region }} are down - failover required"

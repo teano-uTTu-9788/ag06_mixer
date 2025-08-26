@@ -1,0 +1,32 @@
+
+# Kubernetes Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ag06-mixer-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: ag06-mixer
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: nginx-ingress
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 5432  # Database
+    - protocol: TCP
+      port: 6379  # Redis
+    - protocol: TCP
+      port: 53   # DNS
+    - protocol: UDP
+      port: 53   # DNS

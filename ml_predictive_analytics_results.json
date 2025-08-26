@@ -1,0 +1,163 @@
+{
+  "demo_summary": {
+    "insights_generated": 4,
+    "processing_time_seconds": 0.501076,
+    "average_confidence": 0.2625,
+    "models_used": [
+      "AnalyticsModel.LIGHTWEIGHT_STATS"
+    ]
+  },
+  "insights": {
+    "anomaly_detection": {
+      "insight_id": "anomaly_1756057697",
+      "prediction_type": "PredictionType.ANOMALY_DETECTION",
+      "model_used": "AnalyticsModel.LIGHTWEIGHT_STATS",
+      "confidence_score": 0.1,
+      "prediction": {
+        "error": "'derived_metrics'",
+        "is_anomaly": false
+      },
+      "recommended_actions": [
+        "Check ML analytics engine logs"
+      ],
+      "severity": "LOW",
+      "predicted_impact": {},
+      "time_horizon": "immediate",
+      "supporting_data": {},
+      "timestamp": "2025-08-25 00:48:17.227194",
+      "expires_at": "2025-08-25 00:53:17.227197"
+    },
+    "performance_forecasting": {
+      "insight_id": "performance_forecast_1756057697",
+      "prediction_type": "PredictionType.PERFORMANCE_FORECASTING",
+      "model_used": "AnalyticsModel.LIGHTWEIGHT_STATS",
+      "confidence_score": 0.1,
+      "prediction": {
+        "error": "The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()"
+      },
+      "recommended_actions": [
+        "Check ML analytics engine logs"
+      ],
+      "severity": "LOW",
+      "predicted_impact": {},
+      "time_horizon": "medium_term",
+      "supporting_data": {},
+      "timestamp": "2025-08-25 00:48:17.412556",
+      "expires_at": "2025-08-25 01:18:17.412558"
+    },
+    "resource_optimization": {
+      "insight_id": "resource_opt_1756057697",
+      "prediction_type": "PredictionType.RESOURCE_OPTIMIZATION",
+      "model_used": "AnalyticsModel.LIGHTWEIGHT_STATS",
+      "confidence_score": 0.75,
+      "prediction": {
+        "optimizations_found": 2,
+        "optimization_details": [
+          {
+            "resource": "cpu",
+            "current_utilization": 0,
+            "recommendation": "downscale",
+            "suggested_change": "Reduce CPU allocation by 50%",
+            "estimated_savings": "1.0% cost reduction"
+          },
+          {
+            "resource": "memory",
+            "current_utilization": 0,
+            "recommendation": "optimize_allocation",
+            "suggested_change": "Redistribute memory from over-allocated processes",
+            "estimated_savings": "0.9% memory cost reduction"
+          }
+        ],
+        "current_resource_state": {
+          "cpu_percent": 0,
+          "memory_percent": 0,
+          "workflow_count": 0
+        }
+      },
+      "recommended_actions": [
+        "Moderate optimization opportunities available",
+        "Consider implementing suggested changes during low-usage periods",
+        "Reduce CPU allocation by 50%",
+        "Redistribute memory from over-allocated processes"
+      ],
+      "severity": "MEDIUM",
+      "predicted_impact": {
+        "cost_savings_percent": 1.9,
+        "performance_improvement_percent": 0,
+        "efficiency_gain": 0
+      },
+      "time_horizon": "short_term",
+      "supporting_data": {
+        "timestamp": "2025-08-25 00:48:17.412605",
+        "system_metrics": {
+          "overall_status_score": 1.0,
+          "workflow_count": 0,
+          "event_count": 0,
+          "ml_optimizer_learning_rate": 0.01
+        },
+        "workflow_metrics": {},
+        "performance_metrics": {}
+      },
+      "timestamp": "2025-08-25 00:48:17.518036",
+      "expires_at": "2025-08-25 02:48:17.518036"
+    },
+    "failure_prediction": {
+      "insight_id": "failure_risk_1756057697",
+      "prediction_type": "PredictionType.FAILURE_PREDICTION",
+      "model_used": "AnalyticsModel.LIGHTWEIGHT_STATS",
+      "confidence_score": 0.1,
+      "prediction": {
+        "error": "'derived_metrics'"
+      },
+      "recommended_actions": [
+        "Check ML analytics engine logs"
+      ],
+      "severity": "LOW",
+      "predicted_impact": {},
+      "time_horizon": "long_term",
+      "supporting_data": {},
+      "timestamp": "2025-08-25 00:48:17.619807",
+      "expires_at": "2025-08-25 01:03:17.619808"
+    }
+  },
+  "analytics_status": {
+    "engine_id": "ml_analytics_001",
+    "status": "operational",
+    "uptime_seconds": 0.836991,
+    "uptime_human": "0.0 hours",
+    "capabilities": {
+      "sklearn_available": true,
+      "pandas_available": true,
+      "prediction_types": 5,
+      "model_types": 5
+    },
+    "metrics": {
+      "total_predictions": 1,
+      "successful_predictions": 1,
+      "model_accuracy": {},
+      "prediction_confidence_avg": 0.2625,
+      "anomalies_detected": 0,
+      "preventive_actions_triggered": 0,
+      "engine_uptime_start": "2025-08-25 00:48:16.783051"
+    },
+    "active_models": [
+      "AnalyticsModel.ISOLATION_FOREST",
+      "AnalyticsModel.RANDOM_FOREST",
+      "AnalyticsModel.DBSCAN_CLUSTERING"
+    ],
+    "prediction_history_count": 1,
+    "configuration": {
+      "anomaly_detection_contamination": 0.05,
+      "prediction_confidence_threshold": 0.7,
+      "model_retrain_interval_hours": 24,
+      "max_prediction_history": 10000,
+      "feature_window_minutes": 60,
+      "prediction_horizons": {
+        "immediate": 5,
+        "short_term": 60,
+        "medium_term": 1440,
+        "long_term": 10080
+      }
+    }
+  }
+}

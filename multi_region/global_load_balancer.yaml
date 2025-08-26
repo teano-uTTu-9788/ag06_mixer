@@ -1,0 +1,530 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: global-load-balancer-config
+  namespace: ai-mixer
+data:
+  # Global Traffic Manager Configuration
+  traffic-manager.yaml: |
+    global_config:
+      service_name: "ai-mixer"
+      health_check_interval: 30s
+      failover_timeout: 10s
+      session_affinity: "none"  # Stateless processing
+      
+    # Global regions with priority-based routing
+    regions:
+      - name: "us-west"
+        priority: 1
+        weight: 100
+        endpoints:
+          - "us-west-1.aimixer.com"
+          - "us-west-2.aimixer.com"
+        health_check:
+          path: "/health"
+          port: 443
+          protocol: "HTTPS"
+          
+      - name: "us-east" 
+        priority: 1
+        weight: 100
+        endpoints:
+          - "us-east-1.aimixer.com"
+          - "us-east-2.aimixer.com"
+        health_check:
+          path: "/health"
+          port: 443
+          protocol: "HTTPS"
+          
+      - name: "eu-west"
+        priority: 1
+        weight: 100
+        endpoints:
+          - "eu-west-1.aimixer.com"
+          - "eu-west-2.aimixer.com"
+        health_check:
+          path: "/health"
+          port: 443
+          protocol: "HTTPS"
+          
+      - name: "asia-pacific"
+        priority: 1
+        weight: 100
+        endpoints:
+          - "ap-southeast-1.aimixer.com"
+          - "ap-northeast-1.aimixer.com"
+        health_check:
+          path: "/health"
+          port: 443
+          protocol: "HTTPS"
+    
+    # Routing policies
+    routing_policies:
+      # Geolocation-based routing
+      - name: "geo_routing"
+        type: "geolocation"
+        rules:
+          - countries: ["US", "CA", "MX"]
+            regions: ["us-west", "us-east"]
+          - countries: ["GB", "FR", "DE", "NL", "ES", "IT"]
+            regions: ["eu-west"]
+          - countries: ["JP", "KR", "SG", "AU", "IN"]
+            regions: ["asia-pacific"]
+            
+      # Latency-based routing  
+      - name: "latency_routing"
+        type: "latency"
+        enabled: true
+        fallback_to_geo: true
+        
+      # Weighted routing for A/B testing
+      - name: "weighted_routing"
+        type: "weighted"
+        rules:
+          - region: "us-west"
+            weight: 25
+          - region: "us-east"  
+            weight: 25
+          - region: "eu-west"
+            weight: 25
+          - region: "asia-pacific"
+            weight: 25
+
+  # CloudFlare Load Balancer Configuration  
+  cloudflare-lb.yaml: |
+    load_balancer:
+      name: "ai-mixer-global-lb"
+      description: "Global load balancer for AI Mixer"
+      ttl: 60
+      proxied: true
+      
+      # Environment configuration
+      environments:
+        production:
+          enabled: true
+          domains: ["api.aimixer.com"]
+          env.production: true
+        staging:
+          enabled: true  
+          domains: ["api-staging.aimixer.com"]
+          env.staging: true
+      
+      # Origin pools by region
+      origin_pools:
+        - name: "us-west-pool"
+          description: "US West Coast servers"
+          enabled: true
+          minimum_origins: 1
+          origins:
+            - name: "us-west-1"
+              address: "10.0.1.10"
+              weight: 1
+              enabled: true
+            - name: "us-west-2"  
+              address: "10.0.1.20"
+              weight: 1
+              enabled: true
+          health_check:
+            type: "https"
+            port: 443
+            path: "/health"
+            interval: 60
+            retries: 2
+            timeout: 10
+            
+        - name: "us-east-pool"
+          description: "US East Coast servers"
+          enabled: true
+          minimum_origins: 1
+          origins:
+            - name: "us-east-1"
+              address: "10.0.2.10"
+              weight: 1
+              enabled: true
+            - name: "us-east-2"
+              address: "10.0.2.20"
+              weight: 1
+              enabled: true
+          health_check:
+            type: "https"
+            port: 443
+            path: "/health"
+            interval: 60
+            retries: 2
+            timeout: 10
+            
+        - name: "eu-west-pool"
+          description: "Europe West servers"
+          enabled: true
+          minimum_origins: 1
+          origins:
+            - name: "eu-west-1"
+              address: "10.0.3.10"
+              weight: 1
+              enabled: true
+            - name: "eu-west-2"
+              address: "10.0.3.20"
+              weight: 1
+              enabled: true
+          health_check:
+            type: "https"
+            port: 443
+            path: "/health"
+            interval: 60
+            retries: 2
+            timeout: 10
+            
+        - name: "asia-pacific-pool"
+          description: "Asia Pacific servers"
+          enabled: true
+          minimum_origins: 1
+          origins:
+            - name: "ap-southeast-1"
+              address: "10.0.4.10"
+              weight: 1
+              enabled: true
+            - name: "ap-northeast-1"
+              address: "10.0.4.20"
+              weight: 1
+              enabled: true
+          health_check:
+            type: "https"
+            port: 443
+            path: "/health"
+            interval: 60
+            retries: 2
+            timeout: 10
+      
+      # Global traffic steering rules
+      rules:
+        - name: "geo-steering"
+          condition: "true"  # Always active
+          overrides:
+            country_pools:
+              - country: "US"
+                pool_ids: ["us-west-pool", "us-east-pool"]
+              - country: "CA" 
+                pool_ids: ["us-west-pool", "us-east-pool"]
+              - country: "GB"
+                pool_ids: ["eu-west-pool"]
+              - country: "FR"
+                pool_ids: ["eu-west-pool"]
+              - country: "DE"
+                pool_ids: ["eu-west-pool"]
+              - country: "JP"
+                pool_ids: ["asia-pacific-pool"]
+              - country: "KR"
+                pool_ids: ["asia-pacific-pool"]
+              - country: "SG"
+                pool_ids: ["asia-pacific-pool"]
+            default_pools: ["us-west-pool", "eu-west-pool", "asia-pacific-pool"]
+
+  # AWS Application Load Balancer Configuration
+  aws-alb.yaml: |
+    target_groups:
+      - name: "us-west-targets"
+        protocol: "HTTPS"
+        port: 443
+        vpc_id: "vpc-uswest"
+        health_check:
+          protocol: "HTTPS"
+          path: "/health"
+          interval: 30
+          timeout: 5
+          healthy_threshold: 2
+          unhealthy_threshold: 3
+        targets:
+          - id: "i-uswest1"
+            port: 443
+          - id: "i-uswest2"
+            port: 443
+            
+      - name: "us-east-targets"
+        protocol: "HTTPS"
+        port: 443
+        vpc_id: "vpc-useast"
+        health_check:
+          protocol: "HTTPS"
+          path: "/health"
+          interval: 30
+          timeout: 5
+          healthy_threshold: 2
+          unhealthy_threshold: 3
+        targets:
+          - id: "i-useast1"
+            port: 443
+          - id: "i-useast2"
+            port: 443
+    
+    load_balancers:
+      - name: "ai-mixer-global-alb"
+        scheme: "internet-facing"
+        type: "application"
+        listeners:
+          - port: 443
+            protocol: "HTTPS"
+            ssl_policy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+            certificate_arn: "arn:aws:acm:us-west-2:account:certificate/cert-id"
+            default_actions:
+              - type: "forward"
+                target_group_arn: "arn:aws:elasticloadbalancing:region:account:targetgroup/us-west-targets"
+        
+        # Cross-region routing rules
+        rules:
+          - priority: 100
+            conditions:
+              - field: "source-ip"
+                values: ["10.0.0.0/8"]  # Internal traffic
+            actions:
+              - type: "forward"
+                target_group_arn: "us-west-targets"
+                
+          - priority: 200
+            conditions:
+              - field: "host-header"
+                values: ["*.eu.aimixer.com"]
+            actions:
+              - type: "forward"
+                target_group_arn: "eu-west-targets"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: global-load-balancer-controller
+  namespace: ai-mixer
+  labels:
+    app: global-load-balancer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: global-load-balancer
+  template:
+    metadata:
+      labels:
+        app: global-load-balancer
+    spec:
+      containers:
+      - name: load-balancer-controller
+        image: nginx/nginx-prometheus-exporter:latest
+        ports:
+        - containerPort: 8080
+        - containerPort: 9113  # Metrics
+        env:
+        - name: SCRAPE_URI
+          value: "http://localhost:8080/nginx_status"
+        command:
+          - /bin/sh
+          - -c
+          - |
+            # Global Load Balancer Controller
+            echo "Starting Global Load Balancer Controller"
+            
+            # Health check all regions
+            check_region_health() {
+              local region=$1
+              local endpoint=$2
+              
+              echo "Checking health for $region at $endpoint"
+              
+              response=$(curl -s -o /dev/null -w "%{http_code}" \
+                --max-time 10 "$endpoint/health" || echo "000")
+              
+              if [ "$response" = "200" ]; then
+                echo "✅ $region: Healthy"
+                return 0
+              else
+                echo "❌ $region: Unhealthy (HTTP $response)"
+                return 1
+              fi
+            }
+            
+            # Main health check loop
+            while true; do
+              echo "$(date): Running global health checks..."
+              
+              # Check all regions
+              check_region_health "US-West" "https://us-west-1.aimixer.com"
+              check_region_health "US-East" "https://us-east-1.aimixer.com"  
+              check_region_health "EU-West" "https://eu-west-1.aimixer.com"
+              check_region_health "Asia-Pacific" "https://ap-southeast-1.aimixer.com"
+              
+              # Update load balancer weights based on health
+              echo "Updating load balancer configuration..."
+              
+              # Sleep before next check
+              sleep 60
+            done
+
+      - name: prometheus-metrics
+        image: prom/node-exporter:latest
+        ports:
+        - containerPort: 9100
+        args:
+          - --path.procfs=/host/proc
+          - --path.sysfs=/host/sys
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+          
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: global-load-balancer-service
+  namespace: ai-mixer
+  labels:
+    app: global-load-balancer
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 9113
+    targetPort: 9113
+    protocol: TCP
+    name: metrics
+  selector:
+    app: global-load-balancer
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: global-load-balancer-ingress
+  namespace: ai-mixer
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+spec:
+  tls:
+  - hosts:
+    - global-lb.aimixer.com
+    secretName: global-lb-tls
+  rules:
+  - host: global-lb.aimixer.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: global-load-balancer-service
+            port:
+              number: 8080
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: global-load-balancer-metrics
+  namespace: ai-mixer
+  labels:
+    app: global-load-balancer
+spec:
+  selector:
+    matchLabels:
+      app: global-load-balancer
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-global-lb-dashboard
+  namespace: ai-mixer
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "AI Mixer Global Load Balancer",
+        "tags": ["ai-mixer", "load-balancer", "global"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Global Request Distribution",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum by (region) (rate(http_requests_total{service=\"ai-mixer\"}[5m]))",
+                "legendFormat": "{{region}}"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Regional Response Times",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"ai-mixer\"}[5m])) by (region, le))",
+                "legendFormat": "{{region}} 95th percentile"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Regional Health Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{service=\"ai-mixer\"}",
+                "legendFormat": "{{region}}"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Global Error Rates",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum by (region) (rate(http_requests_total{service=\"ai-mixer\",status_code!~\"2..\"}[5m])) / sum by (region) (rate(http_requests_total{service=\"ai-mixer\"}[5m]))",
+                "legendFormat": "{{region}}"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Cross-Region Latency",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "sum(rate(http_request_duration_seconds_bucket{service=\"ai-mixer\"}[5m])) by (region, le)",
+                "legendFormat": "{{region}}"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }

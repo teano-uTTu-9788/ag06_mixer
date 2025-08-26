@@ -1,0 +1,83 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'ai-mixer-alerts@aimixer.com'
+  smtp_auth_username: 'ai-mixer-alerts@aimixer.com'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+
+route:
+  group_by: ['alertname', 'region']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 5s
+      repeat_interval: 15m
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      repeat_interval: 4h
+
+receivers:
+  - name: 'web.hook'
+    webhook_configs:
+      - url: 'http://localhost:5001/'
+
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'devops@aimixer.com'
+        subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} in {{ .GroupLabels.region }}'
+        body: |
+          {{ range .Alerts }}
+          **Alert:** {{ .Annotations.summary }}
+          **Description:** {{ .Annotations.description }}
+          **Region:** {{ .Labels.region }}
+          **Severity:** {{ .Labels.severity }}
+          **Started:** {{ .StartsAt }}
+          {{ end }}
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-critical'
+        color: 'danger'
+        title: '🚨 Critical Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          **Region:** {{ .Labels.region }}
+          **Description:** {{ .Annotations.description }}
+          {{ end }}
+    pagerduty_configs:
+      - routing_key: '${PAGERDUTY_ROUTING_KEY}'
+        description: '{{ .GroupLabels.alertname }} - {{ .GroupLabels.region }}'
+
+  - name: 'warning-alerts'
+    email_configs:
+      - to: 'monitoring@aimixer.com'
+        subject: '⚠️ WARNING: {{ .GroupLabels.alertname }} in {{ .GroupLabels.region }}'
+        body: |
+          {{ range .Alerts }}
+          **Alert:** {{ .Annotations.summary }}
+          **Description:** {{ .Annotations.description }}
+          **Region:** {{ .Labels.region }}
+          **Severity:** {{ .Labels.severity }}
+          **Started:** {{ .StartsAt }}
+          {{ end }}
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-warning'
+        color: 'warning'
+        title: '⚠️ Warning Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          **Region:** {{ .Labels.region }}
+          **Description:** {{ .Annotations.description }}
+          {{ end }}
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'region']

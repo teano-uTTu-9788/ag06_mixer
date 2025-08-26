@@ -1,0 +1,147 @@
+{
+  "timestamp": "2025-08-26T12:06:01.698031",
+  "uptime": 57396.020460128784,
+  "services": {
+    "backend": {
+      "service": "backend",
+      "status": "healthy",
+      "response_time": 0.0041010379791259766,
+      "timestamp": "2025-08-26 12:03:35.823633",
+      "message": "Service responding normally",
+      "details": {
+        "error_count": 0,
+        "processing": true,
+        "status": "healthy",
+        "total_events": 533205,
+        "uptime": 57263.14934301376
+      }
+    },
+    "frontend": {
+      "service": "frontend",
+      "status": "critical",
+      "response_time": 0.13271212577819824,
+      "timestamp": "2025-08-26 12:03:35.956376",
+      "message": "HTTP 404: Not Found",
+      "details": {}
+    }
+  },
+  "system_metrics": null,
+  "availability_24h": {
+    "backend": 100.0,
+    "frontend": 0.0
+  },
+  "recent_alerts": [
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:09:11.503298"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:14:14.470720"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:19:16.268792"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:24:18.428370"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:29:20.717094"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:34:23.152360"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:39:25.422871"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:44:27.720588"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:49:29.919975"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:54:32.129406"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T11:59:34.366153"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 404: Not Found",
+      "timestamp": "2025-08-26T12:04:36.300337"
+    }
+  ],
+  "alert_summary": {
+    "critical": 12,
+    "warning": 0
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "timestamp": "2025-08-24T21:43:58.402337",
+  "tiers": {
+    "bronze": {
+      "name": "Bronze Producer",
+      "min_referrals": 1,
+      "multiplier": 1.0,
+      "perks": [
+        "Priority support",
+        "Early feature access"
+      ],
+      "badge": "\ud83e\udd49"
+    },
+    "silver": {
+      "name": "Silver Beat Maker",
+      "min_referrals": 5,
+      "multiplier": 1.5,
+      "perks": [
+        "Exclusive presets",
+        "Monthly livestream access",
+        "Custom avatar"
+      ],
+      "badge": "\ud83e\udd48"
+    },
+    "gold": {
+      "name": "Gold Mix Master",
+      "min_referrals": 15,
+      "multiplier": 2.0,
+      "perks": [
+        "Beta features",
+        "Direct artist feedback",
+        "Merchandise credits"
+      ],
+      "badge": "\ud83e\udd47"
+    },
+    "platinum": {
+      "name": "Platinum Studio Legend",
+      "min_referrals": 50,
+      "multiplier": 3.0,
+      "perks": [
+        "Custom presets created",
+        "Artist collaboration",
+        "Annual conference invite"
+      ],
+      "badge": "\ud83d\udc8e"
+    },
+    "diamond": {
+      "name": "Diamond Producer Elite",
+      "min_referrals": 100,
+      "multiplier": 5.0,
+      "perks": [
+        "Revenue sharing",
+        "Product advisory board",
+        "Lifetime subscription"
+      ],
+      "badge": "\ud83d\udc8d"
+    }
+  },
+  "reward_structure": {
+    "referrer_credit": {
+      "type": "credit",
+      "value": 5.0,
+      "description": "$5 account credit for each successful referral"
+    },
+    "referee_discount": {
+      "type": "subscription",
+      "value": 0.3,
+      "description": "30% off first month for new user"
+    },
+    "bonus_features": {
+      "type": "features",
+      "value": 1.0,
+      "description": "Unlock premium features for 1 month"
+    },
+    "streak_bonus": {
+      "type": "credit",
+      "value": 25.0,
+      "description": "$25 bonus for 5 referrals in 30 days"
+    },
+    "merchandise": {
+      "type": "merchandise",
+      "value": 50.0,
+      "description": "Free AG06 merchandise package"
+    }
+  },
+  "viral_campaigns": [
+    {
+      "name": "Double Rewards Weekend",
+      "type": "multiplier",
+      "multiplier": 2.0,
+      "duration": "3 days",
+      "expected_lift": "40%"
+    },
+    {
+      "name": "Beat Drop Challenge",
+      "type": "social_contest",
+      "prize": "$500 + Studio subscription",
+      "duration": "2 weeks",
+      "expected_participation": "1000+ users"
+    },
+    {
+      "name": "Producer Pair-Up",
+      "type": "collaborative",
+      "reward": "Bonus for both users",
+      "duration": "1 month",
+      "expected_conversion": "+25%"
+    }
+  ],
+  "analytics": {
+    "active_referrers": 198,
+    "total_referrals": 832,
+    "successful_referrals": 291,
+    "viral_coefficient": 0.291,
+    "roi": 3020.0
+  },
+  "sample_users": {
+    "user_001": {
+      "user_id": "user_001",
+      "username": "BeatMaster_DJ",
+      "referral_code": "MIX9167",
+      "referral_link": "https://ag06mixer.com/join?ref=MIX9167&u=user_001",
+      "referrals_made": 0,
+      "referrals_successful": 0,
+      "total_earnings": 0.0,
+      "current_tier": "bronze",
+      "tier_progress": 0,
+      "achievements": [],
+      "created_at": "2025-08-24T21:43:58.402274",
+      "last_activity": "2025-08-24T21:43:58.402276",
+      "social_shares": 0,
+      "conversion_rate": 0.0,
+      "streak_count": 0,
+      "best_streak": 0
+    },
+    "user_002": {
+      "user_id": "user_002",
+      "username": "StudioVibes_Pro",
+      "referral_code": "VIBE9403",
+      "referral_link": "https://ag06mixer.com/join?ref=VIBE9403&u=user_002",
+      "referrals_made": 0,
+      "referrals_successful": 0,
+      "total_earnings": 0.0,
+      "current_tier": "bronze",
+      "tier_progress": 0,
+      "achievements": [],
+      "created_at": "2025-08-24T21:43:58.402285",
+      "last_activity": "2025-08-24T21:43:58.402286",
+      "social_shares": 0,
+      "conversion_rate": 0.0,
+      "streak_count": 0,
+      "best_streak": 0
+    },
+    "user_003": {
+      "user_id": "user_003",
+      "username": "MixKing_Audio",
+      "referral_code": "FLOWEF30",
+      "referral_link": "https://ag06mixer.com/join?ref=FLOWEF30&u=user_003",
+      "referrals_made": 0,
+      "referrals_successful": 0,
+      "total_earnings": 0.0,
+      "current_tier": "bronze",
+      "tier_progress": 0,
+      "achievements": [],
+      "created_at": "2025-08-24T21:43:58.402292",
+      "last_activity": "2025-08-24T21:43:58.402293",
+      "social_shares": 0,
+      "conversion_rate": 0.0,
+      "streak_count": 0,
+      "best_streak": 0
+    }
+  }
+}

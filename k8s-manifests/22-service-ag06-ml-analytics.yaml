@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ag06-ml-analytics
+  namespace: ag06-production
+  labels:
+    app.kubernetes.io/name: ag06
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: ag06-deployer
+    app.kubernetes.io/part-of: ag06-platform
+    app.kubernetes.io/component: ml-analytics
+  annotations:
+    service.beta.kubernetes.io/load-balancer-source-ranges: 10.0.0.0/8
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '9090'
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: ag06
+    app.kubernetes.io/component: ml-analytics

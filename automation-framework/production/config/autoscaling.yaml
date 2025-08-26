@@ -1,0 +1,12 @@
+cluster_autoscaler:
+  enabled: true
+  max_nodes: 50
+  min_nodes: 3
+horizontal_pod_autoscaler:
+  max_replicas: 20
+  min_replicas: 3
+  target_cpu_utilization: 70
+  target_memory_utilization: 80
+vertical_pod_autoscaler:
+  enabled: true
+  update_mode: Auto

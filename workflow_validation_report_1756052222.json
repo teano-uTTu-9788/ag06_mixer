@@ -1,0 +1,793 @@
+{
+  "validation_summary": {
+    "total_tests": 88,
+    "passed": 85,
+    "failed": 3,
+    "errors": 0,
+    "success_rate_percent": 96.5909090909091,
+    "manu_compliance": false
+  },
+  "timing": {
+    "start_time": "2025-08-24T23:16:08.721072",
+    "end_time": "2025-08-24T23:17:02.165934",
+    "total_duration_seconds": 53.444862,
+    "total_test_execution_ms": 52505.15580177307,
+    "average_test_duration_ms": 596.6494977474213
+  },
+  "category_breakdown": {
+    "Core System": {
+      "total": 15,
+      "passed": 15,
+      "failed": 0,
+      "errors": 0
+    },
+    "Observability": {
+      "total": 15,
+      "passed": 15,
+      "failed": 0,
+      "errors": 0
+    },
+    "Persistence": {
+      "total": 15,
+      "passed": 14,
+      "failed": 1,
+      "errors": 0
+    },
+    "ML Optimization": {
+      "total": 15,
+      "passed": 15,
+      "failed": 0,
+      "errors": 0
+    },
+    "Circuit Breaker": {
+      "total": 10,
+      "passed": 9,
+      "failed": 1,
+      "errors": 0
+    },
+    "Integration": {
+      "total": 10,
+      "passed": 9,
+      "failed": 1,
+      "errors": 0
+    },
+    "Performance": {
+      "total": 8,
+      "passed": 8,
+      "failed": 0,
+      "errors": 0
+    }
+  },
+  "failed_tests": [
+    {
+      "test_id": 41,
+      "name": "Event Store Timestamp Tracking",
+      "category": "Persistence",
+      "error": "No events found"
+    },
+    {
+      "test_id": 70,
+      "name": "Circuit Breaker Concurrent Access",
+      "category": "Circuit Breaker",
+      "error": "Invalid results from concurrent calls"
+    },
+    {
+      "test_id": 73,
+      "name": "Agent Priority Handling",
+      "category": "Integration",
+      "error": "Priority handling failed"
+    }
+  ],
+  "performance_summary": {
+    "fastest_test_ms": 0.0019073486328125,
+    "slowest_test_ms": 11178.091049194336,
+    "tests_per_second": 1.6465567822029366
+  },
+  "system_status": "NON_COMPLIANT",
+  "detailed_results": [
+    {
+      "test_id": 1,
+      "name": "Integrated System Initialization",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 0.0069141387939453125,
+      "error": null
+    },
+    {
+      "test_id": 2,
+      "name": "Specialized Agent Initialization",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 0.0019073486328125,
+      "error": null
+    },
+    {
+      "test_id": 3,
+      "name": "Basic Workflow Execution",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 464.68400955200195,
+      "error": null
+    },
+    {
+      "test_id": 4,
+      "name": "Workflow Execution with Context",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 1122.1110820770264,
+      "error": null
+    },
+    {
+      "test_id": 5,
+      "name": "System Health Check",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 104.25281524658203,
+      "error": null
+    },
+    {
+      "test_id": 6,
+      "name": "Workflow with Custom Steps",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 1127.385139465332,
+      "error": null
+    },
+    {
+      "test_id": 7,
+      "name": "Multiple Concurrent Workflows",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 1399.5940685272217,
+      "error": null
+    },
+    {
+      "test_id": 8,
+      "name": "Workflow Error Handling",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 1123.0578422546387,
+      "error": null
+    },
+    {
+      "test_id": 9,
+      "name": "Workflow Configuration Validation",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 0.005245208740234375,
+      "error": null
+    },
+    {
+      "test_id": 10,
+      "name": "Component Integration",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 0.0030994415283203125,
+      "error": null
+    },
+    {
+      "test_id": 11,
+      "name": "Workflow Types Support",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 4485.700845718384,
+      "error": null
+    },
+    {
+      "test_id": 12,
+      "name": "Workflow Duration Tracking",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 1121.3440895080566,
+      "error": null
+    },
+    {
+      "test_id": 13,
+      "name": "Correlation ID Propagation",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 1116.0008907318115,
+      "error": null
+    },
+    {
+      "test_id": 14,
+      "name": "Workflow Step Tracking",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 1114.6056652069092,
+      "error": null
+    },
+    {
+      "test_id": 15,
+      "name": "System Resource Management",
+      "category": "Core System",
+      "status": "PASS",
+      "duration_ms": 5811.95068359375,
+      "error": null
+    },
+    {
+      "test_id": 16,
+      "name": "Observer Workflow Tracking",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 0.08702278137207031,
+      "error": null
+    },
+    {
+      "test_id": 17,
+      "name": "Observer Step Recording",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 102.12421417236328,
+      "error": null
+    },
+    {
+      "test_id": 18,
+      "name": "Observer Workflow Completion",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 0.0667572021484375,
+      "error": null
+    },
+    {
+      "test_id": 19,
+      "name": "Observer Health Status",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 103.00517082214355,
+      "error": null
+    },
+    {
+      "test_id": 20,
+      "name": "Observer Metrics Collection",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 103.05404663085938,
+      "error": null
+    },
+    {
+      "test_id": 21,
+      "name": "Observer Error Tracking",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 105.34930229187012,
+      "error": null
+    },
+    {
+      "test_id": 22,
+      "name": "Observer Resource Monitoring",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 105.11112213134766,
+      "error": null
+    },
+    {
+      "test_id": 23,
+      "name": "Observer Correlation IDs",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 0.11396408081054688,
+      "error": null
+    },
+    {
+      "test_id": 24,
+      "name": "Observer Workflow Types",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 0.052928924560546875,
+      "error": null
+    },
+    {
+      "test_id": 25,
+      "name": "Observer Multiple Steps",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 310.15896797180176,
+      "error": null
+    },
+    {
+      "test_id": 26,
+      "name": "Observer Duration Measurement",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 101.23801231384277,
+      "error": null
+    },
+    {
+      "test_id": 27,
+      "name": "Observer Concurrent Workflows",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 0.09799003601074219,
+      "error": null
+    },
+    {
+      "test_id": 28,
+      "name": "Observer Event Export",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 107.21111297607422,
+      "error": null
+    },
+    {
+      "test_id": 29,
+      "name": "Observer Health Scoring",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 102.81515121459961,
+      "error": null
+    },
+    {
+      "test_id": 30,
+      "name": "Observer Metrics Summary",
+      "category": "Observability",
+      "status": "PASS",
+      "duration_ms": 0.0040531158447265625,
+      "error": null
+    },
+    {
+      "test_id": 31,
+      "name": "Event Store Basic Storage",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.05698204040527344,
+      "error": null
+    },
+    {
+      "test_id": 32,
+      "name": "Event Store Deduplication",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.02193450927734375,
+      "error": null
+    },
+    {
+      "test_id": 33,
+      "name": "Event Store Retrieval",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.01621246337890625,
+      "error": null
+    },
+    {
+      "test_id": 34,
+      "name": "Event Store Correlation Tracking",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.015974044799804688,
+      "error": null
+    },
+    {
+      "test_id": 35,
+      "name": "Event Store Multiple Streams",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.03409385681152344,
+      "error": null
+    },
+    {
+      "test_id": 36,
+      "name": "Event Store Stream Info",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.012874603271484375,
+      "error": null
+    },
+    {
+      "test_id": 37,
+      "name": "Event Store Health Status",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.0019073486328125,
+      "error": null
+    },
+    {
+      "test_id": 38,
+      "name": "Event Store Large Payload",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.011920928955078125,
+      "error": null
+    },
+    {
+      "test_id": 39,
+      "name": "Event Store Concurrent Writes",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.13971328735351562,
+      "error": null
+    },
+    {
+      "test_id": 40,
+      "name": "Event Store Event Types",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.030040740966796875,
+      "error": null
+    },
+    {
+      "test_id": 41,
+      "name": "Event Store Timestamp Tracking",
+      "category": "Persistence",
+      "status": "FAIL",
+      "duration_ms": 0.06008148193359375,
+      "error": "No events found"
+    },
+    {
+      "test_id": 42,
+      "name": "Event Store Mark Processed",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.016927719116210938,
+      "error": null
+    },
+    {
+      "test_id": 43,
+      "name": "Event Store Fallback Behavior",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.0040531158447265625,
+      "error": null
+    },
+    {
+      "test_id": 44,
+      "name": "Event Store Error Handling",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.022172927856445312,
+      "error": null
+    },
+    {
+      "test_id": 45,
+      "name": "Event Store Stream Isolation",
+      "category": "Persistence",
+      "status": "PASS",
+      "duration_ms": 0.025033950805664062,
+      "error": null
+    },
+    {
+      "test_id": 46,
+      "name": "Optimizer Initialization",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.0030994415283203125,
+      "error": null
+    },
+    {
+      "test_id": 47,
+      "name": "Optimizer Performance Recording",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.04220008850097656,
+      "error": null
+    },
+    {
+      "test_id": 48,
+      "name": "Optimizer Configuration Suggestion",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.09894371032714844,
+      "error": null
+    },
+    {
+      "test_id": 49,
+      "name": "Optimizer Feature Extraction",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.007867813110351562,
+      "error": null
+    },
+    {
+      "test_id": 50,
+      "name": "Optimizer Performance Prediction",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.0040531158447265625,
+      "error": null
+    },
+    {
+      "test_id": 51,
+      "name": "Optimizer Learning Iterations",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.057220458984375,
+      "error": null
+    },
+    {
+      "test_id": 52,
+      "name": "Optimizer A/B Experiment Creation",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.006198883056640625,
+      "error": null
+    },
+    {
+      "test_id": 53,
+      "name": "Optimizer A/B Config Assignment",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.013828277587890625,
+      "error": null
+    },
+    {
+      "test_id": 54,
+      "name": "Optimizer A/B Result Recording",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.014066696166992188,
+      "error": null
+    },
+    {
+      "test_id": 55,
+      "name": "Optimizer Optimization Summary",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.14090538024902344,
+      "error": null
+    },
+    {
+      "test_id": 56,
+      "name": "Optimizer Model Export",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 1.8379688262939453,
+      "error": null
+    },
+    {
+      "test_id": 57,
+      "name": "Optimizer Success/Failure Tracking",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.029087066650390625,
+      "error": null
+    },
+    {
+      "test_id": 58,
+      "name": "Optimizer Context Awareness",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.007867813110351562,
+      "error": null
+    },
+    {
+      "test_id": 59,
+      "name": "Optimizer Weight Updates",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.015020370483398438,
+      "error": null
+    },
+    {
+      "test_id": 60,
+      "name": "Optimizer Configuration Space",
+      "category": "ML Optimization",
+      "status": "PASS",
+      "duration_ms": 0.4909038543701172,
+      "error": null
+    },
+    {
+      "test_id": 61,
+      "name": "Circuit Breaker Initialization",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 0.0152587890625,
+      "error": null
+    },
+    {
+      "test_id": 62,
+      "name": "Circuit Breaker Success Recording",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 0.006198883056640625,
+      "error": null
+    },
+    {
+      "test_id": 63,
+      "name": "Circuit Breaker Failure Recording",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 0.0019073486328125,
+      "error": null
+    },
+    {
+      "test_id": 64,
+      "name": "Circuit Breaker State Transitions",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 0.0030994415283203125,
+      "error": null
+    },
+    {
+      "test_id": 65,
+      "name": "Circuit Breaker Call Execution",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 0.013113021850585938,
+      "error": null
+    },
+    {
+      "test_id": 66,
+      "name": "Circuit Breaker Call Rejection",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 0.010013580322265625,
+      "error": null
+    },
+    {
+      "test_id": 67,
+      "name": "Circuit Breaker Timeout Reset",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 201.10797882080078,
+      "error": null
+    },
+    {
+      "test_id": 68,
+      "name": "Circuit Breaker Half-Open State",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 201.32708549499512,
+      "error": null
+    },
+    {
+      "test_id": 69,
+      "name": "Circuit Breaker Statistics",
+      "category": "Circuit Breaker",
+      "status": "PASS",
+      "duration_ms": 0.013828277587890625,
+      "error": null
+    },
+    {
+      "test_id": 70,
+      "name": "Circuit Breaker Concurrent Access",
+      "category": "Circuit Breaker",
+      "status": "FAIL",
+      "duration_ms": 0.3161430358886719,
+      "error": "Invalid results from concurrent calls"
+    },
+    {
+      "test_id": 71,
+      "name": "Agent Workflow Integration",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 1122.9100227355957,
+      "error": null
+    },
+    {
+      "test_id": 72,
+      "name": "Agent Queue Management",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 0.05602836608886719,
+      "error": null
+    },
+    {
+      "test_id": 73,
+      "name": "Agent Priority Handling",
+      "category": "Integration",
+      "status": "FAIL",
+      "duration_ms": 0.0362396240234375,
+      "error": "Priority handling failed"
+    },
+    {
+      "test_id": 74,
+      "name": "Agent Status Reporting",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 105.34405708312988,
+      "error": null
+    },
+    {
+      "test_id": 75,
+      "name": "Agent Circuit Breaker Integration",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 105.49807548522949,
+      "error": null
+    },
+    {
+      "test_id": 76,
+      "name": "End-to-End Workflow Execution",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 1119.8968887329102,
+      "error": null
+    },
+    {
+      "test_id": 77,
+      "name": "Component Health Aggregation",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 201.15184783935547,
+      "error": null
+    },
+    {
+      "test_id": 78,
+      "name": "Error Propagation",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 101.38821601867676,
+      "error": null
+    },
+    {
+      "test_id": 79,
+      "name": "Concurrent Integration",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 1323.9638805389404,
+      "error": null
+    },
+    {
+      "test_id": 80,
+      "name": "Data Flow Integration",
+      "category": "Integration",
+      "status": "PASS",
+      "duration_ms": 1116.696834564209,
+      "error": null
+    },
+    {
+      "test_id": 81,
+      "name": "Workflow Latency",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 1118.2420253753662,
+      "error": null
+    },
+    {
+      "test_id": 82,
+      "name": "Concurrent Performance",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 2179.5380115509033,
+      "error": null
+    },
+    {
+      "test_id": 83,
+      "name": "Memory Efficiency",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 11178.091049194336,
+      "error": null
+    },
+    {
+      "test_id": 84,
+      "name": "Throughput Measurement",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 4240.293979644775,
+      "error": null
+    },
+    {
+      "test_id": 85,
+      "name": "Resource Cleanup",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 3362.8859519958496,
+      "error": null
+    },
+    {
+      "test_id": 86,
+      "name": "Event Store Performance",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 0.49591064453125,
+      "error": null
+    },
+    {
+      "test_id": 87,
+      "name": "Optimizer Performance",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 1.096963882446289,
+      "error": null
+    },
+    {
+      "test_id": 88,
+      "name": "System Scalability",
+      "category": "Performance",
+      "status": "PASS",
+      "duration_ms": 4690.321922302246,
+      "error": null
+    }
+  ]
+}

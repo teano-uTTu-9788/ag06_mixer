@@ -1,0 +1,536 @@
+{
+  "total": 88,
+  "passed": 88,
+  "failed": 0,
+  "percentage": 100.0,
+  "results": [
+    {
+      "name": "Server process running",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Port 9090 listening",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Health endpoint accessible",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Health returns valid JSON",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Service status is healthy",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Uptime is tracked",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "CORS headers present",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Static file serving works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Server accepts connections",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Async event loop running",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "GET /api/health works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "GET /api/mix works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "POST /api/mix works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "GET /api/stats works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "POST /api/youtube/search works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "POST /api/youtube/queue works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "GET /api/youtube/queue works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "POST /api/effects works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "POST /api/voice works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Content-Type is JSON",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Invalid endpoint returns 404",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Empty POST handled gracefully",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Large payload handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Concurrent requests handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "API responds quickly",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Search returns results",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Results have video_id",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Results have title",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Results have thumbnail",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Demo mode works without API key",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Queue adds songs",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Queue returns position",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Queue can be retrieved",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "AI mix applied on queue",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Search handles special characters",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Mixer has default settings",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Reverb can be adjusted",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Bass boost works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Vocal reduction works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Party effect applies",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Clean effect resets",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "No vocals effect works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Multiple settings update",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Settings persist",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Invalid effect handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Play command recognized",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Skip command works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Volume up command",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Volume down command",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Add reverb command",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Remove vocals command",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Command updates settings",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Empty command handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Manifest.json exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Service worker exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Interface HTML exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Interface has viewport meta",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Apple mobile web app capable",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Status bar style configured",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "PWA title configured",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Manifest linked in HTML",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Touch optimizations present",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Responsive design implemented",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Search input exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Voice button exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Player container exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Mixer controls exist",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Reverb slider exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Bass slider exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Effect buttons exist",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "YouTube iframe API loaded",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Results grid exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Queue display exists",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Invalid JSON handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Missing required field handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Invalid mixer value handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Network timeout handled",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Server recovers from error",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "404 for non-existent files",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Headers injection prevented",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "SQL injection prevented",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Health check < 100ms",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Search responds < 1s",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Mixer update < 50ms",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Can handle 10 requests/sec",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Memory usage stable",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "Stats tracking works",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    },
+    {
+      "name": "System fully operational",
+      "passed": true,
+      "details": "",
+      "status": "\u2705 PASS"
+    }
+  ]
+}

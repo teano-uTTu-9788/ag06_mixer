@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aioke - Real-time Audio Processing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        .spectrum-bar {
+            transition: height 0.1s ease-out;
+            background: linear-gradient(to top, #3b82f6, #8b5cf6);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                Aioke
+            </h1>
+            <p class="text-gray-400">Real-time Audio Processing with SSE Streaming</p>
+            <div id="connection-status" class="mt-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm glass">
+                    <span id="status-indicator" class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    <span id="status-text">Disconnected</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Controls -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Control Panel -->
+            <div class="glass rounded-xl p-6">
+                <h2 class="text-2xl font-semibold mb-4">Control Panel</h2>
+                
+                <div class="space-y-4">
+                    <button id="connect-btn" 
+                            class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all">
+                        Connect to Stream
+                    </button>
+                    
+                    <div>
+                        <label class="block text-sm mb-2">AI Mix Level</label>
+                        <input type="range" id="ai-mix" min="0" max="100" value="70" 
+                               class="w-full accent-purple-500">
+                        <span id="ai-mix-value" class="text-sm text-gray-400">70%</span>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm mb-2">Bass Boost</label>
+                        <input type="range" id="bass-boost" min="0" max="200" value="130" 
+                               class="w-full accent-purple-500">
+                        <span id="bass-boost-value" class="text-sm text-gray-400">130%</span>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm mb-2">Presence</label>
+                        <input type="range" id="presence" min="0" max="200" value="120" 
+                               class="w-full accent-purple-500">
+                        <span id="presence-value" class="text-sm text-gray-400">120%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Display -->
+            <div class="glass rounded-xl p-6">
+                <h2 class="text-2xl font-semibold mb-4">Live Metrics</h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-400">Input Level</p>
+                        <p class="text-2xl font-bold">
+                            <span id="input-rms">-60.0</span> dB
+                        </p>
+                        <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                            <div id="input-level-bar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-gray-400">Output Level</p>
+                        <p class="text-2xl font-bold">
+                            <span id="output-rms">-60.0</span> dB
+                        </p>
+                        <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                            <div id="output-level-bar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-gray-400">Genre</p>
+                        <p class="text-xl font-semibold" id="genre">Unknown</p>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-gray-400">Latency</p>
+                        <p class="text-xl font-semibold">
+                            <span id="latency">0</span> ms
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-sm text-gray-400">Cloud Environment</p>
+                    <p class="text-lg" id="environment">Local</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spectrum Visualizer -->
+        <div class="glass rounded-xl p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Spectrum Analyzer</h2>
+            <div class="h-48 flex items-end justify-between" id="spectrum-container">
+                <!-- Spectrum bars will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="glass rounded-xl p-6">
+            <h2 class="text-2xl font-semibold mb-4">Performance History</h2>
+            <canvas id="performance-chart" class="w-full h-64"></canvas>
+        </div>
+
+        <!-- Event Log -->
+        <div class="glass rounded-xl p-6 mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Event Stream</h2>
+            <div id="event-log" class="h-32 overflow-y-auto font-mono text-sm text-gray-300 space-y-1">
+                <div>Waiting for connection...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8080'
+            : (window.NEXT_PUBLIC_API_URL || 'https://aioke-backend.azurecontainerapps.io');
+        
+        // State
+        let eventSource = null;
+        let isConnected = false;
+        let performanceChart = null;
+        let chartData = {
+            labels: [],
+            datasets: [{
+                label: 'Input RMS',
+                data: [],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            }, {
+                label: 'Output RMS',
+                data: [],
+                borderColor: 'rgb(139, 92, 246)',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            }]
+        };
+
+        // Initialize spectrum bars
+        function initSpectrum() {
+            const container = document.getElementById('spectrum-container');
+            container.innerHTML = '';
+            for (let i = 0; i < 16; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'spectrum-bar rounded-t';
+                bar.style.width = '5%';
+                bar.style.height = '0%';
+                bar.id = `spectrum-bar-${i}`;
+                container.appendChild(bar);
+            }
+        }
+
+        // Update spectrum display
+        function updateSpectrum(spectrum) {
+            if (!spectrum || spectrum.length === 0) return;
+            
+            for (let i = 0; i < Math.min(16, spectrum.length); i++) {
+                const bar = document.getElementById(`spectrum-bar-${i}`);
+                if (bar) {
+                    const height = Math.max(0, Math.min(100, spectrum[i]));
+                    bar.style.height = `${height}%`;
+                }
+            }
+        }
+
+        // Update metrics display
+        function updateMetrics(data) {
+            // Update levels
+            const inputRms = data.metrics?.input_rms || -60;
+            const outputRms = data.metrics?.output_rms || -60;
+            
+            document.getElementById('input-rms').textContent = inputRms.toFixed(1);
+            document.getElementById('output-rms').textContent = outputRms.toFixed(1);
+            
+            // Update level bars
+            const inputPercent = Math.max(0, Math.min(100, (inputRms + 60) * 1.67));
+            const outputPercent = Math.max(0, Math.min(100, (outputRms + 60) * 1.67));
+            
+            document.getElementById('input-level-bar').style.width = `${inputPercent}%`;
+            document.getElementById('output-level-bar').style.width = `${outputPercent}%`;
+            
+            // Update genre
+            if (data.genre) {
+                document.getElementById('genre').textContent = 
+                    data.genre.charAt(0).toUpperCase() + data.genre.slice(1);
+            }
+            
+            // Update latency
+            if (data.metrics?.latency_ms) {
+                document.getElementById('latency').textContent = 
+                    data.metrics.latency_ms.toFixed(1);
+            }
+            
+            // Update spectrum
+            if (data.spectrum) {
+                updateSpectrum(data.spectrum);
+            }
+            
+            // Update chart
+            updateChart(inputRms, outputRms);
+        }
+
+        // Update performance chart
+        function updateChart(inputRms, outputRms) {
+            if (!performanceChart) return;
+            
+            const now = new Date().toLocaleTimeString();
+            
+            // Keep only last 20 data points
+            if (chartData.labels.length > 20) {
+                chartData.labels.shift();
+                chartData.datasets[0].data.shift();
+                chartData.datasets[1].data.shift();
+            }
+            
+            chartData.labels.push(now);
+            chartData.datasets[0].data.push(inputRms);
+            chartData.datasets[1].data.push(outputRms);
+            
+            performanceChart.update('none'); // No animation for smooth updates
+        }
+
+        // Log event
+        function logEvent(message, type = 'info') {
+            const log = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const colors = {
+                'info': 'text-gray-300',
+                'success': 'text-green-400',
+                'error': 'text-red-400',
+                'warning': 'text-yellow-400'
+            };
+            
+            entry.className = colors[type] || 'text-gray-300';
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Keep only last 50 entries
+            while (log.children.length > 50) {
+                log.removeChild(log.firstChild);
+            }
+        }
+
+        // Connect to SSE stream
+        function connect() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            logEvent('Connecting to SSE stream...', 'info');
+            
+            eventSource = new EventSource(`${API_URL}/api/stream`);
+            
+            eventSource.onopen = () => {
+                isConnected = true;
+                document.getElementById('status-indicator').className = 
+                    'w-2 h-2 bg-green-500 rounded-full mr-2 pulse';
+                document.getElementById('status-text').textContent = 'Connected';
+                document.getElementById('connect-btn').textContent = 'Disconnect';
+                logEvent('Connected to stream', 'success');
+                
+                // Fetch initial status
+                fetchStatus();
+            };
+            
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'audio_update') {
+                        updateMetrics(data);
+                    } else if (data.type === 'heartbeat') {
+                        // Heartbeat received, connection is alive
+                    }
+                } catch (error) {
+                    console.error('Error parsing SSE data:', error);
+                }
+            };
+            
+            eventSource.onerror = (error) => {
+                isConnected = false;
+                document.getElementById('status-indicator').className = 
+                    'w-2 h-2 bg-red-500 rounded-full mr-2';
+                document.getElementById('status-text').textContent = 'Disconnected';
+                document.getElementById('connect-btn').textContent = 'Connect to Stream';
+                logEvent('Stream disconnected', 'error');
+                
+                // Attempt to reconnect after 5 seconds
+                setTimeout(() => {
+                    if (!isConnected) {
+                        logEvent('Attempting to reconnect...', 'warning');
+                        connect();
+                    }
+                }, 5000);
+            };
+        }
+
+        // Disconnect from stream
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            isConnected = false;
+            document.getElementById('status-indicator').className = 
+                'w-2 h-2 bg-red-500 rounded-full mr-2';
+            document.getElementById('status-text').textContent = 'Disconnected';
+            document.getElementById('connect-btn').textContent = 'Connect to Stream';
+            logEvent('Disconnected from stream', 'info');
+        }
+
+        // Fetch current status
+        async function fetchStatus() {
+            try {
+                const response = await fetch(`${API_URL}/api/status`);
+                const data = await response.json();
+                
+                // Update environment
+                if (data.cloud?.environment) {
+                    document.getElementById('environment').textContent = 
+                        data.cloud.environment.charAt(0).toUpperCase() + 
+                        data.cloud.environment.slice(1);
+                }
+                
+                logEvent(`Status: ${data.processing ? 'Processing' : 'Idle'}`, 'info');
+            } catch (error) {
+                logEvent('Failed to fetch status', 'error');
+            }
+        }
+
+        // Update configuration
+        async function updateConfig() {
+            const config = {
+                ai_mix: document.getElementById('ai-mix').value / 100,
+                bass_boost: document.getElementById('bass-boost').value / 100,
+                presence_boost: document.getElementById('presence').value / 100
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (response.ok) {
+                    logEvent('Configuration updated', 'success');
+                }
+            } catch (error) {
+                logEvent('Failed to update configuration', 'error');
+            }
+        }
+
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('performance-chart').getContext('2d');
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: -60,
+                            max: 0,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: 'rgba(255, 255, 255, 0.9)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        });
+
+        // Slider event listeners
+        ['ai-mix', 'bass-boost', 'presence'].forEach(id => {
+            const slider = document.getElementById(id);
+            const valueDisplay = document.getElementById(`${id}-value`);
+            
+            slider.addEventListener('input', () => {
+                valueDisplay.textContent = `${slider.value}%`;
+            });
+            
+            slider.addEventListener('change', updateConfig);
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initSpectrum();
+            initChart();
+            logEvent('Application initialized', 'success');
+            
+            // Auto-connect
+            setTimeout(() => {
+                connect();
+            }, 1000);
+        });
+
+        // Cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>

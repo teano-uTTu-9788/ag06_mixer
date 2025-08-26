@@ -1,0 +1,7 @@
+auto_renewal: true
+cert_authority: letsencrypt
+cipher_suite: ECDHE-RSA-AES256-GCM-SHA384
+domain: ag06mixer.com
+protocols:
+- TLSv1.2
+- TLSv1.3

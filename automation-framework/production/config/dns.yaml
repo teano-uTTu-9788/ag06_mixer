@@ -1,0 +1,21 @@
+cdn:
+  caching_rules:
+  - static_assets
+  - api_responses
+  enabled: true
+  provider: cloudflare
+domain: ag06mixer.com
+records:
+- name: '@'
+  type: A
+  value: 203.0.113.1
+- name: www
+  type: A
+  value: 203.0.113.1
+- name: api
+  type: CNAME
+  value: api.ag06mixer.com
+- name: '@'
+  priority: 10
+  type: MX
+  value: mail.ag06mixer.com

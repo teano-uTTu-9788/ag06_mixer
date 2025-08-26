@@ -1,0 +1,7 @@
+backup_schedule: hourly
+connection_pool_size: 20
+database: ag06_mixer_production
+host: ag06-db-primary.internal
+port: 5432
+replica_host: ag06-db-replica.internal
+replication_enabled: true

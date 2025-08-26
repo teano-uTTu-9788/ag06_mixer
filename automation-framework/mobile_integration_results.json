@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-08-24T19:15:52.815455",
+  "server_url": "http://127.0.0.1:8080",
+  "passed": 24,
+  "failed": 2,
+  "total": 26,
+  "percentage": 92.3076923076923,
+  "results": [
+    [
+      "Health check endpoint",
+      "\u2705 PASS"
+    ],
+    [
+      "API status endpoint",
+      "\u2705 PASS"
+    ],
+    [
+      "Response time < 100ms",
+      "\u2705 PASS"
+    ],
+    [
+      "GET /api/status",
+      "\u2705 PASS"
+    ],
+    [
+      "POST /api/start",
+      "\u2705 PASS"
+    ],
+    [
+      "POST /api/stop",
+      "\u2705 PASS"
+    ],
+    [
+      "POST /api/config",
+      "\u2705 PASS"
+    ],
+    [
+      "Start mixer operation",
+      "\u2705 PASS"
+    ],
+    [
+      "Mixer status after start",
+      "\u274c FAIL"
+    ],
+    [
+      "Stop mixer operation",
+      "\u2705 PASS"
+    ],
+    [
+      "Mixer status after stop",
+      "\u274c FAIL"
+    ],
+    [
+      "Configuration update 1",
+      "\u2705 PASS"
+    ],
+    [
+      "Configuration update 2",
+      "\u2705 PASS"
+    ],
+    [
+      "Configuration update 3",
+      "\u2705 PASS"
+    ],
+    [
+      "404 error handling",
+      "\u2705 PASS"
+    ],
+    [
+      "Invalid JSON handling",
+      "\u2705 PASS"
+    ],
+    [
+      "Rapid request handling",
+      "\u2705 PASS"
+    ],
+    [
+      "Handle 10 concurrent requests",
+      "\u2705 PASS"
+    ],
+    [
+      "Response time consistency",
+      "\u2705 PASS"
+    ],
+    [
+      "Memory efficiency (100 requests)",
+      "\u2705 PASS"
+    ],
+    [
+      "Free tier rate limiting",
+      "\u2705 PASS"
+    ],
+    [
+      "Pro tier features",
+      "\u2705 PASS"
+    ],
+    [
+      "Studio tier features",
+      "\u2705 PASS"
+    ],
+    [
+      "Battery mode: aggressive",
+      "\u2705 PASS"
+    ],
+    [
+      "Battery mode: balanced",
+      "\u2705 PASS"
+    ],
+    [
+      "Battery mode: performance",
+      "\u2705 PASS"
+    ]
+  ]
+}

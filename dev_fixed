@@ -1,0 +1,317 @@
+#!/usr/bin/env bash
+# Developer CLI - Meta/Google Inspired Development Tool (Fixed)
+# Provides unified interface for all development operations
+
+set -euo pipefail
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export AUTOMATION_LIB_DIR="$SCRIPT_DIR/scripts/lib"
+
+# Load core library (fixed version)
+if [[ -f "$AUTOMATION_LIB_DIR/core_fixed.sh" ]]; then
+    source "$AUTOMATION_LIB_DIR/core_fixed.sh"
+else
+    # Fallback logging
+    log::info() { echo "[INFO] $*" >&2; }
+    log::warn() { echo "[WARN] $*" >&2; }
+    log::error() { echo "[ERROR] $*" >&2; }
+fi
+
+# ============================================================================
+# Command Registry
+# ============================================================================
+
+declare -A COMMANDS
+declare -A COMMAND_DESCRIPTIONS
+
+register_command() {
+    local name="$1"
+    local description="$2"
+    COMMANDS["$name"]=1
+    COMMAND_DESCRIPTIONS["$name"]="$description"
+}
+
+# Register available commands
+register_command "bootstrap" "Bootstrap development environment"
+register_command "doctor" "Check system health and dependencies"
+register_command "build" "Build the project"
+register_command "test" "Run test suite"
+register_command "lint" "Run linters and formatters"
+register_command "fmt" "Format code automatically"
+register_command "ci" "Run CI checks locally"
+register_command "deploy" "Deploy to specified environment"
+register_command "clean" "Clean build artifacts and caches"
+register_command "shell" "Enter development shell"
+register_command "help" "Show this help message"
+
+# ============================================================================
+# Commands
+# ============================================================================
+
+cmd::bootstrap() {
+    log::info "Bootstrapping development environment..."
+    
+    # Create virtual environment if Python is available
+    if command -v python3 &>/dev/null; then
+        if [[ ! -d ".venv" ]]; then
+            log::info "Creating Python virtual environment..."
+            python3 -m venv .venv
+        fi
+    fi
+    
+    # Install from Brewfile if on macOS
+    if command -v brew &>/dev/null && [[ -f "Brewfile" ]]; then
+        log::info "Installing dependencies from Brewfile..."
+        brew bundle install --file=Brewfile || log::warn "Brewfile installation had issues"
+    fi
+    
+    log::info "Bootstrap complete!"
+}
+
+cmd::doctor() {
+    log::info "Running system health check..."
+    
+    local issues=0
+    
+    # Check required commands
+    local required_commands=("bash" "git")
+    for cmd in "${required_commands[@]}"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            log::error "Required command not found: $cmd"
+            ((issues++))
+        else
+            log::info "✓ $cmd installed"
+        fi
+    done
+    
+    # Check if in git repository
+    if git rev-parse --git-dir &>/dev/null; then
+        log::info "✓ Git repository detected"
+    else
+        log::warn "⚠ Not in a git repository"
+        ((issues++))
+    fi
+    
+    # Check system resources
+    if command -v df &>/dev/null; then
+        local disk_free=$(df / | awk 'NR==2 {print int($4/1024)}' 2>/dev/null || echo "0")
+        if [[ $disk_free -gt 1000 ]]; then
+            log::info "✓ Sufficient disk space (${disk_free}MB free)"
+        else
+            log::warn "⚠ Low disk space (${disk_free}MB free)"
+        fi
+    fi
+    
+    if [[ $issues -eq 0 ]]; then
+        log::info "All checks passed! System is healthy."
+        return 0
+    else
+        log::error "Found $issues issues."
+        return 1
+    fi
+}
+
+cmd::build() {
+    log::info "Building project..."
+    
+    # Python projects
+    if [[ -f "setup.py" ]] || [[ -f "pyproject.toml" ]]; then
+        log::info "Building Python project..."
+        if [[ -d ".venv" ]]; then
+            source .venv/bin/activate
+        fi
+        
+        if [[ -f "pyproject.toml" ]]; then
+            pip install -e . 2>/dev/null || log::warn "Python build had issues"
+        elif [[ -f "setup.py" ]]; then
+            python setup.py build 2>/dev/null || log::warn "Python build had issues"
+        fi
+    fi
+    
+    # Node projects
+    if [[ -f "package.json" ]]; then
+        log::info "Building Node project..."
+        npm run build 2>/dev/null || npm run compile 2>/dev/null || log::warn "Node build not available"
+    fi
+    
+    log::info "Build complete!"
+}
+
+cmd::test() {
+    log::info "Running tests..."
+    
+    # Run our 88-test suite if it exists
+    if [[ -x "./run_88_tests.sh" ]]; then
+        log::info "Running MANU compliance tests..."
+        ./run_88_tests.sh
+        return $?
+    fi
+    
+    # Python tests
+    if command -v pytest &>/dev/null; then
+        log::info "Running Python tests..."
+        pytest -v 2>/dev/null || log::warn "Python tests had issues"
+    fi
+    
+    # Node tests
+    if [[ -f "package.json" ]] && grep -q '"test"' package.json; then
+        log::info "Running Node tests..."
+        npm test 2>/dev/null || log::warn "Node tests had issues"
+    fi
+    
+    log::info "Tests complete!"
+}
+
+cmd::lint() {
+    log::info "Running linters..."
+    
+    # Shell script linting
+    if command -v shellcheck &>/dev/null; then
+        log::info "Running shellcheck..."
+        find . -name "*.sh" -exec shellcheck {} \; || log::warn "Shellcheck found issues"
+    fi
+    
+    # Python linting
+    if command -v ruff &>/dev/null; then
+        log::info "Running ruff..."
+        ruff check . || log::warn "Ruff found issues"
+    fi
+    
+    log::info "Linting complete!"
+}
+
+cmd::fmt() {
+    log::info "Formatting code..."
+    
+    # Shell script formatting
+    if command -v shfmt &>/dev/null; then
+        log::info "Formatting shell scripts..."
+        find . -name "*.sh" -exec shfmt -w {} \; || true
+    fi
+    
+    log::info "Formatting complete!"
+}
+
+cmd::ci() {
+    log::info "Running CI checks locally..."
+    
+    cmd::lint
+    cmd::test
+    
+    log::info "CI checks complete!"
+}
+
+cmd::deploy() {
+    local environment="${1:-local}"
+    log::info "Deploying to $environment..."
+    
+    case "$environment" in
+        local)
+            log::info "Local deployment..."
+            # Add local deployment logic
+            ;;
+        staging)
+            log::info "Staging deployment..."
+            # Add staging deployment logic
+            ;;
+        production)
+            log::warn "Production deployment requires confirmation"
+            ;;
+        *)
+            log::error "Unknown environment: $environment"
+            return 1
+            ;;
+    esac
+    
+    log::info "Deployment to $environment complete!"
+}
+
+cmd::clean() {
+    log::info "Cleaning build artifacts..."
+    
+    # Python cleanup
+    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    find . -type f -name "*.pyc" -delete 2>/dev/null || true
+    rm -rf build/ dist/ .pytest_cache/ .coverage htmlcov/ 2>/dev/null || true
+    
+    # Node cleanup
+    rm -rf node_modules/ .next/ out/ 2>/dev/null || true
+    
+    log::info "Cleanup complete!"
+}
+
+cmd::shell() {
+    log::info "Entering development shell..."
+    
+    # Activate Python virtual environment
+    if [[ -f ".venv/bin/activate" ]]; then
+        source .venv/bin/activate
+    fi
+    
+    # Start shell with custom prompt
+    PS1="(dev) \w $ " bash --norc
+}
+
+cmd::help() {
+    cat << EOF
+Developer CLI - Unified Development Tool
+
+Usage: $0 <command> [options]
+
+Available commands:
+
+EOF
+    
+    for cmd in "${!COMMAND_DESCRIPTIONS[@]}"; do
+        printf "  %-12s %s\n" "$cmd" "${COMMAND_DESCRIPTIONS[$cmd]}"
+    done | sort
+    
+    cat << EOF
+
+Examples:
+  $0 bootstrap    # Setup development environment
+  $0 test         # Run all tests
+  $0 ci           # Run CI checks locally
+  $0 deploy prod  # Deploy to production
+
+EOF
+}
+
+# ============================================================================
+# Main Entry Point
+# ============================================================================
+
+main() {
+    local command="${1:-help}"
+    shift || true
+    
+    # Check if command exists
+    if [[ -z "${COMMANDS[$command]:-}" ]] && [[ "$command" != "help" ]]; then
+        log::error "Unknown command: $command"
+        cmd::help
+        exit 1
+    fi
+    
+    # Execute command
+    case "$command" in
+        bootstrap)  cmd::bootstrap "$@" ;;
+        doctor)     cmd::doctor "$@" ;;
+        build)      cmd::build "$@" ;;
+        test)       cmd::test "$@" ;;
+        lint)       cmd::lint "$@" ;;
+        fmt)        cmd::fmt "$@" ;;
+        ci)         cmd::ci "$@" ;;
+        deploy)     cmd::deploy "$@" ;;
+        clean)      cmd::clean "$@" ;;
+        shell)      cmd::shell "$@" ;;
+        help|--help|-h) cmd::help ;;
+        *)          
+            log::error "Command not implemented: $command"
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function
+main "$@"

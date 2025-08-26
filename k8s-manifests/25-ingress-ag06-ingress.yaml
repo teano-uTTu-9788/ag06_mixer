@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ag06-ingress
+  namespace: ag06-production
+  labels:
+    app.kubernetes.io/name: ag06
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: ag06-deployer
+    app.kubernetes.io/part-of: ag06-platform
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: ag06-ip
+    ingress.gcp.kubernetes.io/managed-certificates: ag06-ssl-cert
+    kubernetes.io/ingress.allow-http: 'false'
+spec:
+  tls:
+  - secretName: ag06-tls-secret
+    hosts:
+    - ag06.example.com
+  rules:
+  - host: ag06.example.com
+    http:
+      paths:
+      - path: /api/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: ag06-api
+            port:
+              number: 8080
+      - path: /dashboard/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: ag06-dashboard
+            port:
+              number: 8080
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: ag06-frontend
+            port:
+              number: 80

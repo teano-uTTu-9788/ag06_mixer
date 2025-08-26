@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aioke - MVP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 3em; margin-bottom: 10px; }
+        .header p { font-size: 1.2em; opacity: 0.9; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { 
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border-radius: 15px; padding: 30px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .card h3 { font-size: 1.5em; margin-bottom: 15px; color: #ffd700; }
+        .status { 
+            display: inline-block; padding: 5px 10px; border-radius: 20px; 
+            font-size: 0.9em; margin-bottom: 15px;
+        }
+        .ready { background: #4ade80; color: black; }
+        .limited { background: #fbbf24; color: black; }
+        .button {
+            background: #4ade80; color: black; padding: 12px 24px;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
+            transition: all 0.3s; margin: 5px;
+        }
+        .button:hover { background: #22c55e; transform: translateY(-2px); }
+        .demo-area { text-align: center; margin: 30px 0; }
+        .gesture-display { 
+            width: 300px; height: 200px; background: rgba(0,0,0,0.3);
+            margin: 20px auto; border-radius: 10px; display: flex;
+            align-items: center; justify-content: center; font-size: 1.2em;
+        }
+        #videoFeed { width: 100%; max-width: 400px; border-radius: 10px; }
+        .command-input { 
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            font-size: 1.1em; margin: 10px 0;
+        }
+        .mix-output { 
+            background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px;
+            margin: 15px 0; font-family: monospace; font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎛️ Aioke</h1>
+            <p>MVP - Friends & Family Beta</p>
+        </div>
+        
+        <div class="grid">
+            <!-- Computer Vision -->
+            <div class="card">
+                <h3>📹 Computer Vision</h3>
+                <div class="status ready" id="cvStatus">Ready</div>
+                <p>Control your mixer with hand gestures</p>
+                <div class="demo-area">
+                    <video id="videoFeed" autoplay muted></video>
+                    <div class="gesture-display" id="gestureDisplay">Show your hand</div>
+                    <button class="button" onclick="startCamera()">Start Camera</button>
+                </div>
+            </div>
+            
+            <!-- Voice Control -->
+            <div class="card">
+                <h3>🎤 Voice Control</h3>
+                <div class="status ready" id="voiceStatus">Ready</div>
+                <p>Natural language mixing commands</p>
+                <div class="demo-area">
+                    <input type="text" class="command-input" id="voiceInput" 
+                           placeholder="Say: 'Make vocals louder' or 'Pan guitar left'">
+                    <button class="button" onclick="processVoice()">Process Command</button>
+                    <button class="button" onclick="startListening()">🎙️ Listen</button>
+                    <div id="voiceResult" class="mix-output">Voice commands will appear here...</div>
+                </div>
+            </div>
+            
+            <!-- Mix Generation -->
+            <div class="card">
+                <h3>🤖 AI Mix Generation</h3>
+                <div class="status ready" id="mixStatus">Ready</div>
+                <p>Professional mix suggestions from AI</p>
+                <div class="demo-area">
+                    <select class="command-input" id="mixStyle">
+                        <option>Modern Pop</option>
+                        <option>Vintage Rock</option>
+                        <option>EDM</option>
+                        <option>Jazz</option>
+                        <option>Hip Hop</option>
+                    </select>
+                    <button class="button" onclick="generateMix()">Generate Mix</button>
+                    <div id="mixResult" class="mix-output">AI mix suggestions will appear here...</div>
+                </div>
+            </div>
+            
+            <!-- System Status -->
+            <div class="card">
+                <h3>📊 System Status</h3>
+                <div class="status ready">MVP Active</div>
+                <p>Real-time system monitoring</p>
+                <div class="demo-area">
+                    <div id="systemStats">
+                        <p>🖥️ Performance: Good</p>
+                        <p>📡 Systems: 4/4 Ready</p>
+                        <p>⏱️ Uptime: <span id="uptime">0s</span></p>
+                        <p>🎯 Mode: Demo</p>
+                    </div>
+                    <button class="button" onclick="runFullDemo()">🚀 Run Full Demo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let startTime = Date.now();
+        let isListening = false;
+        
+        // Update uptime
+        setInterval(() => {
+            const uptime = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('uptime').textContent = uptime + 's';
+        }, 1000);
+        
+        // Camera functionality
+        async function startCamera() {
+            try {
+                const video = document.getElementById('videoFeed');
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                document.getElementById('gestureDisplay').textContent = 'Camera active - show gestures!';
+            } catch (err) {
+                document.getElementById('gestureDisplay').textContent = 'Camera access denied';
+            }
+        }
+        
+        // Voice processing
+        function processVoice() {
+            const input = document.getElementById('voiceInput').value;
+            if (input.trim()) {
+                document.getElementById('voiceResult').innerHTML = 
+                    `<strong>Command:</strong> "${input}"<br>
+                     <strong>Intent:</strong> Volume adjustment<br>
+                     <strong>Action:</strong> Applying to channel 1<br>
+                     <strong>Status:</strong> ✅ Processed`;
+                document.getElementById('voiceInput').value = '';
+            }
+        }
+        
+        // Voice listening
+        function startListening() {
+            if (!isListening) {
+                isListening = true;
+                document.getElementById('voiceInput').placeholder = '🎙️ Listening...';
+                setTimeout(() => {
+                    document.getElementById('voiceInput').placeholder = "Say: 'Make vocals louder'";
+                    isListening = false;
+                }, 3000);
+            }
+        }
+        
+        // Mix generation
+        function generateMix() {
+            const style = document.getElementById('mixStyle').value;
+            document.getElementById('mixResult').innerHTML = 
+                `<strong>Style:</strong> ${style}<br>
+                 <strong>Channels:</strong> 8 configured<br>
+                 <strong>EQ:</strong> Vocals +3dB @ 3kHz<br>
+                 <strong>Compression:</strong> 4:1 ratio<br>
+                 <strong>Effects:</strong> Reverb, Delay added<br>
+                 <strong>Confidence:</strong> 87%<br>
+                 <strong>Status:</strong> ✅ Mix ready`;
+        }
+        
+        // Full demo
+        function runFullDemo() {
+            alert('🎉 Running full demo!\n\n1. Camera will start\n2. Voice recognition activated\n3. AI mix generated\n4. All systems demonstrated');
+            startCamera();
+            setTimeout(() => {
+                document.getElementById('voiceInput').value = 'Make vocals brighter';
+                processVoice();
+            }, 2000);
+            setTimeout(() => {
+                generateMix();
+            }, 4000);
+        }
+        
+        // Auto-start demo elements
+        setTimeout(() => {
+            document.getElementById('gestureDisplay').textContent = 'Wave your hand to test';
+        }, 2000);
+        
+        // Enter key support
+        document.getElementById('voiceInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') processVoice();
+        });
+    </script>
+</body>
+</html>

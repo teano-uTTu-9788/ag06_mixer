@@ -1,0 +1,246 @@
+{
+  "timestamp": "2025-08-24T20:45:40.008534",
+  "practices_implemented": {
+    "google_sre": "Golden Signals, Error Budgets, SLOs",
+    "meta_chaos": "Chaos Engineering, Resilience Testing",
+    "amazon_cells": "Cell-Based Architecture, Blast Radius Reduction",
+    "netflix_concurrency": "Adaptive Concurrency, Auto-scaling",
+    "uber_ringpop": "Distributed Membership, Consistent Hashing",
+    "spotify_squads": "Autonomous Teams, Cross-functional Chapters"
+  },
+  "metrics": {
+    "google": {
+      "latency": {
+        "p50": 101.28020661221882,
+        "p95": 150.4383985759846,
+        "p99": 183.8023124078255
+      },
+      "traffic": 2126.839388559446,
+      "errors": 0.0019927934607109777,
+      "saturation": {
+        "cpu": 0.4132083408441951,
+        "memory": 0.6839716186391896,
+        "disk": 0.49129069736429554
+      },
+      "error_budget_consumed": 199.27934607109776
+    },
+    "meta": [
+      {
+        "experiment": "latency_injection",
+        "blast_radius": "5%",
+        "impact": "5.1%",
+        "recovered": true,
+        "recovery_time": 4.814013623378224
+      },
+      {
+        "experiment": "error_injection",
+        "blast_radius": "5%",
+        "impact": "4.7%",
+        "recovered": true,
+        "recovery_time": 1.6536578091943166
+      },
+      {
+        "experiment": "resource_exhaustion",
+        "blast_radius": "5%",
+        "impact": "3.3%",
+        "recovered": false,
+        "recovery_time": null
+      },
+      {
+        "experiment": "network_partition",
+        "blast_radius": "5%",
+        "impact": "4.7%",
+        "recovered": true,
+        "recovery_time": 2.4972837576041167
+      },
+      {
+        "experiment": "clock_skew",
+        "blast_radius": "5%",
+        "impact": "3.2%",
+        "recovered": true,
+        "recovery_time": 3.6341298634395733
+      },
+      {
+        "experiment": "certificate_expiry",
+        "blast_radius": "5%",
+        "impact": "9.7%",
+        "recovered": true,
+        "recovery_time": 3.872473987786013
+      }
+    ],
+    "amazon": [
+      {
+        "id": "cell-00",
+        "region": "us-east-1",
+        "users": 1000,
+        "health": "degraded",
+        "load": 0.3430800631735878,
+        "version": "v1.1.0"
+      },
+      {
+        "id": "cell-01",
+        "region": "us-west-2",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.8099502117119393,
+        "version": "v1.0.0"
+      },
+      {
+        "id": "cell-02",
+        "region": "us-east-1",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.49393248209921814,
+        "version": "v1.1.0"
+      },
+      {
+        "id": "cell-03",
+        "region": "us-east-1",
+        "users": 1000,
+        "health": "degraded",
+        "load": 0.7502752179803958,
+        "version": "v1.0.1"
+      },
+      {
+        "id": "cell-04",
+        "region": "eu-west-1",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.8224722039773316,
+        "version": "v1.1.0"
+      },
+      {
+        "id": "cell-05",
+        "region": "us-east-1",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.6209547725039151,
+        "version": "v1.0.0"
+      },
+      {
+        "id": "cell-06",
+        "region": "us-east-1",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.6206035900399771,
+        "version": "v1.0.0"
+      },
+      {
+        "id": "cell-07",
+        "region": "us-west-2",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.51706981410235,
+        "version": "v1.1.0"
+      },
+      {
+        "id": "cell-08",
+        "region": "us-west-2",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.5079214751985829,
+        "version": "v1.0.1"
+      },
+      {
+        "id": "cell-09",
+        "region": "eu-west-1",
+        "users": 1000,
+        "health": "healthy",
+        "load": 0.8582678168741216,
+        "version": "v1.1.0"
+      }
+    ],
+    "netflix": 89.10000000000001,
+    "uber": [
+      {
+        "id": "node-ec4ffd4a",
+        "address": "10.0.0.1:7001",
+        "status": "suspect",
+        "vnodes": 137,
+        "ownership": 13.2495164410058
+      },
+      {
+        "id": "node-05fffeea",
+        "address": "10.0.0.2:7001",
+        "status": "suspect",
+        "vnodes": 278,
+        "ownership": 26.88588007736944
+      },
+      {
+        "id": "node-39dbe2ce",
+        "address": "10.0.0.3:7001",
+        "status": "alive",
+        "vnodes": 273,
+        "ownership": 26.402321083172147
+      },
+      {
+        "id": "node-9682781f",
+        "address": "10.0.0.4:7001",
+        "status": "suspect",
+        "vnodes": 218,
+        "ownership": 21.08317214700193
+      },
+      {
+        "id": "node-36796ec7",
+        "address": "10.0.0.5:7001",
+        "status": "alive",
+        "vnodes": 128,
+        "ownership": 12.379110251450678
+      }
+    ],
+    "spotify": {
+      "tribes": {
+        "Infrastructure": [
+          "Platform Squad",
+          "DevOps Squad",
+          "Security Squad"
+        ],
+        "Mobile": [
+          "iOS Squad",
+          "Android Squad",
+          "Mobile Platform Squad"
+        ],
+        "Growth": [
+          "Monetization Squad",
+          "Marketing Squad",
+          "Analytics Squad"
+        ]
+      },
+      "chapters": {
+        "Backend": [
+          "Platform Squad",
+          "Mobile Platform Squad",
+          "Analytics Squad"
+        ],
+        "Frontend": [
+          "iOS Squad",
+          "Android Squad",
+          "Marketing Squad"
+        ],
+        "Data": [
+          "Analytics Squad",
+          "Monetization Squad",
+          "Security Squad"
+        ],
+        "Quality": [
+          "All Squads"
+        ]
+      },
+      "guilds": {
+        "Machine Learning": 8,
+        "Performance": 12,
+        "Open Source": 6,
+        "Accessibility": 4
+      }
+    }
+  },
+  "readiness_scores": {
+    "Monitoring": 95,
+    "Resilience": 85,
+    "Scalability": 90,
+    "Performance": 88,
+    "Distribution": 92,
+    "Organization": 87
+  },
+  "overall_score": 89.5
+}

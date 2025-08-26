@@ -1,0 +1,21 @@
+alertmanager:
+  enabled: true
+  notification_channels:
+  - slack
+  - email
+  - pagerduty
+grafana:
+  admin_user: admin
+  dashboards:
+  - system
+  - application
+  - business
+  enabled: true
+log_aggregation:
+  elasticsearch: true
+  kibana: true
+  retention_days: 90
+prometheus:
+  enabled: true
+  retention: 30d
+  scrape_interval: 15s

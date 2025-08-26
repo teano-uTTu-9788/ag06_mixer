@@ -1,0 +1,300 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "AI Mixer - Global Production Dashboard",
+    "tags": ["ai-mixer", "production"],
+    "timezone": "UTC",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Global Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(ai_mixer_requests_total[1m])) by (region)",
+            "legendFormat": "{{region}} - Requests/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests per second",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "thresholds": [
+          {
+            "value": 10,
+            "colorMode": "critical",
+            "op": "lt"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Processing Latency (95th percentile)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(ai_mixer_processing_duration_seconds_bucket[5m])) by (le, region))",
+            "legendFormat": "{{region}} - p95 Latency"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0,
+            "max": 0.2
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "thresholds": [
+          {
+            "value": 0.1,
+            "colorMode": "critical",
+            "op": "gt"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate by Region",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(ai_mixer_requests_total{status!=\"200\"}[5m])) by (region) / sum(rate(ai_mixer_requests_total[5m])) by (region)",
+            "legendFormat": "{{region}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.005
+                },
+                {
+                  "color": "red",
+                  "value": 0.01
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Audio Streams",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_mixer_active_streams",
+            "legendFormat": "{{region}} - Active Streams"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Stream Count",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 5,
+        "title": "Audio Quality Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_mixer_audio_peak_db",
+            "legendFormat": "Peak Level (dB)"
+          },
+          {
+            "expr": "ai_mixer_audio_lufs",
+            "legendFormat": "LUFS Level"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "dB",
+            "min": -40,
+            "max": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        },
+        "thresholds": [
+          {
+            "value": -3,
+            "colorMode": "critical",
+            "op": "gt"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Genre Classification Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(ai_mixer_genre_classifications_total) by (genre)",
+            "legendFormat": "{{genre}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 7,
+        "title": "Genre Classification Accuracy",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "ai_mixer_genre_accuracy",
+            "legendFormat": "Accuracy"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.7
+                },
+                {
+                  "color": "green",
+                  "value": 0.8
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "id": 8,
+        "title": "System Resource Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{container!=\"POD\",container!=\"\"}[5m])",
+            "legendFormat": "CPU - {{container}}"
+          },
+          {
+            "expr": "container_memory_usage_bytes{container!=\"POD\",container!=\"\"} / 1024 / 1024 / 1024",
+            "legendFormat": "Memory GB - {{container}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Usage",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 28
+        }
+      },
+      {
+        "id": 9,
+        "title": "Kubernetes Pod Status",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "kube_pod_info{namespace=\"ai-mixer-global\"}",
+            "format": "table"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 36
+        }
+      },
+      {
+        "id": 10,
+        "title": "Network Traffic",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(container_network_receive_bytes_total[5m])) by (pod)",
+            "legendFormat": "RX - {{pod}}"
+          },
+          {
+            "expr": "sum(rate(container_network_transmit_bytes_total[5m])) by (pod)",
+            "legendFormat": "TX - {{pod}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes per second",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 44
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s",
+    "schemaVersion": 30,
+    "version": 1
+  }
+}

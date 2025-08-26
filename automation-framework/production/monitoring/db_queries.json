@@ -1,0 +1,5 @@
+{
+  "connection_count": "SELECT count(*) FROM pg_stat_activity;",
+  "database_size": "SELECT pg_size_pretty(pg_database_size(current_database()));",
+  "active_queries": "SELECT count(*) FROM pg_stat_activity WHERE state = 'active';"
+}

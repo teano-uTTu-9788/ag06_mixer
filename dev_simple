@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# Developer CLI - Simple Version
+# Provides unified interface for all development operations
+
+set -euo pipefail
+
+# Simple logging
+log_info() { echo "[INFO] $*" >&2; }
+log_warn() { echo "[WARN] $*" >&2; }
+log_error() { echo "[ERROR] $*" >&2; }
+
+# ============================================================================
+# Commands
+# ============================================================================
+
+cmd_bootstrap() {
+    log_info "Bootstrapping development environment..."
+    
+    # Create virtual environment if Python is available
+    if command -v python3 &>/dev/null; then
+        if [[ ! -d ".venv" ]]; then
+            log_info "Creating Python virtual environment..."
+            python3 -m venv .venv
+        fi
+    fi
+    
+    # Install from Brewfile if on macOS
+    if command -v brew &>/dev/null && [[ -f "Brewfile" ]]; then
+        log_info "Installing dependencies from Brewfile..."
+        brew bundle install --file=Brewfile || log_warn "Brewfile installation had issues"
+    fi
+    
+    log_info "Bootstrap complete!"
+}
+
+cmd_doctor() {
+    log_info "Running system health check..."
+    
+    local issues=0
+    
+    # Check required commands
+    for cmd in bash git; do
+        if ! command -v "$cmd" &>/dev/null; then
+            log_error "Required command not found: $cmd"
+            issues=$((issues + 1))
+        else
+            log_info "✓ $cmd installed"
+        fi
+    done
+    
+    # Check if in git repository
+    if git rev-parse --git-dir &>/dev/null; then
+        log_info "✓ Git repository detected"
+    else
+        log_warn "⚠ Not in a git repository"
+        issues=$((issues + 1))
+    fi
+    
+    if [[ $issues -eq 0 ]]; then
+        log_info "All checks passed! System is healthy."
+        return 0
+    else
+        log_error "Found $issues issues."
+        return 1
+    fi
+}
+
+cmd_test() {
+    log_info "Running tests..."
+    
+    # Run our 88-test suite if it exists
+    if [[ -x "./run_88_tests.sh" ]]; then
+        log_info "Running MANU compliance tests..."
+        ./run_88_tests.sh
+        return $?
+    fi
+    
+    log_info "No test suite found. Run ./run_88_tests.sh for MANU compliance tests."
+}
+
+cmd_help() {
+    cat << 'EOF'
+Developer CLI - Unified Development Tool
+
+Usage: ./dev_simple <command> [options]
+
+Available commands:
+  bootstrap    Bootstrap development environment
+  doctor       Check system health and dependencies
+  test         Run test suite
+  help         Show this help message
+
+Examples:
+  ./dev_simple bootstrap    # Setup development environment
+  ./dev_simple test         # Run all tests
+  ./dev_simple doctor       # Check system health
+
+EOF
+}
+
+# ============================================================================
+# Main Entry Point
+# ============================================================================
+
+main() {
+    local command="${1:-help}"
+    
+    case "$command" in
+        bootstrap)  
+            cmd_bootstrap 
+            ;;
+        doctor)     
+            cmd_doctor 
+            ;;
+        test)       
+            cmd_test 
+            ;;
+        help|--help|-h) 
+            cmd_help 
+            ;;
+        *)          
+            log_error "Unknown command: $command"
+            cmd_help
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function
+main "$@"

@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+images:
+- name: gcr.io/ag06-project/api
+  newTag: v1.0.0
+- name: gcr.io/ag06-project/dashboard
+  newTag: v1.0.0
+- name: gcr.io/ag06-project/workflow-engine
+  newTag: v1.0.0
+- name: gcr.io/ag06-project/ml-analytics
+  newTag: v1.0.0
+kind: Kustomization
+namespace: ag06-production
+resources:
+- 05-serviceaccount-ag06-api.yaml
+- 17-service-ag06-workflow-engine.yaml
+- 08-horizontalpodautoscaler-ag06-api-hpa.yaml
+- 04-networkpolicy-allow-internal-communication.yaml
+- 09-poddisruptionbudget-ag06-api-pdb.yaml
+- 02-networkpolicy-default-deny-ingress.yaml
+- 16-deployment-ag06-workflow-engine.yaml
+- 21-deployment-ag06-ml-analytics.yaml
+- 19-poddisruptionbudget-ag06-workflow-engine-pdb.yaml
+- 11-deployment-ag06-dashboard.yaml
+- 03-networkpolicy-allow-ingress-controller.yaml
+- 07-service-ag06-api.yaml
+- 10-serviceaccount-ag06-dashboard.yaml
+- 00-namespace-ag06-production.yaml
+- 24-poddisruptionbudget-ag06-ml-analytics-pdb.yaml
+- 06-deployment-ag06-api.yaml
+- 18-horizontalpodautoscaler-ag06-workflow-engine-hpa.yaml
+- 12-service-ag06-dashboard.yaml
+- 01-resourcequota-ag06-resource-quota.yaml
+- 22-service-ag06-ml-analytics.yaml
+- 15-serviceaccount-ag06-workflow-engine.yaml
+- 20-serviceaccount-ag06-ml-analytics.yaml
+- 14-poddisruptionbudget-ag06-dashboard-pdb.yaml
+- 23-horizontalpodautoscaler-ag06-ml-analytics-hpa.yaml
+- 13-horizontalpodautoscaler-ag06-dashboard-hpa.yaml
+- 25-ingress-ag06-ingress.yaml

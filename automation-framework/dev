@@ -36,6 +36,7 @@ ${_color}$(printf '\033[1m')dev${_reset} — developer CLI v${VERSION}
 ${_color}$(printf '\033[1m')Usage:${_reset} dev <command> [args]
 
 ${_color}$(printf '\033[1m')Commands:${_reset}
+  ${_color}green${_reset}mixer${_reset}           Manage AI mixer (see: dev mixer help)
   ${_color}green${_reset}doctor${_reset}          Check environment (brew, tools, git, gh)
   ${_color}green${_reset}bootstrap${_reset}       Install dev deps (Brewfile + uv env)
   ${_color}green${_reset}fmt${_reset}             Format shell + Python (shfmt, ruff format)
@@ -314,7 +315,15 @@ main() {
   local cmd="${1:-help}"
   shift || true
   
+  # Check for task scripts
+  if [[ -f "$FRAMEWORK_ROOT/scripts/tasks/mixer.sh" ]]; then
+    source "$FRAMEWORK_ROOT/scripts/tasks/mixer.sh"
+  fi
+  
   case "$cmd" in
+    mixer)
+      task_mixer "$@"
+      ;;
     doctor)
       cmd_doctor "$@"
       ;;

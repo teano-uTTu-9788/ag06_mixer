@@ -1,0 +1,17 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ag06-workflow-engine-pdb
+  namespace: ag06-production
+  labels:
+    app.kubernetes.io/name: ag06
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: ag06-deployer
+    app.kubernetes.io/part-of: ag06-platform
+    app.kubernetes.io/component: workflow-engine
+spec:
+  minAvailable: 50%
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ag06
+      app.kubernetes.io/component: workflow-engine

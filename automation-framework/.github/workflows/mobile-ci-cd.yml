@@ -1,0 +1,420 @@
+name: Mobile App CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'mobile-app/**'
+      - '.github/workflows/mobile-ci-cd.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mobile-app/**'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  XCODE_VERSION: '15.4'
+  JAVA_VERSION: '17'
+
+jobs:
+  # Mobile App Testing
+  mobile-tests:
+    name: 🧪 Mobile App Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install aiohttp psutil flask
+
+      - name: Run 88/88 Mobile Tests
+        run: |
+          python3 test_mobile_88.py
+          
+      - name: Validate 88/88 Compliance
+        run: |
+          python3 -c "
+          import json
+          with open('mobile_test_results.json', 'r') as f:
+              results = json.load(f)
+          if results['percentage'] != 100.0:
+              raise SystemExit(f'Tests failed: {results[\"failed\"]} failures')
+          print('✅ 88/88 tests passing (100% compliance)')
+          "
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-test-results
+          path: mobile_test_results.json
+
+  # Integration Testing
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: mobile-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install aiohttp psutil flask
+
+      - name: Start Test Server
+        run: |
+          python3 production_mixer.py &
+          sleep 5
+
+      - name: Run Integration Tests
+        run: |
+          python3 test_mobile_server_integration.py
+
+      - name: Upload Integration Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: mobile_integration_results.json
+
+  # iOS Build and Test
+  ios-build:
+    name: 🍎 iOS Build
+    runs-on: macos-14
+    needs: mobile-tests
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Cache Xcode build
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-${{ hashFiles('mobile-app/**/*.swift') }}
+
+      - name: Install CocoaPods
+        run: |
+          cd mobile-app
+          sudo gem install cocoapods
+          pod install
+
+      - name: Build iOS App
+        run: |
+          cd mobile-app
+          xcodebuild -workspace MobileAG06.xcworkspace \
+            -scheme MobileAG06 \
+            -configuration Release \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            build
+
+      - name: Run iOS Unit Tests
+        run: |
+          cd mobile-app
+          xcodebuild test \
+            -workspace MobileAG06.xcworkspace \
+            -scheme MobileAG06Tests \
+            -destination 'platform=iOS Simulator,name=iPhone 15'
+
+      - name: Archive iOS App
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd mobile-app
+          xcodebuild -workspace MobileAG06.xcworkspace \
+            -scheme MobileAG06 \
+            -configuration Release \
+            -archivePath ./build/MobileAG06.xcarchive \
+            archive
+
+      - name: Upload iOS Archive
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-archive
+          path: mobile-app/build/MobileAG06.xcarchive
+
+  # Android Build and Test
+  android-build:
+    name: 🤖 Android Build
+    runs-on: ubuntu-latest
+    needs: mobile-tests
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+      - name: Build Android Debug APK
+        run: |
+          cd mobile-app/android
+          ./gradlew assembleDebug
+
+      - name: Run Android Unit Tests
+        run: |
+          cd mobile-app/android
+          ./gradlew testDebugUnitTest
+
+      - name: Run Android Instrumentation Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            cd mobile-app/android
+            ./gradlew connectedAndroidTest
+
+      - name: Build Android Release APK
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd mobile-app/android
+          ./gradlew assembleRelease
+
+      - name: Sign Android APK
+        if: github.ref == 'refs/heads/main'
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: mobile-app/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Upload Android APK
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: mobile-app/android/app/build/outputs/apk/release/*.apk
+
+  # Code Quality and Security
+  code-quality:
+    name: 🔍 Code Quality & Security
+    runs-on: ubuntu-latest
+    needs: mobile-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SOLID Principles Validation
+        run: |
+          python3 solid_compliance_validator.py mobile-app/
+
+      - name: SwiftLint (iOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install swiftlint
+          cd mobile-app
+          swiftlint --strict
+
+      - name: Android Lint
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+      - run: |
+          cd mobile-app/android
+          ./gradlew lint
+
+      - name: Security Scan with Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: auto
+
+      - name: Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'AG06-Mobile'
+          path: './mobile-app'
+          format: 'ALL'
+
+  # Performance Testing
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: [mobile-tests, integration-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install aiohttp psutil flask locust
+
+      - name: Start Test Server
+        run: |
+          python3 production_mixer.py &
+          sleep 5
+
+      - name: Run Load Tests
+        run: |
+          cat > locustfile.py << 'EOF'
+          from locust import HttpUser, task, between
+          
+          class MobileAppUser(HttpUser):
+              wait_time = between(0.5, 2.0)
+              
+              @task(3)
+              def get_status(self):
+                  self.client.get("/api/status")
+              
+              @task(2)
+              def health_check(self):
+                  self.client.get("/healthz")
+              
+              @task(1)
+              def start_mixer(self):
+                  self.client.post("/api/start")
+              
+              @task(1)
+              def stop_mixer(self):
+                  self.client.post("/api/stop")
+          EOF
+          
+          locust -f locustfile.py --host=http://127.0.0.1:8080 \
+            --users 50 --spawn-rate 5 --run-time 60s --headless
+
+  # Production Deployment
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [ios-build, android-build, code-quality, performance-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download iOS Archive
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-archive
+          path: ./ios-build
+
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: ./android-build
+
+      - name: Deploy to App Store Connect
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: ./ios-build/MobileAG06.xcarchive
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Deploy to Google Play Console
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: com.ag06mixer.mobile
+          releaseFiles: ./android-build/*.apk
+          track: internal
+          status: completed
+
+      - name: Update Production Monitoring
+        run: |
+          curl -X POST ${{ secrets.MONITORING_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{"event": "deployment", "app": "mobile", "version": "${{ github.sha }}", "status": "success"}'
+
+      - name: Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Staging Deployment
+  deploy-staging:
+    name: 🎭 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [mobile-tests, integration-tests]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID_IOS }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: internal-testers
+          file: ./ios-build/MobileAG06.ipa
+
+  # Rollback Capability
+  rollback:
+    name: ↩️ Rollback
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Rollback iOS
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: ${{ env.PREVIOUS_IOS_BUILD }}
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Rollback Android
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: com.ag06mixer.mobile
+          releaseFiles: ${{ env.PREVIOUS_ANDROID_BUILD }}
+          track: production
+          status: completed
+
+      - name: Rollback Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'warning'
+          channel: '#alerts'
+          text: '🚨 ROLLBACK EXECUTED: Mobile app deployment failed and was rolled back'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

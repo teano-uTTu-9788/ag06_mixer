@@ -1,0 +1,574 @@
+#!/usr/bin/env bash
+# Developer CLI - Meta/Google Inspired Development Tool
+# Provides unified interface for all development operations
+
+set -euo pipefail
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export AUTOMATION_LIB_DIR="$SCRIPT_DIR/scripts/lib"
+
+# Load core library
+source "$AUTOMATION_LIB_DIR/core.sh"
+
+# Load additional libraries as needed
+deps::require "homebrew"
+deps::require "git"
+deps::require "docker"
+deps::require "testing"
+deps::require "ci"
+
+# ============================================================================
+# Command Registry (Netflix Service Pattern)
+# ============================================================================
+
+declare -A COMMANDS
+declare -A COMMAND_DESCRIPTIONS
+
+register_command() {
+    local name="$1"
+    local description="$2"
+    COMMANDS["$name"]=1
+    COMMAND_DESCRIPTIONS["$name"]="$description"
+}
+
+# Register available commands
+register_command "bootstrap" "Bootstrap development environment"
+register_command "setup" "Setup project dependencies"
+register_command "build" "Build the project"
+register_command "test" "Run test suite"
+register_command "lint" "Run linters and formatters"
+register_command "fmt" "Format code automatically"
+register_command "ci" "Run CI checks locally"
+register_command "deploy" "Deploy to specified environment"
+register_command "doctor" "Check system health and dependencies"
+register_command "clean" "Clean build artifacts and caches"
+register_command "release" "Create a new release"
+register_command "benchmark" "Run performance benchmarks"
+register_command "security" "Run security scans"
+register_command "update" "Update dependencies"
+register_command "shell" "Enter development shell"
+
+# ============================================================================
+# Bootstrap Command (Dropbox Onboarding Pattern)
+# ============================================================================
+
+cmd::bootstrap() {
+    log::info "Bootstrapping development environment..."
+    
+    # Install Homebrew if needed
+    if ! brew::is_installed; then
+        brew::install
+    fi
+    
+    # Setup Homebrew path
+    brew::setup_path
+    
+    # Install from Brewfile
+    if [[ -f "Brewfile" ]]; then
+        brew::bundle_install
+    else
+        log::warn "No Brewfile found, skipping brew bundle"
+    fi
+    
+    # Setup Python environment
+    if command -v python3 &>/dev/null; then
+        log::info "Setting up Python environment..."
+        python3 -m venv .venv || true
+        source .venv/bin/activate
+        pip install --upgrade pip
+        [[ -f "requirements.txt" ]] && pip install -r requirements.txt
+        [[ -f "requirements-dev.txt" ]] && pip install -r requirements-dev.txt
+    fi
+    
+    # Setup Node environment
+    if command -v npm &>/dev/null && [[ -f "package.json" ]]; then
+        log::info "Installing Node dependencies..."
+        npm install
+    fi
+    
+    # Setup Git hooks
+    if [[ -d ".githooks" ]]; then
+        git::install_hooks
+    fi
+    
+    # Run doctor to verify
+    cmd::doctor
+    
+    log::info "Bootstrap complete!"
+}
+
+# ============================================================================
+# Doctor Command (Google SRE Pattern)
+# ============================================================================
+
+cmd::doctor() {
+    log::info "Running system health check..."
+    
+    local issues=0
+    
+    # Check required commands
+    local required_commands=("git" "brew")
+    for cmd in "${required_commands[@]}"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            log::error "Required command not found: $cmd"
+            ((issues++))
+        else
+            log::info "✓ $cmd installed"
+        fi
+    done
+    
+    # Check Homebrew health
+    if brew::is_installed; then
+        if brew::doctor; then
+            log::info "✓ Homebrew is healthy"
+        else
+            log::warn "⚠ Homebrew has issues"
+            ((issues++))
+        fi
+    fi
+    
+    # Check Git configuration
+    if [[ -z "$(git config --get user.email)" ]]; then
+        log::warn "⚠ Git user.email not configured"
+        ((issues++))
+    else
+        log::info "✓ Git configured"
+    fi
+    
+    # Check Python environment
+    if [[ -d ".venv" ]]; then
+        log::info "✓ Python virtual environment exists"
+    else
+        log::warn "⚠ Python virtual environment not found"
+    fi
+    
+    # Check for outdated dependencies
+    if brew::is_installed; then
+        if brew::outdated; then
+            log::warn "⚠ Some packages are outdated"
+        else
+            log::info "✓ All packages up to date"
+        fi
+    fi
+    
+    if [[ $issues -eq 0 ]]; then
+        log::info "All checks passed! System is healthy."
+        return 0
+    else
+        log::error "Found $issues issues. Run './dev bootstrap' to fix."
+        return 1
+    fi
+}
+
+# ============================================================================
+# Build Command (Meta's Build System Pattern)
+# ============================================================================
+
+cmd::build() {
+    local target="${1:-all}"
+    log::info "Building target: $target"
+    
+    # Python projects
+    if [[ -f "setup.py" ]] || [[ -f "pyproject.toml" ]]; then
+        log::info "Building Python project..."
+        if [[ -f "pyproject.toml" ]]; then
+            pip install -e . || python -m build
+        else
+            python setup.py build
+        fi
+    fi
+    
+    # Node projects
+    if [[ -f "package.json" ]]; then
+        log::info "Building Node project..."
+        npm run build || npm run compile || true
+    fi
+    
+    # Docker images
+    if [[ -f "Dockerfile" ]]; then
+        log::info "Building Docker image..."
+        docker::build
+    fi
+    
+    log::info "Build complete!"
+}
+
+# ============================================================================
+# Test Command (Netflix Quality Pattern)
+# ============================================================================
+
+cmd::test() {
+    local scope="${1:-all}"
+    log::info "Running tests: $scope"
+    
+    # Python tests
+    if command -v pytest &>/dev/null; then
+        log::info "Running Python tests..."
+        pytest -v --cov=. --cov-report=term-missing
+    elif [[ -f "manage.py" ]]; then
+        python manage.py test
+    fi
+    
+    # Node tests
+    if [[ -f "package.json" ]]; then
+        if grep -q '"test"' package.json; then
+            log::info "Running Node tests..."
+            npm test
+        fi
+    fi
+    
+    # Shell tests
+    if [[ -d "tests" ]] && ls tests/*.bats &>/dev/null 2>&1; then
+        log::info "Running shell tests..."
+        testing::run_bats tests/
+    fi
+    
+    log::info "Tests complete!"
+}
+
+# ============================================================================
+# Lint Command (Uber Code Quality Pattern)
+# ============================================================================
+
+cmd::lint() {
+    log::info "Running linters..."
+    
+    local failed=0
+    
+    # Python linting
+    if command -v ruff &>/dev/null; then
+        log::info "Running ruff..."
+        ruff check . || ((failed++))
+    elif command -v flake8 &>/dev/null; then
+        log::info "Running flake8..."
+        flake8 . || ((failed++))
+    fi
+    
+    if command -v mypy &>/dev/null; then
+        log::info "Running mypy..."
+        mypy . || ((failed++))
+    fi
+    
+    # JavaScript/TypeScript linting
+    if [[ -f "package.json" ]] && grep -q '"lint"' package.json; then
+        log::info "Running npm lint..."
+        npm run lint || ((failed++))
+    fi
+    
+    # Shell script linting
+    if command -v shellcheck &>/dev/null; then
+        log::info "Running shellcheck..."
+        find . -type f -name "*.sh" -exec shellcheck {} \; || ((failed++))
+    fi
+    
+    # Dockerfile linting
+    if command -v hadolint &>/dev/null && [[ -f "Dockerfile" ]]; then
+        log::info "Running hadolint..."
+        hadolint Dockerfile || ((failed++))
+    fi
+    
+    if [[ $failed -eq 0 ]]; then
+        log::info "All linters passed!"
+        return 0
+    else
+        log::error "$failed linters reported issues"
+        return 1
+    fi
+}
+
+# ============================================================================
+# Format Command (Google Style Pattern)
+# ============================================================================
+
+cmd::fmt() {
+    log::info "Formatting code..."
+    
+    # Python formatting
+    if command -v black &>/dev/null; then
+        log::info "Running black..."
+        black .
+    fi
+    
+    if command -v isort &>/dev/null; then
+        log::info "Running isort..."
+        isort .
+    fi
+    
+    # JavaScript/TypeScript formatting
+    if [[ -f "package.json" ]] && grep -q '"format"' package.json; then
+        log::info "Running npm format..."
+        npm run format
+    elif command -v prettier &>/dev/null; then
+        log::info "Running prettier..."
+        prettier --write "**/*.{js,jsx,ts,tsx,json,css,md}"
+    fi
+    
+    # Shell script formatting
+    if command -v shfmt &>/dev/null; then
+        log::info "Running shfmt..."
+        shfmt -w -i 4 .
+    fi
+    
+    log::info "Formatting complete!"
+}
+
+# ============================================================================
+# CI Command (GitHub Actions Local Pattern)
+# ============================================================================
+
+cmd::ci() {
+    log::info "Running CI checks locally..."
+    
+    # Run all quality checks
+    local failed=0
+    
+    # Format check
+    log::info "Checking formatting..."
+    if ! cmd::fmt; then
+        log::warn "Formatting issues found"
+        ((failed++))
+    fi
+    
+    # Lint check
+    log::info "Running linters..."
+    if ! cmd::lint; then
+        log::warn "Linting issues found"
+        ((failed++))
+    fi
+    
+    # Test check
+    log::info "Running tests..."
+    if ! cmd::test; then
+        log::warn "Test failures found"
+        ((failed++))
+    fi
+    
+    # Security check
+    log::info "Running security scan..."
+    if ! cmd::security; then
+        log::warn "Security issues found"
+        ((failed++))
+    fi
+    
+    if [[ $failed -eq 0 ]]; then
+        log::info "All CI checks passed! ✅"
+        return 0
+    else
+        log::error "$failed CI checks failed ❌"
+        return 1
+    fi
+}
+
+# ============================================================================
+# Deploy Command (Netflix Deployment Pattern)
+# ============================================================================
+
+cmd::deploy() {
+    local environment="${1:-staging}"
+    log::info "Deploying to $environment..."
+    
+    # Run pre-deployment checks
+    if ! cmd::ci; then
+        log::error "CI checks failed. Aborting deployment."
+        return 1
+    fi
+    
+    # Environment-specific deployment
+    case "$environment" in
+        local)
+            log::info "Deploying to local environment..."
+            docker::compose_up
+            ;;
+        staging)
+            log::info "Deploying to staging..."
+            ci::deploy_staging
+            ;;
+        production)
+            log::warn "Production deployment requires confirmation"
+            read -p "Deploy to production? (yes/no): " confirm
+            if [[ "$confirm" == "yes" ]]; then
+                ci::deploy_production
+            else
+                log::info "Deployment cancelled"
+                return 1
+            fi
+            ;;
+        *)
+            log::error "Unknown environment: $environment"
+            return 1
+            ;;
+    esac
+    
+    log::info "Deployment complete!"
+}
+
+# ============================================================================
+# Clean Command (Maintenance Pattern)
+# ============================================================================
+
+cmd::clean() {
+    log::info "Cleaning build artifacts and caches..."
+    
+    # Python cleanup
+    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    find . -type f -name "*.pyc" -delete 2>/dev/null || true
+    find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+    rm -rf build/ dist/ .pytest_cache/ .coverage htmlcov/ 2>/dev/null || true
+    
+    # Node cleanup
+    rm -rf node_modules/ .next/ out/ dist/ 2>/dev/null || true
+    
+    # Build artifacts
+    rm -rf target/ build/ bin/ 2>/dev/null || true
+    
+    # Docker cleanup
+    if command -v docker &>/dev/null; then
+        docker::cleanup || true
+    fi
+    
+    # Homebrew cleanup
+    if brew::is_installed; then
+        brew::cleanup
+    fi
+    
+    log::info "Cleanup complete!"
+}
+
+# ============================================================================
+# Security Command (Google Security Pattern)
+# ============================================================================
+
+cmd::security() {
+    log::info "Running security scans..."
+    
+    local issues=0
+    
+    # Python security
+    if command -v bandit &>/dev/null; then
+        log::info "Running bandit..."
+        bandit -r . || ((issues++))
+    fi
+    
+    if command -v safety &>/dev/null; then
+        log::info "Running safety check..."
+        safety check || ((issues++))
+    fi
+    
+    # Node security
+    if [[ -f "package.json" ]]; then
+        log::info "Running npm audit..."
+        npm audit || ((issues++))
+    fi
+    
+    # Docker security
+    if command -v trivy &>/dev/null && [[ -f "Dockerfile" ]]; then
+        log::info "Running trivy scan..."
+        docker::security_scan || ((issues++))
+    fi
+    
+    # Secret scanning
+    if command -v gitleaks &>/dev/null; then
+        log::info "Running gitleaks..."
+        gitleaks detect --source . || ((issues++))
+    fi
+    
+    if [[ $issues -eq 0 ]]; then
+        log::info "No security issues found!"
+        return 0
+    else
+        log::error "Found $issues security issues"
+        return 1
+    fi
+}
+
+# ============================================================================
+# Shell Command (Developer Experience Pattern)
+# ============================================================================
+
+cmd::shell() {
+    log::info "Entering development shell..."
+    
+    # Activate Python virtual environment
+    if [[ -f ".venv/bin/activate" ]]; then
+        source .venv/bin/activate
+    fi
+    
+    # Set development environment variables
+    if [[ -f ".env" ]]; then
+        set -a
+        source .env
+        set +a
+    fi
+    
+    # Export useful functions
+    export -f cmd::build cmd::test cmd::lint
+    
+    # Start shell with custom prompt
+    PS1="(dev) \w $ " bash --norc
+}
+
+# ============================================================================
+# Help Command
+# ============================================================================
+
+cmd::help() {
+    echo "Developer CLI - Unified Development Tool"
+    echo ""
+    echo "Usage: ./dev <command> [options]"
+    echo ""
+    echo "Available commands:"
+    echo ""
+    
+    for cmd in "${!COMMAND_DESCRIPTIONS[@]}"; do
+        printf "  %-12s %s\n" "$cmd" "${COMMAND_DESCRIPTIONS[$cmd]}"
+    done | sort
+    
+    echo ""
+    echo "Examples:"
+    echo "  ./dev bootstrap    # Setup development environment"
+    echo "  ./dev test         # Run all tests"
+    echo "  ./dev ci           # Run CI checks locally"
+    echo "  ./dev deploy prod  # Deploy to production"
+    echo ""
+    echo "For detailed help on a command, use: ./dev <command> --help"
+}
+
+# ============================================================================
+# Main Entry Point
+# ============================================================================
+
+main() {
+    local command="${1:-help}"
+    shift || true
+    
+    # Check if command exists
+    if [[ -z "${COMMANDS[$command]:-}" ]] && [[ "$command" != "help" ]]; then
+        log::error "Unknown command: $command"
+        cmd::help
+        exit 1
+    fi
+    
+    # Execute command
+    case "$command" in
+        bootstrap)  cmd::bootstrap "$@" ;;
+        doctor)     cmd::doctor "$@" ;;
+        build)      cmd::build "$@" ;;
+        test)       cmd::test "$@" ;;
+        lint)       cmd::lint "$@" ;;
+        fmt)        cmd::fmt "$@" ;;
+        ci)         cmd::ci "$@" ;;
+        deploy)     cmd::deploy "$@" ;;
+        clean)      cmd::clean "$@" ;;
+        security)   cmd::security "$@" ;;
+        shell)      cmd::shell "$@" ;;
+        help|--help|-h) cmd::help ;;
+        *)          
+            log::error "Command not implemented: $command"
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function
+main "$@"

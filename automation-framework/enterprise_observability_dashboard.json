@@ -1,0 +1,173 @@
+{
+  "timestamp": "2025-08-25T00:16:39.108845",
+  "golden_signals": {
+    "autonomous_scaling": {
+      "latency": {
+        "p95_ms": 183.6673617095332,
+        "p99_ms": 485.64806857969785,
+        "p95_target": 200
+      },
+      "traffic": {
+        "rps": 110.46950055177463,
+        "target_rps": 100
+      },
+      "errors": {
+        "rate_percent": 0.09253383433995233,
+        "target_percent": 0.1
+      },
+      "availability": {
+        "percent": 99.8546004818234,
+        "target_percent": 99.9
+      }
+    },
+    "international_expansion": {
+      "latency": {
+        "p95_ms": 450.32298354273803,
+        "p99_ms": 950.4618614522699,
+        "p95_target": 500
+      },
+      "traffic": {
+        "rps": 59.60018873323583,
+        "target_rps": 50
+      },
+      "errors": {
+        "rate_percent": 0.224457204309997,
+        "target_percent": 0.5
+      },
+      "availability": {
+        "percent": 99.70493282023841,
+        "target_percent": 99.5
+      }
+    },
+    "referral_program": {
+      "latency": {
+        "p95_ms": 260.5646481227448,
+        "p99_ms": 735.7764965571014,
+        "p95_target": 500
+      },
+      "traffic": {
+        "rps": 231.53281115433467,
+        "target_rps": 50
+      },
+      "errors": {
+        "rate_percent": 0.7635191530507929,
+        "target_percent": 0.5
+      },
+      "availability": {
+        "percent": 99.18355952996082,
+        "target_percent": 99.5
+      }
+    },
+    "premium_studio": {
+      "latency": {
+        "p95_ms": 72.9209440337541,
+        "p99_ms": 183.62994534351807,
+        "p95_target": 500
+      },
+      "traffic": {
+        "rps": 596.4479212350324,
+        "target_rps": 50
+      },
+      "errors": {
+        "rate_percent": 0.02045592977813647,
+        "target_percent": 0.1
+      },
+      "availability": {
+        "percent": 100.06925164309308,
+        "target_percent": 99.9
+      }
+    }
+  },
+  "service_slos": {
+    "autonomous_scaling": {
+      "availability": {
+        "compliance_percent": 72.5,
+        "target": 99.9,
+        "comparison": ">="
+      },
+      "latency_p95": {
+        "compliance_percent": 85.83333333333333,
+        "target": 200,
+        "comparison": "<="
+      },
+      "error_rate": {
+        "compliance_percent": 100.0,
+        "target": 0.1,
+        "comparison": "<="
+      }
+    },
+    "international_expansion": {
+      "availability": {
+        "compliance_percent": 99.16666666666667,
+        "target": 99.5,
+        "comparison": ">="
+      },
+      "latency_p95": {
+        "compliance_percent": 100.0,
+        "target": 500,
+        "comparison": "<="
+      },
+      "error_rate": {
+        "compliance_percent": 100.0,
+        "target": 0.5,
+        "comparison": "<="
+      }
+    },
+    "referral_program": {
+      "availability": {
+        "compliance_percent": 87.5,
+        "target": 99.0,
+        "comparison": ">="
+      },
+      "latency_p95": {
+        "compliance_percent": 80.0,
+        "target": 300,
+        "comparison": "<="
+      },
+      "error_rate": {
+        "compliance_percent": 97.5,
+        "target": 1.0,
+        "comparison": "<="
+      }
+    },
+    "premium_studio": {
+      "availability": {
+        "compliance_percent": 95.83333333333334,
+        "target": 99.9,
+        "comparison": ">="
+      },
+      "latency_p95": {
+        "compliance_percent": 97.5,
+        "target": 100,
+        "comparison": "<="
+      },
+      "error_rate": {
+        "compliance_percent": 100.0,
+        "target": 0.1,
+        "comparison": "<="
+      }
+    }
+  },
+  "active_alerts": [
+    {
+      "alert_id": "system.cpu_utilization_1756055588",
+      "name": "system.cpu_utilization_threshold",
+      "severity": "AlertSeverity.HIGH",
+      "message": "HIGH: System CPU utilization is 99.5%, above threshold 80%",
+      "service": "system",
+      "timestamp": "2025-08-25 00:13:08.937018",
+      "labels": {
+        "metric": "system.cpu_utilization",
+        "rule": "threshold"
+      },
+      "resolved": false,
+      "resolution_time": null
+    }
+  ],
+  "system_health": {
+    "cpu_percent": 31.7,
+    "memory_percent": 80.7,
+    "overall_health": "degraded"
+  },
+  "performance_summary": {}
+}

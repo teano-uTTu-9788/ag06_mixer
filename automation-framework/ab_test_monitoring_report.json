@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-08-24T21:33:02.749422",
+  "experiments_analyzed": 6,
+  "winners_found": 3,
+  "optimizations_applied": 3,
+  "revenue_impact": {
+    "base_mrr": 15247,
+    "new_mrr": 18909.55281308623,
+    "mrr_increase": 3662.5528130862294,
+    "total_lift_percentage": 24.02146529209832,
+    "annual_impact": 43950.63375703475
+  },
+  "detailed_results": [
+    {
+      "experiment": "onboarding_flow_v2",
+      "winner": "interactive_tutorial",
+      "lift": 24.58669712330768,
+      "confidence": 0.9999984301411626,
+      "p_value": 1.5698588373691535e-06
+    },
+    {
+      "experiment": "pricing_display_test",
+      "winner": "annual_discount",
+      "lift": 33.290912310212036,
+      "confidence": 0.987118043643229,
+      "p_value": 0.01288195635677103
+    },
+    {
+      "experiment": "conversion_optimization_v1",
+      "winner": "simplified_flow",
+      "lift": 14.2,
+      "confidence": 0.945,
+      "p_value": 0.055
+    },
+    {
+      "experiment": "conversion_optimization_v2",
+      "winner": "progressive_form",
+      "lift": 19.1,
+      "confidence": 0.998,
+      "p_value": 0.002
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+# AG06 SLO Alerting Rules
+groups:
+- name: ag06_slo_alerts
+  rules:
+  - alert: SLO_api_availability_Warning
+    expr: (sum(rate(http_requests_total{job="api",code!~"5.."}[5m])) / sum(rate(http_requests_total{job="api"}[5m]))) * 100 < 99.5
+    for: 5m
+    labels:
+      severity: warning
+      service: ag06_api
+      slo: api_availability
+    annotations:
+      summary: "SLO {{ $labels.slo }} is approaching threshold"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below threshold of 99.5%"
+      
+  - alert: SLO_api_availability_Critical
+    expr: (sum(rate(http_requests_total{job="api",code!~"5.."}[5m])) / sum(rate(http_requests_total{job="api"}[5m]))) * 100 < 99.9
+    for: 2m
+    labels:
+      severity: critical
+      service: ag06_api
+      slo: api_availability
+    annotations:
+      summary: "SLO {{ $labels.slo }} is below target"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below target of 99.9%"
+
+  - alert: SLO_api_latency_Warning
+    expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="api"}[5m])) by (le)) * 1000 < 90.0
+    for: 5m
+    labels:
+      severity: warning
+      service: ag06_api
+      slo: api_latency
+    annotations:
+      summary: "SLO {{ $labels.slo }} is approaching threshold"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below threshold of 90.0%"
+      
+  - alert: SLO_api_latency_Critical
+    expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="api"}[5m])) by (le)) * 1000 < 95.0
+    for: 2m
+    labels:
+      severity: critical
+      service: ag06_api
+      slo: api_latency
+    annotations:
+      summary: "SLO {{ $labels.slo }} is below target"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below target of 95.0%"
+
+  - alert: SLO_api_success_rate_Warning
+    expr: (sum(rate(http_requests_total{job="api",code!~"4..|5.."}[5m])) / sum(rate(http_requests_total{job="api"}[5m]))) * 100 < 99.0
+    for: 5m
+    labels:
+      severity: warning
+      service: ag06_api
+      slo: api_success_rate
+    annotations:
+      summary: "SLO {{ $labels.slo }} is approaching threshold"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below threshold of 99.0%"
+      
+  - alert: SLO_api_success_rate_Critical
+    expr: (sum(rate(http_requests_total{job="api",code!~"4..|5.."}[5m])) / sum(rate(http_requests_total{job="api"}[5m]))) * 100 < 99.5
+    for: 2m
+    labels:
+      severity: critical
+      service: ag06_api
+      slo: api_success_rate
+    annotations:
+      summary: "SLO {{ $labels.slo }} is below target"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below target of 99.5%"
+
+  - alert: SLO_workflow_success_Warning
+    expr: (sum(rate(workflow_completions_total{status="success"}[5m])) / sum(rate(workflow_completions_total[5m]))) * 100 < 98.0
+    for: 5m
+    labels:
+      severity: warning
+      service: ag06_workflows
+      slo: workflow_success
+    annotations:
+      summary: "SLO {{ $labels.slo }} is approaching threshold"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below threshold of 98.0%"
+      
+  - alert: SLO_workflow_success_Critical
+    expr: (sum(rate(workflow_completions_total{status="success"}[5m])) / sum(rate(workflow_completions_total[5m]))) * 100 < 99.0
+    for: 2m
+    labels:
+      severity: critical
+      service: ag06_workflows
+      slo: workflow_success
+    annotations:
+      summary: "SLO {{ $labels.slo }} is below target"
+      description: "{{ $labels.service }} SLO {{ $labels.slo }} is at {{ $value }}%, below target of 99.0%"

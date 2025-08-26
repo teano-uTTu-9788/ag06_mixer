@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-08-24T21:43:31.779685",
+  "priority_market": "United Kingdom",
+  "uk_analysis": {
+    "country": "United Kingdom",
+    "potential_users": 437175.0,
+    "monthly_revenue": 371227.15125,
+    "annual_revenue": 4454725.8149999995,
+    "total_investment": 2017287.5,
+    "roi": 120.82751293506749,
+    "payback_months": 5.434105488263367,
+    "priority_score": 95
+  },
+  "uk_localization": {
+    "languages": [
+      "English (UK)"
+    ],
+    "payment": {
+      "currency": "GBP",
+      "methods": [
+        "Card",
+        "Apple Pay",
+        "Google Pay",
+        "PayPal"
+      ]
+    },
+    "content": {
+      "app_store_listing": true,
+      "in_app_content": true,
+      "marketing_materials": true,
+      "support_documentation": true
+    }
+  },
+  "uk_strategy": {
+    "channels": {
+      "primary": [
+        "Apple Search Ads",
+        "Google Ads",
+        "Instagram"
+      ],
+      "secondary": [
+        "YouTube",
+        "Spotify Ads",
+        "Music Forums"
+      ],
+      "influencers": [
+        "Music YouTubers",
+        "Producer Communities"
+      ]
+    },
+    "pricing": {
+      "free": 0,
+      "pro": 7.99,
+      "studio": 15.99
+    },
+    "timeline": {
+      "Phase 1": "Soft launch with beta users",
+      "Phase 2": "Influencer partnerships",
+      "Phase 3": "Paid acquisition campaigns",
+      "Phase 4": "Scale and optimize"
+    }
+  },
+  "uk_compliance": {
+    "data_protection": "UK GDPR",
+    "consumer_rights": "Consumer Rights Act 2015",
+    "digital_services": "Online Safety Bill",
+    "tax": "VAT (20%)",
+    "content_rating": "PEGI"
+  },
+  "expansion_timeline": [
+    {
+      "phase": 1,
+      "country": "United Kingdom",
+      "start_month": 1,
+      "end_month": 3,
+      "investment": 50000,
+      "roi_month": 4
+    },
+    {
+      "phase": 2,
+      "country": "Germany",
+      "start_month": 4,
+      "end_month": 6,
+      "investment": 75000,
+      "roi_month": 8
+    },
+    {
+      "phase": 3,
+      "country": "Japan",
+      "start_month": 7,
+      "end_month": 9,
+      "investment": 150000,
+      "roi_month": 13
+    },
+    {
+      "phase": 4,
+      "country": "Brazil",
+      "start_month": 10,
+      "end_month": 12,
+      "investment": 40000,
+      "roi_month": 15
+    },
+    {
+      "phase": 5,
+      "country": "India",
+      "start_month": 13,
+      "end_month": 15,
+      "investment": 60000,
+      "roi_month": 21
+    }
+  ],
+  "global_impact": {
+    "countries": 5,
+    "total_investment": 24070597.5,
+    "potential_users": 8588175.0,
+    "annual_revenue": 87511785.61500001
+  }
+}

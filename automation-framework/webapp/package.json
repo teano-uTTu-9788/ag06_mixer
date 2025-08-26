@@ -1,0 +1,19 @@
+{
+  "name": "aioke-webapp",
+  "version": "2.0.0",
+  "description": "Aioke - Real-time audio processing dashboard with SSE streaming",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build required'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "audio",
+    "mixer",
+    "sse",
+    "real-time",
+    "aioke"
+  ],
+  "author": "Aioke Team",
+  "license": "MIT"
+}
