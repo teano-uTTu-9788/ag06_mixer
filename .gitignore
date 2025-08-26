@@ -1,1 +1,29 @@
 node_modules
+
+# Virtual environments
+venv/
+*/venv/
+aioke_beta/venv/
+*.pyc
+__pycache__/
+*/__pycache__/
+
+# Large binary files
+*.so
+*.dylib
+*.zip
+
+# IDE and system files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+server.log
+
+# Temporary files
+*.tmp
+*.bak
+
