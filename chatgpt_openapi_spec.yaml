@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: Enterprise ChatGPT Coding API
+  description: |
+    Secure code execution API for ChatGPT with enterprise features:
+    - Token-based authentication with rate limiting
+    - Sandboxed code execution environment
+    - Circuit breaker protection and fault tolerance
+    - Comprehensive monitoring and structured logging
+    - Support for Python and JavaScript execution
+  version: 3.0.0
+  contact:
+    name: Enterprise ChatGPT API
+    url: http://localhost:8090/docs
+
+servers:
+  - url: http://localhost:8090
+    description: Local development server
+  - url: https://your-tunnel-domain.ngrok.io
+    description: Public tunnel endpoint (replace with your actual tunnel URL)
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /execute:
+    post:
+      summary: Execute code securely
+      description: |
+        Executes code in a sandboxed environment with security validation.
+        Supports Python and JavaScript with configurable timeout.
+        Returns execution results, errors, and performance metrics.
+      operationId: executeCode
+      tags:
+        - Code Execution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeExecutionRequest'
+            examples:
+              python_example:
+                summary: Python code execution
+                value:
+                  code: |
+                    # Calculate fibonacci sequence
+                    def fibonacci(n):
+                        if n <= 1:
+                            return n
+                        return fibonacci(n-1) + fibonacci(n-2)
+                    
+                    result = [fibonacci(i) for i in range(10)]
+                    print(f"Fibonacci sequence: {result}")
+                  language: python
+                  timeout: 30
+              javascript_example:
+                summary: JavaScript code execution
+                value:
+                  code: |
+                    // Array operations
+                    const numbers = [1, 2, 3, 4, 5];
+                    const doubled = numbers.map(n => n * 2);
+                    const sum = doubled.reduce((a, b) => a + b, 0);
+                    console.log(`Original: ${numbers}`);
+                    console.log(`Doubled: ${doubled}`);
+                    console.log(`Sum: ${sum}`);
+                  language: javascript
+                  timeout: 15
+      responses:
+        '200':
+          description: Code executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeExecutionResponse'
+              examples:
+                success_response:
+                  summary: Successful execution
+                  value:
+                    status: success
+                    output: "Fibonacci sequence: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n"
+                    error: ""
+                    execution_time: 0.145
+                    language: python
+                    trace_id: "abc123def456"
+                error_response:
+                  summary: Execution error
+                  value:
+                    status: error
+                    output: ""
+                    error: "NameError: name 'undefined_variable' is not defined"
+                    execution_time: 0.023
+                    language: python
+                    trace_id: "def456ghi789"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /health:
+    get:
+      summary: Health check
+      description: |
+        Returns the health status of the API and its dependencies.
+        Includes system uptime, version info, and dependency checks.
+      operationId: healthCheck
+      tags:
+        - Monitoring
+      security: []  # Health check doesn't require authentication
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                timestamp: "2025-08-26T12:30:00Z"
+                version: "3.0.0-enhanced"
+                uptime: 86400.5
+                dependencies:
+                  redis: healthy
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: |
+        Returns Prometheus-formatted metrics for monitoring and alerting.
+        Includes request counts, response times, and system performance data.
+      operationId: getMetrics
+      tags:
+        - Monitoring
+      security: []  # Metrics endpoint is public for monitoring systems
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP chatgpt_requests_total Total requests
+                  # TYPE chatgpt_requests_total counter
+                  chatgpt_requests_total{method="POST",endpoint="/execute",status="200"} 1234
+                  # HELP chatgpt_request_duration_seconds Request duration
+                  # TYPE chatgpt_request_duration_seconds histogram
+                  chatgpt_request_duration_seconds_bucket{le="0.1"} 500
+
+  /status:
+    get:
+      summary: Detailed system status
+      description: |
+        Returns comprehensive system status including circuit breaker state,
+        rate limiter status, and detailed performance metrics.
+      operationId: getStatus
+      tags:
+        - Monitoring
+      responses:
+        '200':
+          description: Detailed system status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        Bearer token authentication. Use the CHATGPT_API_TOKEN from your .env.enterprise file.
+        Format: "Bearer cgt_your_token_here"
+
+  schemas:
+    CodeExecutionRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: The code to execute
+          example: 'print("Hello, ChatGPT!")'
+          maxLength: 50000
+        language:
+          type: string
+          description: Programming language
+          enum: [python, javascript]
+          default: python
+        timeout:
+          type: integer
+          description: Execution timeout in seconds
+          minimum: 1
+          maximum: 300
+          default: 30
+
+    CodeExecutionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Execution status
+          enum: [success, error, timeout, security_error]
+          example: success
+        output:
+          type: string
+          description: Standard output from code execution
+          example: "Hello, ChatGPT!\n"
+        error:
+          type: string
+          description: Error message if execution failed
+          example: ""
+        execution_time:
+          type: number
+          format: float
+          description: Execution time in seconds
+          example: 0.145
+        language:
+          type: string
+          description: Programming language used
+          example: python
+        trace_id:
+          type: string
+          description: Distributed trace ID for debugging
+          example: "abc123def456"
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: healthy
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-08-26T12:30:00Z"
+        version:
+          type: string
+          example: "3.0.0-enhanced"
+        uptime:
+          type: number
+          format: float
+          description: Uptime in seconds
+          example: 86400.5
+        dependencies:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            redis: healthy
+
+    StatusResponse:
+      type: object
+      properties:
+        redis:
+          type: object
+          properties:
+            connected:
+              type: boolean
+            info:
+              type: object
+        metrics:
+          type: object
+          properties:
+            active_requests:
+              type: integer
+            total_requests:
+              type: integer
+            total_executions:
+              type: integer
+        tracing:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            exporter:
+              type: string
+            endpoint:
+              type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Invalid authentication token"
+
+  responses:
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Invalid authentication token"
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Rate limit exceeded. Try again in 60 seconds."
+
+    ServiceUnavailable:
+      description: Service temporarily unavailable (circuit breaker open)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Circuit breaker is open - service temporarily unavailable"
+
+tags:
+  - name: Code Execution
+    description: Secure code execution endpoints
+  - name: Monitoring
+    description: Health checks and system monitoring
