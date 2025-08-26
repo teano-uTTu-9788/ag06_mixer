@@ -1,0 +1,373 @@
+# Istio Service Mesh Configuration for Enterprise Karaoke System
+# Following Google Istio and service mesh best practices
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: enterprise-dual-channel-vs
+  namespace: karaoke-system
+spec:
+  hosts:
+  - enterprise-karaoke.example.com
+  - enterprise-dual-channel-service
+  gateways:
+  - enterprise-karaoke-gateway
+  - mesh
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/
+    route:
+    - destination:
+        host: enterprise-dual-channel-service
+        port:
+          number: 80
+      weight: 90
+    - destination:
+        host: enterprise-dual-channel-service
+        port:
+          number: 80
+        subset: canary
+      weight: 10
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream
+    timeout: 10s
+  - match:
+    - uri:
+        prefix: /health
+    route:
+    - destination:
+        host: enterprise-dual-channel-service
+        port:
+          number: 80
+    timeout: 5s
+  - match:
+    - uri:
+        prefix: /ws
+    route:
+    - destination:
+        host: enterprise-dual-channel-service
+        port:
+          number: 80
+    websocketUpgrade: true
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: enterprise-dual-channel-dr
+  namespace: karaoke-system
+spec:
+  host: enterprise-dual-channel-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        keepalive:
+          time: 7200s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 64
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 50
+    loadBalancer:
+      simple: LEAST_CONN
+    outlierDetection:
+      consecutiveGatewayErrors: 5
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 50
+  subsets:
+  - name: stable
+    labels:
+      version: v1
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 100
+        http:
+          http1MaxPendingRequests: 32
+          http2MaxRequests: 500
+  - name: canary
+    labels:
+      version: v1-canary
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 20
+        http:
+          http1MaxPendingRequests: 10
+          http2MaxRequests: 100
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: enterprise-karaoke-gateway
+  namespace: karaoke-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - enterprise-karaoke.example.com
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: enterprise-karaoke-tls
+    hosts:
+    - enterprise-karaoke.example.com
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: enterprise-dual-channel-authz
+  namespace: karaoke-system
+spec:
+  selector:
+    matchLabels:
+      app: enterprise-dual-channel
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/karaoke-system/sa/enterprise-karaoke-sa"]
+    - source:
+        namespaces: ["karaoke-system", "monitoring", "istio-system"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/health", "/metrics", "/api/v1/*"]
+  - from:
+    - source:
+        namespaces: ["karaoke-system"]
+    to:
+    - operation:
+        methods: ["GET"]
+        paths: ["/ws"]
+  - from:
+    - source:
+        notPrincipals: ["*"]
+    to:
+    - operation:
+        methods: ["*"]
+        paths: ["/admin/*"]
+    when:
+    - key: source.ip
+      values: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: enterprise-dual-channel-pa
+  namespace: karaoke-system
+spec:
+  selector:
+    matchLabels:
+      app: enterprise-dual-channel
+  mtls:
+    mode: STRICT
+
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: enterprise-dual-channel-telemetry
+  namespace: karaoke-system
+spec:
+  selector:
+    matchLabels:
+      app: enterprise-dual-channel
+  metrics:
+  - providers:
+    - name: prometheus
+  - overrides:
+    - match:
+        metric: ALL_METRICS
+        mode: CLIENT
+      tagOverrides:
+        request_protocol:
+          operation: UPSERT
+          value: "http"
+        response_code:
+          operation: UPSERT
+          value: "%{RESPONSE_CODE}"
+        source_workload:
+          operation: UPSERT
+          value: "%{SOURCE_WORKLOAD}"
+        destination_service_name:
+          operation: UPSERT
+          value: "enterprise-dual-channel"
+  accessLogging:
+  - providers:
+    - name: otel
+    filter:
+      expression: 'response.code >= 400'
+  tracing:
+  - providers:
+    - name: jaeger
+
+---
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: enterprise-karaoke-istio
+  namespace: istio-system
+spec:
+  values:
+    global:
+      meshID: enterprise-karaoke-mesh
+      multiCluster:
+        clusterName: karaoke-cluster
+      network: karaoke-network
+      proxy:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+  components:
+    pilot:
+      k8s:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        hpaSpec:
+          minReplicas: 2
+          maxReplicas: 5
+          metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+      k8s:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+        hpaSpec:
+          minReplicas: 2
+          maxReplicas: 10
+          metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+        service:
+          type: LoadBalancer
+          annotations:
+            cloud.google.com/neg: '{"ingress": true}'
+            service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    egressGateways:
+    - name: istio-egressgateway
+      enabled: true
+      k8s:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Sidecar
+metadata:
+  name: enterprise-dual-channel-sidecar
+  namespace: karaoke-system
+spec:
+  workloadSelector:
+    labels:
+      app: enterprise-dual-channel
+  ingress:
+  - port:
+      number: 9093
+      protocol: HTTP
+      name: http
+    defaultEndpoint: 127.0.0.1:9093
+  - port:
+      number: 8000
+      protocol: HTTP
+      name: metrics
+    defaultEndpoint: 127.0.0.1:8000
+  egress:
+  - hosts:
+    - "./*"
+    - "istio-system/*"
+    - "monitoring/*"
+  - hosts:
+    - "karaoke-ai.cognitiveservices.azure.com"
+    port:
+      number: 443
+      protocol: HTTPS
+      name: azure-cognitive
+  - hosts:
+    - "kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local"
+    port:
+      number: 9092
+      protocol: TCP
+      name: kafka
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: enterprise-dual-channel-monitor
+  namespace: karaoke-system
+  labels:
+    app: enterprise-dual-channel
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: enterprise-dual-channel
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - karaoke-system

@@ -448,9 +448,14 @@ class DualChannelKaraokeSystem:
             'device_index': channel.device_index
         }
     
-    def start(self):
+    def start_processing(self):
         """Start audio processing threads"""
         self.running = True
+        logger.info("Audio processing started")
+    
+    def start(self):
+        """Start audio processing threads (alias for start_processing)"""
+        return self.start_processing()
         
         # Start independent processing threads
         self.vocal_thread = threading.Thread(target=self._vocal_processing_loop)
@@ -461,9 +466,14 @@ class DualChannelKaraokeSystem:
         
         logger.info("Audio processing started")
     
-    def stop(self):
+    def stop_processing(self):
         """Stop audio processing"""
         self.running = False
+        logger.info("Stopping audio processing")
+    
+    def stop(self):
+        """Stop audio processing (alias for stop_processing)"""
+        return self.stop_processing()
         
         if self.vocal_thread:
             self.vocal_thread.join()

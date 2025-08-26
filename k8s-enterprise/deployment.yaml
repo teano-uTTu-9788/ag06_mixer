@@ -1,0 +1,320 @@
+# Enterprise Dual Channel Karaoke System - Kubernetes Deployment
+# Following Google GKE and Amazon EKS best practices
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enterprise-dual-channel-karaoke
+  namespace: karaoke-system
+  labels:
+    app: enterprise-dual-channel
+    version: v1
+    tier: application
+    component: karaoke-engine
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: enterprise-karaoke
+    meta.helm.sh/release-namespace: karaoke-system
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: enterprise-dual-channel
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: enterprise-dual-channel
+        version: v1
+        tier: application
+        component: karaoke-engine
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+        sidecar.istio.io/inject: "true"
+    spec:
+      serviceAccountName: enterprise-karaoke-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: enterprise-dual-channel
+        image: gcr.io/karaoke-enterprise/enterprise-dual-channel:v1.0.0
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 9093
+          protocol: TCP
+        - name: metrics
+          containerPort: 8000
+          protocol: TCP
+        - name: grpc
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: PROMETHEUS_ENABLED
+          value: "true"
+        - name: OTEL_ENABLED
+          value: "true"
+        - name: KAFKA_ENABLED
+          value: "true"
+        - name: KAFKA_BROKERS
+          value: "kafka-cluster-kafka-bootstrap:9092"
+        - name: AZURE_COGNITIVE_SERVICES_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: azure-cognitive-services
+              key: endpoint
+        - name: AZURE_COGNITIVE_SERVICES_KEY
+          valueFrom:
+            secretKeyRef:
+              name: azure-cognitive-services
+              key: api-key
+        - name: GOOGLE_CLOUD_PROJECT
+          value: "karaoke-enterprise"
+        - name: JAEGER_ENDPOINT
+          value: "http://jaeger-collector:14268/api/traces"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        - name: temp-volume
+          mountPath: /tmp
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      - name: istio-proxy
+        # Istio sidecar will be injected automatically
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: enterprise-karaoke-config
+      - name: temp-volume
+        emptyDir: {}
+      nodeSelector:
+        kubernetes.io/os: linux
+        workload-type: compute-optimized
+      tolerations:
+      - key: "workload-type"
+        operator: "Equal"
+        value: "compute-optimized"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - enterprise-dual-channel
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: enterprise-dual-channel-service
+  namespace: karaoke-system
+  labels:
+    app: enterprise-dual-channel
+    service: enterprise-dual-channel
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  - name: grpc
+    port: 9090
+    targetPort: grpc
+    protocol: TCP
+  - name: metrics
+    port: 8000
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: enterprise-dual-channel
+    version: v1
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: enterprise-karaoke-sa
+  namespace: karaoke-system
+  annotations:
+    iam.gke.io/gcp-service-account: "enterprise-karaoke@karaoke-enterprise.iam.gserviceaccount.com"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/enterprise-karaoke-role"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: enterprise-karaoke-config
+  namespace: karaoke-system
+data:
+  config.yaml: |
+    cloud_native:
+      project_id: "karaoke-enterprise"
+      region: "us-central1"
+      cluster_name: "karaoke-cluster"
+    
+    ai_ml:
+      cognitive_services_endpoint: "https://karaoke-ai.cognitiveservices.azure.com/"
+      model_registry: "azureml://karaoke-models"
+      voice_enhancement_model: "azure-speech-enhancement-v2"
+      music_source_separation: "azure-audio-separation-v3"
+    
+    resilience:
+      circuit_breaker:
+        failure_threshold: 5
+        recovery_timeout: 30
+        request_volume_threshold: 10
+      
+    observability:
+      prometheus_enabled: true
+      jaeger_enabled: true
+      log_level: "INFO"
+    
+    streaming:
+      protocols: ["webrtc", "websocket", "sse"]
+      default_quality: "high"
+      adaptive_bitrate: true
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-cognitive-services
+  namespace: karaoke-system
+type: Opaque
+data:
+  endpoint: aHR0cHM6Ly9rYXJhb2tlLWFpLmNvZ25pdGl2ZXNlcnZpY2VzLmF6dXJlLmNvbS8=  # base64 encoded
+  api-key: eW91ci1henVyZS1jb2duaXRpdmUtc2VydmljZXMta2V5LWhlcmU=  # base64 encoded
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: enterprise-dual-channel-hpa
+  namespace: karaoke-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: enterprise-dual-channel-karaoke
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: karaoke_active_streams
+      target:
+        type: AverageValue
+        averageValue: "50"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 4
+        periodSeconds: 60
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: enterprise-dual-channel-pdb
+  namespace: karaoke-system
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: enterprise-dual-channel
+      version: v1
