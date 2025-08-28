@@ -237,18 +237,24 @@ analyze_and_create_tasks() {
     
     log_info "Analyzing repository structure to create tasks..."
     
-    # Common development tasks for any project
+    # AiOke-specific development tasks following Google/AWS/Microsoft best practices
     local -a common_tasks=(
+        "AiOke Audio Engine Optimization:Optimize real-time audio processing following Google's gRPC patterns:aioke_audio_processing:high"
+        "AiOke Karaoke Algorithm Enhancement:Enhance karaoke vocal separation using AWS machine learning patterns:aioke_karaoke_engine:high" 
+        "AiOke UI Component Library:Build reusable React components following Microsoft Fluent design system:aioke_ui_components:medium"
+        "AiOke Performance Monitoring:Implement observability following OpenTelemetry standards:aioke_monitoring:high"
+        "AiOke Deployment Pipeline:Create blue-green deployment using AWS/Google Cloud patterns:aioke_deployment:high"
+        "AiOke Documentation System:Create comprehensive docs following Google's documentation standards:aioke_documentation:medium"
+        "AiOke API Gateway Design:Design GraphQL API following Netflix federation patterns:aioke_api_design:medium"
+        "AiOke Vocal Effects Processing:Implement professional vocal effects using WebAssembly:aioke_vocal_effects:medium"
+        "AiOke Auto-Scaling Configuration:Configure Kubernetes HPA following Google GKE best practices:aioke_scaling:medium"
+        "AiOke CI/CD Security:Implement security scanning following Microsoft DevSecOps patterns:aioke_ci_cd:high"
+        "AiOke Mobile Integration:Prepare mobile SDK following React Native/Flutter patterns:aioke_mobile:medium"
+        "AiOke Analytics Dashboard:Build analytics using Google Analytics/AWS CloudWatch patterns:aioke_analytics:medium"
+        
+        # Legacy tasks for backward compatibility
         "Code Review and Quality Analysis:Review codebase for SOLID principles, patterns, and improvements:code_refactoring:high"
         "Documentation Update:Update and improve project documentation:documentation:medium"
-        "Test Coverage Analysis:Analyze and improve test coverage:testing_validation:high"
-        "Performance Optimization:Identify and fix performance bottlenecks:performance_optimization:medium"
-        "Security Audit:Review code for security vulnerabilities:security_implementation:high"
-        "Dependency Updates:Update and audit project dependencies:devops_deployment:medium"
-        "API Improvements:Enhance API design and documentation:api_development:medium"
-        "Error Handling Enhancement:Improve error handling and logging:backend_development:medium"
-        "UI/UX Improvements:Enhance user interface and experience:frontend_development:medium"
-        "Database Optimization:Optimize database queries and schema:database_design:medium"
     )
     
     # Detect project type and add specific tasks

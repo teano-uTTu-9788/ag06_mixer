@@ -63,7 +63,7 @@ ${WHITE}COMMANDS:${NC}
   ${GREEN}universal:monitor${NC} Monitor universal workflow progress
   ${GREEN}universal:manu:check${NC} Check MANU compliance and agent status
   ${GREEN}universal:manu:start${NC} Start MANU autonomous agents
-  ${GREEN}universal:manu:integrate${NC} Integrate with MANU/AiCan system
+  ${GREEN}universal:manu:integrate${NC} Integrate AiOke workflow with MANU/AiCan system
   ${GREEN}universal:manu:status${NC} Show MANU integration status
   ${GREEN}version${NC}         Show version information
   ${GREEN}help${NC}            Show this help message
@@ -523,7 +523,7 @@ main() {
       ;;
     universal:manu:integrate)
       shift
-      PROJECT_NAME="${1:-$(basename $(pwd))}"
+      PROJECT_NAME="${1:-aioke}"  # Default to AiOke, not directory name
       python3 "${FRAMEWORK_ROOT}/manu_aican_integration.py" integrate "$PROJECT_NAME"
       ;;
     universal:manu:status)

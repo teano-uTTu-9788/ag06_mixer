@@ -28,6 +28,113 @@ class GoldenSignals:
     saturation_memory: float
     timestamp: str
 
+class FourGoldenSignals:
+    """Google SRE Four Golden Signals implementation"""
+    
+    def __init__(self):
+        self.latency_measurements = []
+        self.traffic_measurements = []
+        self.error_measurements = []
+        self.saturation_measurements = []
+    
+    def record_latency(self, duration_ms: float, timestamp: str = None):
+        """Record latency measurement"""
+        if timestamp is None:
+            timestamp = datetime.utcnow().isoformat()
+        self.latency_measurements.append({'duration_ms': duration_ms, 'timestamp': timestamp})
+        
+    def record_traffic(self, requests_per_second: float, timestamp: str = None):
+        """Record traffic measurement"""
+        if timestamp is None:
+            timestamp = datetime.utcnow().isoformat()
+        self.traffic_measurements.append({'rps': requests_per_second, 'timestamp': timestamp})
+    
+    def record_error(self, error_count: int, total_requests: int, timestamp: str = None):
+        """Record error measurement"""
+        if timestamp is None:
+            timestamp = datetime.utcnow().isoformat()
+        error_rate = (error_count / total_requests) * 100 if total_requests > 0 else 0
+        self.error_measurements.append({'error_rate': error_rate, 'timestamp': timestamp})
+    
+    def record_saturation(self, cpu_percent: float, memory_percent: float, timestamp: str = None):
+        """Record saturation measurement"""
+        if timestamp is None:
+            timestamp = datetime.utcnow().isoformat()
+        self.saturation_measurements.append({
+            'cpu_percent': cpu_percent, 
+            'memory_percent': memory_percent, 
+            'timestamp': timestamp
+        })
+
+class SLIMonitoring:
+    """Service Level Indicator monitoring for SRE practices"""
+    
+    def __init__(self):
+        self.sli_measurements = defaultdict(list)
+        self.slo_targets = {
+            'availability': 99.9,  # 99.9% availability SLO
+            'latency_p99': 200,    # 200ms P99 latency SLO
+            'error_rate': 0.1,     # 0.1% error rate SLO
+        }
+    
+    def record_sli(self, sli_name: str, value: float, timestamp: str = None):
+        """Record Service Level Indicator measurement"""
+        if timestamp is None:
+            timestamp = datetime.utcnow().isoformat()
+        
+        self.sli_measurements[sli_name].append({
+            'value': value,
+            'timestamp': timestamp,
+            'meets_slo': self._evaluate_slo(sli_name, value)
+        })
+    
+    def _evaluate_slo(self, sli_name: str, value: float) -> bool:
+        """Evaluate if SLI measurement meets SLO target"""
+        target = self.slo_targets.get(sli_name)
+        if target is None:
+            return True
+        
+        if sli_name == 'availability':
+            return value >= target
+        elif sli_name == 'latency_p99':
+            return value <= target
+        elif sli_name == 'error_rate':
+            return value <= target
+        else:
+            return True
+    
+    def get_error_budget(self, sli_name: str, time_window_hours: int = 24) -> Dict[str, float]:
+        """Calculate error budget for SLI over time window"""
+        if sli_name not in self.sli_measurements:
+            return {'error_budget_remaining': 100.0, 'slo_compliance': 100.0}
+        
+        # Get measurements from time window
+        cutoff_time = datetime.utcnow() - timedelta(hours=time_window_hours)
+        recent_measurements = [
+            m for m in self.sli_measurements[sli_name]
+            if datetime.fromisoformat(m['timestamp']) >= cutoff_time
+        ]
+        
+        if not recent_measurements:
+            return {'error_budget_remaining': 100.0, 'slo_compliance': 100.0}
+        
+        # Calculate SLO compliance
+        total_measurements = len(recent_measurements)
+        slo_compliant = sum(1 for m in recent_measurements if m['meets_slo'])
+        slo_compliance_percent = (slo_compliant / total_measurements) * 100
+        
+        # Calculate error budget remaining
+        target_slo = self.slo_targets.get(sli_name, 100.0)
+        error_budget_used = max(0, target_slo - slo_compliance_percent)
+        error_budget_remaining = max(0, 100 - error_budget_used)
+        
+        return {
+            'error_budget_remaining': error_budget_remaining,
+            'slo_compliance': slo_compliance_percent,
+            'total_measurements': total_measurements,
+            'compliant_measurements': slo_compliant
+        }
+
 # AWS Well-Architected Metrics
 @dataclass
 class AWSMetrics:

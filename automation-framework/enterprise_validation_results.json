@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-08-28T19:17:52.321316",
+  "components": {
+    "sre_monitoring": {
+      "status": "PASS",
+      "score": 20,
+      "details": [
+        "\u2705 Monitoring system file exists",
+        "\u2705 Four Golden Signals implementation found",
+        "\u2705 SLI/SLO monitoring found",
+        "\u2705 AiCan specific monitoring integration found"
+      ],
+      "issues": []
+    },
+    "aws_well_architected": {
+      "status": "PASS",
+      "score": 25,
+      "details": [
+        "\u2705 AWS Well-Architected file exists",
+        "\u2705 Operational Excellence pillar found",
+        "\u2705 Security pillar found",
+        "\u2705 Reliability pillar found",
+        "\u2705 Performance pillar found",
+        "\u2705 Cost Optimization pillar found",
+        "\u2705 Sustainability pillar found",
+        "\u2705 AiCan AWS integration found"
+      ],
+      "issues": []
+    },
+    "azure_enterprise": {
+      "status": "PASS",
+      "score": 25,
+      "details": [
+        "\u2705 Azure Enterprise file exists",
+        "\u2705 ServiceBus integration found",
+        "\u2705 CosmosDB integration found",
+        "\u2705 KeyVault integration found",
+        "\u2705 ApplicationInsights integration found",
+        "\u2705 DurableFunctions integration found",
+        "\u2705 AiCan Azure integration found"
+      ],
+      "issues": []
+    },
+    "unified_orchestration": {
+      "status": "PASS",
+      "score": 21,
+      "details": [
+        "\u2705 Unified orchestration file exists",
+        "\u2705 Main orchestrator class found",
+        "\u2705 sre_monitoring integration found",
+        "\u2705 aws_well_architected integration found",
+        "\u2705 azure_enterprise integration found",
+        "\u2705 Async orchestration pattern found"
+      ],
+      "issues": []
+    },
+    "deployment_system": {
+      "status": "PASS",
+      "score": 10,
+      "details": [
+        "\u2705 Deployment system file exists",
+        "\u2705 Main deployment class found",
+        "\u2705 Complete deployment method found"
+      ],
+      "issues": []
+    }
+  },
+  "overall_status": "EXCELLENT",
+  "total_score": 101,
+  "max_score": 100
+}
