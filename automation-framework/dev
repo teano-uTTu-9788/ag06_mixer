@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-set -Eeuo pipefail
-shopt -s inherit_errexit 2>/dev/null || true
+# Dev CLI - Terminal automation framework following Google/Meta best practices
+# Provides: Unified developer interface for CI/CD operations
+# Used by: Development workflows, CI/CD pipelines, automated deployments
+
+set -euo pipefail  # Google recommended: Exit on error, undefined vars, pipe failures
 
 # Find the framework root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,336 +11,457 @@ FRAMEWORK_ROOT="${SCRIPT_DIR}"
 LIB_DIR="${FRAMEWORK_ROOT}/scripts/lib"
 
 # Validate lib directory exists
-[[ -d "$LIB_DIR" ]] || { echo "Missing scripts/lib directory"; exit 1; }
+if [[ ! -d "$LIB_DIR" ]]; then
+    echo "ERROR: Missing scripts/lib directory at: $LIB_DIR" >&2
+    exit 1
+fi
 
-# Source all libraries
-# shellcheck source=./scripts/lib/log.sh
-source "$LIB_DIR/log.sh"
-# shellcheck source=./scripts/lib/utils.sh
-source "$LIB_DIR/utils.sh"
-# shellcheck source=./scripts/lib/brew.sh
-source "$LIB_DIR/brew.sh"
-# shellcheck source=./scripts/lib/ci.sh
-source "$LIB_DIR/ci.sh"
+# Source all libraries (Google Shell Style Guide - explicit sourcing)
+# shellcheck source=./scripts/lib/core.sh
+source "$LIB_DIR/core.sh"
+# shellcheck source=./scripts/lib/homebrew.sh
+source "$LIB_DIR/homebrew.sh"
 # shellcheck source=./scripts/lib/git.sh
 source "$LIB_DIR/git.sh"
-# shellcheck source=./scripts/lib/python.sh
-source "$LIB_DIR/python.sh"
-# shellcheck source=./scripts/lib/notion.sh
-source "$LIB_DIR/notion.sh"
+
+# Initialize error handling
+setup_error_handling "dev"
 
 # Version
 readonly VERSION="2.0.0"
 
 usage() {
   cat <<USAGE
-${_color}$(printf '\033[1m')dev${_reset} — developer CLI v${VERSION}
+${BLUE}dev${NC} — Terminal Automation Framework v${VERSION}
+${PURPLE}Following Google/Meta best practices for CI/CD and developer productivity${NC}
 
-${_color}$(printf '\033[1m')Usage:${_reset} dev <command> [args]
+${WHITE}USAGE:${NC} dev <command> [options]
 
-${_color}$(printf '\033[1m')Commands:${_reset}
-  ${_color}green${_reset}mixer${_reset}           Manage AI mixer (see: dev mixer help)
-  ${_color}green${_reset}doctor${_reset}          Check environment (brew, tools, git, gh)
-  ${_color}green${_reset}bootstrap${_reset}       Install dev deps (Brewfile + uv env)
-  ${_color}green${_reset}fmt${_reset}             Format shell + Python (shfmt, ruff format)
-  ${_color}green${_reset}lint${_reset}            ShellCheck + ruff
-  ${_color}green${_reset}typecheck${_reset}       mypy (if configured)
-  ${_color}green${_reset}test${_reset}            pytest (via uv)
-  ${_color}green${_reset}ci${_reset}              Lint + fmt check + test (local CI parity)
-  ${_color}green${_reset}pr:create${_reset} [t]   Create PR via gh
-  ${_color}green${_reset}notion:status${_reset} <page> <status>   Update Notion page status
-  ${_color}green${_reset}agent:install${_reset}   Install persistent macOS agent (launchd)
-  ${_color}green${_reset}help${_reset}            Show this help
+${WHITE}COMMANDS:${NC}
+  ${GREEN}doctor${NC}          Check system health (Homebrew, Git, tools)
+  ${GREEN}bootstrap${NC}       Bootstrap development environment
+  ${GREEN}install${NC} <pkg>   Install package via Homebrew with validation
+  ${GREEN}update${NC}          Update Homebrew and all packages
+  ${GREEN}cleanup${NC}         Clean up Homebrew cache and outdated packages
+  ${GREEN}git:setup${NC}       Configure Git with recommended settings
+  ${GREEN}git:branch${NC} <n>  Create and switch to new branch
+  ${GREEN}lint${NC}            Run ShellCheck on all scripts
+  ${GREEN}format${NC}          Format shell scripts with shfmt
+  ${GREEN}test${NC}            Run BATS test suite (if available)
+  ${GREEN}ci${NC}              Run full CI pipeline locally
+  ${GREEN}parallel:init${NC}   Initialize parallel workflow environment
+  ${GREEN}parallel:register${NC} Register Claude instance for parallel work
+  ${GREEN}parallel:status${NC} Show parallel workflow status
+  ${GREEN}parallel:create-tasks${NC} Create AiOke improvement tasks
+  ${GREEN}parallel:distribute${NC} Distribute tasks to active instances
+  ${GREEN}parallel:monitor${NC} Monitor parallel workflow progress
+  ${GREEN}version${NC}         Show version information
+  ${GREEN}help${NC}            Show this help message
 
-${_color}$(printf '\033[1m')Environment Variables:${_reset}
-  LOG_LEVEL       Set to 'debug' for verbose output
-  NO_COLOR        Disable colored output
-  NOTION_TOKEN    Notion API token
-  NOTION_PAGE_ID  Default Notion page ID
+${WHITE}ENVIRONMENT VARIABLES:${NC}
+  LOG_LEVEL       Set to 'DEBUG' for verbose logging
+  PROJECT_ROOT    Override project root directory
+  CI              Set to 'true' for CI environment behavior
+  
+${WHITE}EXAMPLES:${NC}
+  dev doctor                    # Check system health
+  dev bootstrap                 # Set up development environment
+  dev install shellcheck        # Install shellcheck via Homebrew
+  dev git:setup "Name" "email"  # Configure Git user
+  dev git:branch feature/new    # Create feature branch
+  dev ci                        # Run full CI pipeline
 
-${_color}$(printf '\033[1m')Examples:${_reset}
-  dev doctor
-  dev bootstrap
-  dev ci
-  dev pr:create "feat: add new feature"
-  dev notion:status \$PAGE_ID "In Progress"
-
-${_color}$(printf '\033[1m')Configuration:${_reset}
+${WHITE}FRAMEWORK STRUCTURE:${NC}
   Framework root: ${FRAMEWORK_ROOT}
-  Config dir: ${FRAMEWORK_ROOT}/config
+  Libraries: ${LIB_DIR}
+  Logs: ${LOG_FILE}
+
+${CYAN}For more information, see: https://github.com/your-org/automation-framework${NC}
 USAGE
 }
 
 cmd_doctor() {
-  log_info "Running system health check..."
+  log_info "Running system health check (Google SRE-style diagnostics)..."
   
-  # System info
-  log_info "Shell: $SHELL"
-  log_info "Branch: $(current_branch)"
+  # System information
+  log_info "Operating System: $(get_os)"
+  log_info "Architecture: $(get_arch)"
+  log_info "Shell: ${SHELL}"
   
   if is_macos; then
-    log_info "macOS: $(sw_vers -productVersion)"
+    log_info "macOS Version: $(sw_vers -productVersion 2>/dev/null || echo 'Unknown')"
   fi
   
   if is_ci; then
-    log_info "Running in CI environment"
-  fi
-  
-  # Check required tools
-  local tools=("git" "curl" "jq")
-  local missing=0
-  
-  for tool in "${tools[@]}"; do
-    if command -v "$tool" >/dev/null 2>&1; then
-      log_ok "✓ $tool installed"
-    else
-      log_error "✗ $tool missing"
-      ((missing++))
-    fi
-  done
-  
-  # Check optional tools
-  local optional=("brew" "gh" "yq" "shfmt" "shellcheck" "uv" "ruff" "mypy")
-  
-  for tool in "${optional[@]}"; do
-    if command -v "$tool" >/dev/null 2>&1; then
-      log_ok "✓ $tool installed (optional)"
-    else
-      log_warn "○ $tool not installed (optional)"
-    fi
-  done
-  
-  # Check Homebrew health
-  if command -v brew >/dev/null 2>&1; then
-    brew_doctor_check || true
-  fi
-  
-  if [[ $missing -eq 0 ]]; then
-    log_ok "System health check passed!"
+    log_info "Environment: CI/CD Pipeline"
   else
-    die "Missing $missing required tool(s)"
+    log_info "Environment: Local Development"
+  fi
+  
+  # Git repository validation
+  git_validate_repo || log_warn "Not in a Git repository"
+  
+  # Check critical tools (required for framework operation)
+  log_info "Checking critical tools..."
+  local critical_tools=("git" "curl" "bash")
+  local missing_critical=0
+  
+  for tool in "${critical_tools[@]}"; do
+    if validate_command "${tool}" false; then
+      log_ok "✓ ${tool}"
+    else
+      log_error "✗ ${tool} (CRITICAL)"
+      ((missing_critical++))
+    fi
+  done
+  
+  # Check recommended tools (Meta-style developer experience)
+  log_info "Checking recommended tools..."
+  local recommended_tools=("brew" "jq" "shellcheck" "shfmt" "gh")
+  local missing_recommended=0
+  
+  for tool in "${recommended_tools[@]}"; do
+    if validate_command "${tool}" false; then
+      log_ok "✓ ${tool}"
+    else
+      log_warn "○ ${tool} (recommended)"
+      ((missing_recommended++))
+    fi
+  done
+  
+  # Homebrew health check
+  if command -v brew >/dev/null 2>&1; then
+    log_info "Running Homebrew diagnostics..."
+    if brew_doctor; then
+      log_ok "Homebrew is healthy"
+    else
+      log_warn "Homebrew has some issues (non-critical)"
+    fi
+    
+    # Display Homebrew system info
+    brew_info_system
+  else
+    log_warn "Homebrew not installed - run 'dev bootstrap' to install"
+  fi
+  
+  # Summary and recommendations
+  if [[ ${missing_critical} -eq 0 ]]; then
+    log_ok "✅ System health check PASSED"
+    if [[ ${missing_recommended} -gt 0 ]]; then
+      log_info "💡 Consider running 'dev bootstrap' to install recommended tools"
+    fi
+  else
+    log_fatal "❌ System health check FAILED - Missing ${missing_critical} critical tool(s)"
   fi
 }
 
 cmd_bootstrap() {
-  log_info "Bootstrapping development environment..."
+  log_info "Bootstrapping development environment (following Google/Meta practices)..."
   
-  # Install Homebrew if needed
+  # Install Homebrew if needed (Meta-style dependency management)
   if ! command -v brew >/dev/null 2>&1; then
     if is_macos; then
-      brew_install
+      log_info "Installing Homebrew..."
+      install_homebrew
     else
-      log_warn "Skipping Homebrew (not on macOS)"
+      log_warn "Skipping Homebrew installation (not on macOS)"
+      return 1
+    fi
+  else
+    log_info "Homebrew already installed"
+  fi
+  
+  # Update Homebrew to latest version
+  brew_update
+  
+  # Install essential development tools
+  log_info "Installing essential development tools..."
+  local essential_tools=("jq" "shellcheck" "shfmt" "gh")
+  
+  brew_install "${essential_tools[@]}"
+  
+  # Install optional tools for enhanced developer experience
+  log_info "Installing optional development tools..."
+  local optional_tools=("bat" "fd" "ripgrep" "fzf")
+  
+  # Install optional tools but don't fail if they're not available
+  for tool in "${optional_tools[@]}"; do
+    brew_install "${tool}" || log_warn "Could not install optional tool: ${tool}"
+  done
+  
+  # Set up Git with recommended defaults (Google-style)
+  if command -v git >/dev/null 2>&1; then
+    log_info "Configuring Git with recommended defaults..."
+    git_setup_defaults false  # Local configuration
+    log_ok "Git configured with recommended settings"
+  fi
+  
+  # Create Brewfile if it doesn't exist
+  local brewfile="${FRAMEWORK_ROOT}/Brewfile"
+  if [[ ! -f "${brewfile}" ]]; then
+    log_info "Creating Brewfile for dependency management..."
+    cat > "${brewfile}" <<'EOF'
+# Development tools Brewfile
+# Install with: brew bundle
+
+# Essential tools
+brew "git"
+brew "curl" 
+brew "jq"
+
+# Shell tools
+brew "shellcheck"
+brew "shfmt"
+
+# GitHub CLI
+brew "gh"
+
+# Enhanced developer experience
+brew "bat"         # Better cat with syntax highlighting
+brew "fd"          # Better find
+brew "ripgrep"     # Better grep
+brew "fzf"         # Fuzzy finder
+
+# Optional GUI applications
+# cask "visual-studio-code"
+# cask "iterm2"
+EOF
+    log_ok "Brewfile created at: ${brewfile}"
+  fi
+  
+  log_ok "🎉 Bootstrap complete! Run 'dev doctor' to verify installation"
+}
+
+# Package installation command (Google-style)
+cmd_install() {
+  local package="${1:-}"
+  
+  if [[ -z "${package}" ]]; then
+    log_error "Package name required"
+    log_info "Usage: dev install <package>"
+    return 1
+  fi
+  
+  if ! command -v brew >/dev/null 2>&1; then
+    log_fatal "Homebrew not installed. Run 'dev bootstrap' first."
+  fi
+  
+  log_info "Installing package: ${package}"
+  brew_install "${package}"
+}
+
+# Update all packages (Meta-style maintenance)
+cmd_update() {
+  log_info "Updating Homebrew and all packages..."
+  
+  if ! command -v brew >/dev/null 2>&1; then
+    log_fatal "Homebrew not installed. Run 'dev bootstrap' first."
+  fi
+  
+  brew_update
+  brew_upgrade
+  log_ok "All packages updated successfully"
+}
+
+# Cleanup command (Google SRE-style maintenance)
+cmd_cleanup() {
+  log_info "Cleaning up Homebrew cache and outdated packages..."
+  
+  if ! command -v brew >/dev/null 2>&1; then
+    log_fatal "Homebrew not installed. Run 'dev bootstrap' first."
+  fi
+  
+  brew_cleanup
+  log_ok "Cleanup completed"
+}
+
+# Git setup command
+cmd_git_setup() {
+  local name="${1:-}"
+  local email="${2:-}"
+  local global="${3:-false}"
+  
+  if [[ -z "${name}" ]] || [[ -z "${email}" ]]; then
+    log_error "Both name and email are required"
+    log_info "Usage: dev git:setup \"Your Name\" \"your.email@example.com\" [global]"
+    return 1
+  fi
+  
+  log_info "Setting up Git configuration..."
+  git_setup_user "${name}" "${email}" "${global}"
+  git_setup_defaults "${global}"
+  log_ok "Git configuration completed"
+}
+
+# Git branch creation command
+cmd_git_branch() {
+  local branch_name="${1:-}"
+  local base_branch="${2:-main}"
+  
+  if [[ -z "${branch_name}" ]]; then
+    log_error "Branch name is required"
+    log_info "Usage: dev git:branch <branch-name> [base-branch]"
+    return 1
+  fi
+  
+  git_create_branch "${branch_name}" "${base_branch}"
+}
+
+# Format shell scripts (Google Shell Style Guide)
+cmd_format() {
+  log_info "Formatting shell scripts (Google Shell Style Guide)..."
+  
+  if ! command -v shfmt >/dev/null 2>&1; then
+    log_warn "shfmt not installed. Run 'dev bootstrap' to install it."
+    return 1
+  fi
+  
+  # Format all shell scripts with Google-recommended settings
+  timer_start
+  find "${FRAMEWORK_ROOT}" -name "*.sh" -type f -exec shfmt -w -i 2 -ci {} \;
+  shfmt -w -i 2 -ci "${FRAMEWORK_ROOT}/dev" 2>/dev/null || true
+  timer_end
+  
+  log_ok "Shell script formatting completed"
+}
+
+# Lint shell scripts (Google Shell Style Guide compliance)
+cmd_lint() {
+  log_info "Running ShellCheck linter (Google Shell Style Guide compliance)..."
+  
+  if ! command -v shellcheck >/dev/null 2>&1; then
+    log_warn "ShellCheck not installed. Run 'dev bootstrap' to install it."
+    return 1
+  fi
+  
+  local lint_errors=0
+  timer_start
+  
+  # Lint all shell scripts in the framework
+  log_info "Linting framework scripts..."
+  while IFS= read -r -d '' file; do
+    log_debug "Linting: ${file}"
+    if ! shellcheck "${file}"; then
+      ((lint_errors++))
+    fi
+  done < <(find "${FRAMEWORK_ROOT}" -name "*.sh" -type f -print0)
+  
+  # Lint the main dev script
+  if ! shellcheck "${FRAMEWORK_ROOT}/dev"; then
+    ((lint_errors++))
+  fi
+  
+  timer_end
+  
+  if [[ ${lint_errors} -eq 0 ]]; then
+    log_ok "All shell scripts passed linting"
+  else
+    log_error "Found ${lint_errors} linting error(s)"
+    return 1
+  fi
+}
+
+# Test command (BATS framework)
+cmd_test() {
+  log_info "Running test suite..."
+  
+  # Run BATS tests if available
+  if [[ -d "${FRAMEWORK_ROOT}/tests" ]] && command -v bats >/dev/null 2>&1; then
+    log_info "Running BATS test suite..."
+    timer_start
+    bats "${FRAMEWORK_ROOT}/tests"/*.bats
+    timer_end
+    log_ok "All tests passed"
+  else
+    if [[ ! -d "${FRAMEWORK_ROOT}/tests" ]]; then
+      log_warn "No test directory found at: ${FRAMEWORK_ROOT}/tests"
+    fi
+    if ! command -v bats >/dev/null 2>&1; then
+      log_warn "BATS not installed. Install with: brew install bats-core"
+    fi
+    log_info "Skipping tests"
+  fi
+}
+
+# CI pipeline (Google/Meta-style local CI)
+cmd_ci() {
+  log_info "Running full CI pipeline locally (Google/Meta-style)..."
+  
+  local ci_start_time
+  ci_start_time=$(date +%s)
+  
+  # Step 1: Environment check
+  log_info "🔍 Step 1: Environment validation"
+  cmd_doctor || return 1
+  
+  # Step 2: Code formatting check
+  log_info "📝 Step 2: Code formatting validation"
+  if command -v shfmt >/dev/null 2>&1; then
+    # Check if code is properly formatted (don't modify)
+    if ! find "${FRAMEWORK_ROOT}" -name "*.sh" -type f -exec shfmt -d -i 2 -ci {} \;; then
+      log_error "Code formatting issues found. Run 'dev format' to fix."
+      return 1
+    fi
+    log_ok "Code formatting validated"
+  fi
+  
+  # Step 3: Linting
+  log_info "🔍 Step 3: Code linting"
+  cmd_lint || return 1
+  
+  # Step 4: Testing
+  log_info "🧪 Step 4: Test execution"
+  cmd_test || return 1
+  
+  # Step 5: Git status check (ensure clean working directory)
+  log_info "🔄 Step 5: Git status validation"
+  if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
+    if ! git diff --quiet; then
+      log_warn "Working directory has uncommitted changes"
+    else
+      log_ok "Working directory is clean"
     fi
   fi
   
-  # Install tools via Homebrew
-  if command -v brew >/dev/null 2>&1; then
-    brew_ensure jq
-    brew_ensure yq
-    brew_ensure shellcheck
-    brew_ensure shfmt
-    brew_bundle || true
-  fi
+  local ci_end_time
+  ci_end_time=$(date +%s)
+  local ci_duration=$((ci_end_time - ci_start_time))
   
-  # Set up Python environment
-  if [[ -f "pyproject.toml" ]] || [[ -f "python/pyproject.toml" ]]; then
-    python_bootstrap
-  fi
-  
-  log_ok "Bootstrap complete!"
+  log_ok "✅ CI pipeline completed successfully in ${ci_duration}s"
 }
 
-cmd_fmt() {
-  log_info "Formatting code..."
-  
-  # Format shell scripts
-  if command -v shfmt >/dev/null 2>&1; then
-    shfmt -w -i 2 -ci scripts dev 2>/dev/null || true
-    log_ok "Shell scripts formatted"
-  fi
-  
-  # Format Python code
-  if [[ -f "pyproject.toml" ]] || [[ -f "python/pyproject.toml" ]]; then
-    python_format
-  fi
-  
-  log_ok "Formatting complete"
-}
-
-cmd_lint() {
-  log_info "Running linters..."
-  
-  ci_shell
-  
-  if [[ -f "pyproject.toml" ]] || [[ -f "python/pyproject.toml" ]]; then
-    python_lint
-  fi
-  
-  log_ok "Linting complete"
-}
-
-cmd_typecheck() {
-  python_typecheck
-}
-
-cmd_test() {
-  python_run_tests
-  
-  # Run BATS tests if available
-  if [[ -d "test/bats" ]] && command -v bats >/dev/null 2>&1; then
-    log_info "Running BATS tests"
-    bats test/bats/*.bats
-  fi
-}
-
-cmd_ci() {
-  log_info "Running CI checks..."
-  
-  # Install dependencies first
-  if command -v brew >/dev/null 2>&1; then
-    brew_bundle || true
-  fi
-  
-  # Run full CI suite
-  ci_full
-  
-  log_ok "CI checks complete"
-}
-
-cmd_pr_create() {
-  local title="${1:-chore: automation update}"
-  
-  if ! command -v gh >/dev/null 2>&1; then
-    die "GitHub CLI (gh) not installed"
-  fi
-  
-  if ! is_repo; then
-    die "Not in a git repository"
-  fi
-  
-  create_pull_request "$title" "Automated via dev CLI"
-}
-
-cmd_notion_status() {
-  local page_id="${1:-}"
-  local status="${2:-}"
-  
-  notion_update_status "$page_id" "$status"
-}
-
-cmd_agent_install() {
-  log_info "Installing persistent macOS agent..."
-  
-  if ! is_macos; then
-    die "Agent installation only supported on macOS"
-  fi
-  
-  # Run agent installation scripts
-  if [[ -f "scripts/tasks/agent_install.sh" ]]; then
-    bash "scripts/tasks/agent_install.sh"
-  else
-    log_error "Agent installation script not found"
-    log_info "Creating agent installation script..."
-    
-    # Create the agent installation script
-    mkdir -p scripts/tasks
-    cat > scripts/tasks/agent_install.sh <<'EOF'
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-# Install launchd agent for persistent background tasks
-AGENT_PLIST="$HOME/Library/LaunchAgents/com.aican.devagent.plist"
-AGENT_SCRIPT="$HOME/.local/bin/aican-agent.sh"
-
-# Create agent script
-mkdir -p "$HOME/.local/bin"
-cat > "$AGENT_SCRIPT" <<'AGENT'
-#!/usr/bin/env bash
-# Persistent agent for automation tasks
-
-while true; do
-  # Check for tasks every 60 seconds
-  sleep 60
-  
-  # Add task processing logic here
-  # Could poll GitHub issues, S3, or other task queue
-done
-AGENT
-
-chmod +x "$AGENT_SCRIPT"
-
-# Create launchd plist
-cat > "$AGENT_PLIST" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
- "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>com.aican.devagent</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/usr/bin/env</string>
-    <string>bash</string>
-    <string>$HOME/.local/bin/aican-agent.sh</string>
-  </array>
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>PATH</key>
-    <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
-  </dict>
-  <key>RunAtLoad</key>
-  <true/>
-  <key>KeepAlive</key>
-  <true/>
-  <key>StandardOutPath</key>
-  <string>$HOME/Library/Logs/aican-agent.out</string>
-  <key>StandardErrorPath</key>
-  <string>$HOME/Library/Logs/aican-agent.err</string>
-</dict>
-</plist>
-PLIST
-
-# Load the agent
-launchctl load "$AGENT_PLIST"
-
-echo "Agent installed and started"
-EOF
-    chmod +x scripts/tasks/agent_install.sh
-    bash scripts/tasks/agent_install.sh
-  fi
-  
-  log_ok "Agent installation complete"
-}
 
 main() {
   local cmd="${1:-help}"
   shift || true
   
-  # Check for task scripts
-  if [[ -f "$FRAMEWORK_ROOT/scripts/tasks/mixer.sh" ]]; then
-    source "$FRAMEWORK_ROOT/scripts/tasks/mixer.sh"
-  fi
-  
   case "$cmd" in
-    mixer)
-      task_mixer "$@"
-      ;;
     doctor)
       cmd_doctor "$@"
       ;;
     bootstrap)
       cmd_bootstrap "$@"
       ;;
-    fmt|format)
-      cmd_fmt "$@"
+    install)
+      cmd_install "$@"
+      ;;
+    update)
+      cmd_update "$@"
+      ;;
+    cleanup)
+      cmd_cleanup "$@"
+      ;;
+    git:setup)
+      cmd_git_setup "$@"
+      ;;
+    git:branch)
+      cmd_git_branch "$@"
+      ;;
+    format|fmt)
+      cmd_format "$@"
       ;;
     lint)
       cmd_lint "$@"
-      ;;
-    typecheck)
-      cmd_typecheck "$@"
       ;;
     test)
       cmd_test "$@"
@@ -345,14 +469,23 @@ main() {
     ci)
       cmd_ci "$@"
       ;;
-    pr:create|pr)
-      cmd_pr_create "$@"
+    parallel:init)
+      "${FRAMEWORK_ROOT}/parallel_workflow_orchestrator.sh" init
       ;;
-    notion:status|notion)
-      cmd_notion_status "$@"
+    parallel:register)
+      "${FRAMEWORK_ROOT}/parallel_workflow_orchestrator.sh" register "$@"
       ;;
-    agent:install|agent)
-      cmd_agent_install "$@"
+    parallel:status)
+      "${FRAMEWORK_ROOT}/parallel_workflow_orchestrator.sh" status
+      ;;
+    parallel:create-tasks)
+      "${FRAMEWORK_ROOT}/parallel_workflow_orchestrator.sh" create-aioke-tasks
+      ;;
+    parallel:distribute)
+      "${FRAMEWORK_ROOT}/parallel_workflow_orchestrator.sh" distribute
+      ;;
+    parallel:monitor)
+      "${FRAMEWORK_ROOT}/parallel_workflow_orchestrator.sh" monitor "${2:-}"
       ;;
     help|-h|--help)
       usage
@@ -362,8 +495,16 @@ main() {
       ;;
     *)
       log_error "Unknown command: $cmd"
-      usage
-      exit 2
+      echo ""
+      log_info "Available commands:"
+      log_info "  doctor, bootstrap, install, update, cleanup"
+      log_info "  git:setup, git:branch, format, lint, test, ci"
+      log_info "  parallel:init, parallel:register, parallel:status"
+      log_info "  parallel:create-tasks, parallel:distribute, parallel:monitor"
+      log_info "  help, version"
+      echo ""
+      log_info "Run 'dev help' for detailed usage information"
+      return 2
       ;;
   esac
 }
