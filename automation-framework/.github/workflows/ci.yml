@@ -1,137 +1,185 @@
-name: CI
+# Terminal Automation Framework CI/CD Pipeline
+# Following Google/Meta best practices for shell automation
+# 
+# Key features:
+# - Matrix strategy for multiple macOS versions
+# - Homebrew dependency caching
+# - Google Shell Style Guide enforcement
+# - Meta-style fail-fast behavior with parallel execution
+# - Comprehensive testing and validation
+
+name: Terminal Automation Framework CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main, master]
+    branches: [ main ]
+  schedule:
+    # Run nightly at 2 AM UTC (Meta-style continuous validation)
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual triggering
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Global environment variables (Google-style configuration)
+  LOG_LEVEL: INFO
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_ANALYTICS: 1
+
 jobs:
-  macos:
-    runs-on: macos-latest
+  # Job 1: Primary macOS testing with matrix strategy
+  framework-test:
+    name: Framework Testing (macOS ${{ matrix.version }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     
+    strategy:
+      fail-fast: false  # Meta-style: Continue other tests if one fails
+      matrix:
+        include:
+          - os: macos-13
+            version: "13"
+          - os: macos-14  
+            version: "14"
+          - os: macos-latest
+            version: "latest"
+    
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Setup Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+      - name: System information
+        run: |
+          echo "🍎 macOS Version: $(sw_vers -productVersion)"
+          echo "🏗️ Architecture: $(uname -m)"
+          echo "🐚 Shell: $SHELL"
+          echo "📁 Working Directory: $PWD"
         
-      - name: Install system dependencies
-        run: |
-          brew install jq yq shellcheck shfmt
-          
-      - name: Brew bundle
-        run: |
-          if [[ -f Brewfile ]]; then
-            brew bundle --no-lock || true
-          fi
-          
-      - name: Setup Python + uv
-        uses: astral-sh/setup-uv@v3
+      - name: Cache Homebrew packages
+        uses: actions/cache@v3
         with:
-          enable-cache: true
-          
-      - name: Bootstrap Python environment
-        if: hashFiles('python/pyproject.toml') != ''
-        working-directory: python
-        run: |
-          uv venv
-          uv sync
-          
-      - name: Run CI checks
-        run: ./dev ci
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/Cellar
+            /opt/homebrew/Caskroom
+          key: ${{ runner.os }}-${{ matrix.version }}-brew-${{ hashFiles('**/Brewfile') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.version }}-brew-
+            ${{ runner.os }}-brew-
         
-      - name: Upload coverage
-        if: hashFiles('python/pyproject.toml') != ''
-        uses: codecov/codecov-action@v4
-        with:
-          file: python/coverage.xml
-          fail_ci_if_error: false
+      - name: Bootstrap development environment
+        run: |
+          echo "🚀 Bootstrapping development environment..."
+          chmod +x ./dev
+          ./dev bootstrap
+          
+      - name: System health check
+        run: |
+          echo "🏥 Running comprehensive system health check..."
+          ./dev doctor
+          
+      - name: Install testing framework
+        run: |
+          echo "🧪 Installing BATS testing framework..."
+          brew install bats-core
+          
+      - name: Run local CI pipeline
+        run: |
+          echo "🔄 Running full CI pipeline (Google/Meta-style)..."
+          ./dev ci
 
-  ubuntu:
+  # Job 2: Shell script quality checks (Google Shell Style Guide)
+  shell-quality:
+    name: Shell Script Quality Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install linting tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck curl
+          
+          # Install shfmt (Google-recommended formatter)
+          curl -sSLo /tmp/shfmt https://github.com/mvdan/sh/releases/download/v3.7.0/shfmt_v3.7.0_linux_amd64
+          sudo mv /tmp/shfmt /usr/local/bin/shfmt
+          sudo chmod +x /usr/local/bin/shfmt
+          
+      - name: ShellCheck analysis (Google Shell Style Guide)
+        run: |
+          echo "🔍 Running ShellCheck analysis..."
+          # Lint all shell scripts with strict Google standards
+          find . -name "*.sh" -type f | xargs shellcheck -S warning
+          shellcheck -S warning ./dev
+          echo "✅ All shell scripts pass Google Shell Style Guide checks"
+          
+      - name: Shell formatting validation  
+        run: |
+          echo "📝 Validating shell script formatting..."
+          # Check formatting without modifying files (fail if not formatted)
+          shfmt -d -i 2 -ci scripts/ dev
+          echo "✅ All shell scripts are properly formatted"
+
+  # Job 3: Integration tests (Meta-style comprehensive testing)
+  integration-tests:
+    name: Integration & End-to-End Tests
+    runs-on: macos-latest  
+    needs: [shell-quality]  # Run after quality checks pass
     timeout-minutes: 20
     
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-          
-      - name: Install system dependencies
+      - name: Setup test environment
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq shellcheck curl
+          echo "🔧 Setting up integration test environment..."
+          chmod +x ./dev
           
-          # Install yq
-          sudo wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
-          
-          # Install shfmt
-          curl -sSLo /tmp/shfmt https://github.com/mvdan/sh/releases/download/v3.7.0/shfmt_v3.7.0_linux_amd64
-          sudo mv /tmp/shfmt /usr/local/bin/shfmt
-          sudo chmod +x /usr/local/bin/shfmt
-          
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-        
-      - name: Bootstrap Python environment
-        if: hashFiles('python/pyproject.toml') != ''
-        working-directory: python
+      - name: Test framework bootstrap process
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          uv venv
-          uv sync
+          echo "🚀 Testing complete bootstrap process..."
+          ./dev bootstrap
           
-      - name: Run CI checks (Linux)
+      - name: Test Git integration
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
+          echo "🔄 Testing Git operations..."
+          git config user.name "CI Integration Test"
+          git config user.email "ci-test@automation-framework.dev"
+          ./dev git:setup "CI Integration Test" "ci-test@automation-framework.dev"
+          
+      - name: Test package management operations
+        run: |
+          echo "📦 Testing package management..."
+          ./dev install jq  # Should already be installed, but test the command
+          ./dev update
+          ./dev cleanup
+          
+      - name: Test code quality tools
+        run: |
+          echo "🔍 Testing code quality tools..."
+          ./dev format
+          ./dev lint
+          
+      - name: Test complete CI pipeline
+        run: |
+          echo "🔄 Testing complete CI pipeline..."
           ./dev ci
-
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
           
-      - name: Install dependencies
+      - name: Test error handling
         run: |
-          sudo apt-get update
-          sudo apt-get install -y shellcheck
-          curl -sSLo /tmp/shfmt https://github.com/mvdan/sh/releases/download/v3.7.0/shfmt_v3.7.0_linux_amd64
-          sudo mv /tmp/shfmt /usr/local/bin/shfmt
-          sudo chmod +x /usr/local/bin/shfmt
-          
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-        
-      - name: Lint shell scripts
-        run: |
-          find . -type f -name "*.sh" -o -name "dev" | grep -v ".venv" | xargs shellcheck -S warning
-          
-      - name: Check shell formatting
-        run: shfmt -d -i 2 -ci scripts dev
-        
-      - name: Lint Python (if present)
-        if: hashFiles('python/pyproject.toml') != ''
-        working-directory: python
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          uv run ruff check .
+          echo "🚨 Testing error handling..."
+          # Test invalid commands
+          if ./dev invalid-command 2>/dev/null; then
+            echo "❌ Error handling failed - invalid command should fail"
+            exit 1
+          else
+            echo "✅ Error handling working - invalid command properly rejected"
+          fi

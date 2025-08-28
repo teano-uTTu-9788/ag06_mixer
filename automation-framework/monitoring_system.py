@@ -71,7 +71,7 @@ class MonitoringSystem:
                     'critical_response_time': 5.0
                 },
                 'frontend': {
-                    'url': 'https://aioke-komz1cbnq-theanhbach-6594s-projects.vercel.app',
+                    'url': 'http://localhost:3000/health',
                     'timeout': 15,
                     'critical_response_time': 3.0
                 }

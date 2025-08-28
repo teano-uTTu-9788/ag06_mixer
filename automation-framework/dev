@@ -49,12 +49,18 @@ ${WHITE}COMMANDS:${NC}
   ${GREEN}format${NC}          Format shell scripts with shfmt
   ${GREEN}test${NC}            Run BATS test suite (if available)
   ${GREEN}ci${NC}              Run full CI pipeline locally
-  ${GREEN}parallel:init${NC}   Initialize parallel workflow environment
-  ${GREEN}parallel:register${NC} Register Claude instance for parallel work
-  ${GREEN}parallel:status${NC} Show parallel workflow status
-  ${GREEN}parallel:create-tasks${NC} Create AiOke improvement tasks
-  ${GREEN}parallel:distribute${NC} Distribute tasks to active instances
-  ${GREEN}parallel:monitor${NC} Monitor parallel workflow progress
+  ${GREEN}parallel:init${NC}   Initialize parallel workflow environment (AiOke-specific)
+  ${GREEN}parallel:register${NC} Register Claude instance for parallel work (AiOke-specific)
+  ${GREEN}parallel:status${NC} Show parallel workflow status (AiOke-specific)
+  ${GREEN}parallel:create-tasks${NC} Create AiOke improvement tasks (AiOke-specific)
+  ${GREEN}parallel:distribute${NC} Distribute tasks to active instances (AiOke-specific)
+  ${GREEN}parallel:monitor${NC} Monitor parallel workflow progress (AiOke-specific)
+  ${GREEN}universal:init${NC}   Initialize universal workflow environment (any repository)
+  ${GREEN}universal:register${NC} Register Claude instance for universal work
+  ${GREEN}universal:analyze${NC} Analyze project and create context-specific tasks
+  ${GREEN}universal:status${NC} Show universal workflow status
+  ${GREEN}universal:distribute${NC} Distribute universal tasks to active instances
+  ${GREEN}universal:monitor${NC} Monitor universal workflow progress
   ${GREEN}version${NC}         Show version information
   ${GREEN}help${NC}            Show this help message
 
@@ -487,6 +493,24 @@ main() {
     parallel:monitor)
       "${FRAMEWORK_ROOT}/parallel_workflow_orchestrator.sh" monitor "${2:-}"
       ;;
+    universal:init)
+      "${FRAMEWORK_ROOT}/universal_parallel_orchestrator.sh" init
+      ;;
+    universal:register)
+      "${FRAMEWORK_ROOT}/universal_parallel_orchestrator.sh" register "$@"
+      ;;
+    universal:analyze)
+      "${FRAMEWORK_ROOT}/universal_parallel_orchestrator.sh" analyze
+      ;;
+    universal:status)
+      "${FRAMEWORK_ROOT}/universal_parallel_orchestrator.sh" status
+      ;;
+    universal:distribute)
+      "${FRAMEWORK_ROOT}/universal_parallel_orchestrator.sh" distribute
+      ;;
+    universal:monitor)
+      "${FRAMEWORK_ROOT}/universal_parallel_orchestrator.sh" monitor "$@"
+      ;;
     help|-h|--help)
       usage
       ;;
@@ -501,6 +525,8 @@ main() {
       log_info "  git:setup, git:branch, format, lint, test, ci"
       log_info "  parallel:init, parallel:register, parallel:status"
       log_info "  parallel:create-tasks, parallel:distribute, parallel:monitor"
+      log_info "  universal:init, universal:register, universal:analyze"
+      log_info "  universal:status, universal:distribute, universal:monitor"
       log_info "  help, version"
       echo ""
       log_info "Run 'dev help' for detailed usage information"
