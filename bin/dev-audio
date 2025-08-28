@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# AG06 Enhanced Dev CLI - Audio-specific development automation
+
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+readonly VERSION="1.0.0-ag06"
+
+# Audio-specific logging
+log_audio() { echo -e "\033[0;35m[AUDIO]\033[0m $1"; }
+
+# Source base framework
+source "$ROOT_DIR/scripts/lib/utilities.sh" 2>/dev/null || echo "Base framework utilities not available"
+
+# AG06-specific commands
+cmd_audio_doctor() {
+    echo "🎵 AG06 Audio System Health Check"
+    echo "================================="
+    
+    # Run hardware validation
+    if [[ -x "$ROOT_DIR/scripts/hardware_validator.sh" ]]; then
+        "$ROOT_DIR/scripts/hardware_validator.sh"
+    else
+        echo "⚠️  Hardware validator not found"
+    fi
+    
+    # Check audio processing capabilities
+    if [[ -x "$ROOT_DIR/scripts/audio_dev_command.sh" ]]; then
+        "$ROOT_DIR/scripts/audio_dev_command.sh" test
+    fi
+}
+
+cmd_audio_deploy() {
+    echo "🚀 Deploying AG06 audio processing..."
+    
+    # Validate hardware first
+    cmd_audio_doctor
+    
+    echo "✅ AG06 deployment complete"
+}
+
+cmd_audio_monitor() {
+    echo "📊 Starting AG06 monitoring..."
+    
+    if [[ -x "$ROOT_DIR/scripts/audio_dev_command.sh" ]]; then
+        "$ROOT_DIR/scripts/audio_dev_command.sh" monitor
+    else
+        echo "❌ Audio monitoring not available"
+    fi
+}
+
+cmd_help_audio() {
+    cat <<EOF
+dev-audio - AG06 Audio Development CLI
+
+Usage:
+    dev-audio <command> [arguments]
+
+Audio Commands:
+    audio-doctor    AG06 hardware and audio system health check
+    audio-deploy    Deploy AG06 audio processing setup  
+    audio-monitor   Start real-time AG06 monitoring
+    help           Show this help message
+
+Standard Commands (inherited from base framework):
+    Use 'dev' for standard framework commands
+
+EOF
+}
+
+# Main dispatch
+main() {
+    local cmd="${1:-help}"
+    shift || true
+    
+    case "$cmd" in
+        audio-doctor)   cmd_audio_doctor "$@" ;;
+        audio-deploy)   cmd_audio_deploy "$@" ;;
+        audio-monitor)  cmd_audio_monitor "$@" ;;
+        help|--help|-h) cmd_help_audio "$@" ;;
+        *)
+            echo "Unknown audio command: $cmd"
+            cmd_help_audio
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

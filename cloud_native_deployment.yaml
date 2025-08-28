@@ -1,0 +1,137 @@
+---
+# Google Cloud Native Best Practices 2025
+# Kubernetes deployment with Anthos Service Mesh
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aioke-production
+  labels:
+    istio-injection: enabled
+    
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aioke-audio-processor
+  namespace: aioke-production
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    fluxcd.io/automated: "true"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aioke-processor
+  template:
+    metadata:
+      labels:
+        app: aioke-processor
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      containers:
+      - name: audio-processor
+        image: gcr.io/aioke/processor:latest
+        ports:
+        - containerPort: 9099
+        - containerPort: 8765
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+            nvidia.com/gpu: 1  # For ML inference
+          limits:
+            memory: "1Gi"
+            cpu: "2000m"
+        env:
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4317"
+        - name: ENABLE_PROFILING
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9099
+          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9099
+          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aioke-service
+  namespace: aioke-production
+spec:
+  selector:
+    app: aioke-processor
+  ports:
+  - name: http
+    port: 80
+    targetPort: 9099
+  - name: websocket
+    port: 8765
+    targetPort: 8765
+  type: LoadBalancer
+  
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aioke-hpa
+  namespace: aioke-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aioke-audio-processor
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  - type: Pods
+    pods:
+      metric:
+        name: audio_processing_latency
+      target:
+        type: AverageValue
+        averageValue: 100m
+        
+---
+# Istio Virtual Service for Traffic Management
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: aioke-routing
+  namespace: aioke-production
+spec:
+  hosts:
+  - aioke.example.com
+  http:
+  - match:
+    - headers:
+        x-user-type:
+          exact: premium
+    route:
+    - destination:
+        host: aioke-service
+        subset: v2
+      weight: 100
+  - route:
+    - destination:
+        host: aioke-service
+        subset: v1
+      weight: 90
+    - destination:
+        host: aioke-service
+        subset: v2
+      weight: 10  # Canary deployment

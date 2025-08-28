@@ -1,13 +1,13 @@
 {
   "total_tests": 15,
-  "passed": 15,
-  "failed": 0,
-  "accuracy_percentage": 100.0,
+  "passed": 13,
+  "failed": 2,
+  "accuracy_percentage": 86.66666666666667,
   "test_details": {
     "computer_vision": true,
     "nlp_system": true,
     "mix_generation": true,
-    "production_server": true,
+    "production_server": false,
     "dependency_injection": true,
     "circuit_breaker": true,
     "structured_logging": true,
@@ -18,6 +18,6 @@
     "server_starts": true,
     "endpoints_respond": true,
     "web_interface_loads": true,
-    "api_works": true
+    "api_works": false
   }
 }

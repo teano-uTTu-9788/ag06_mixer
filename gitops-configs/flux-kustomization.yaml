@@ -1,0 +1,34 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: enterprise-ai-2025
+  namespace: flux-system
+spec:
+  dependsOn:
+  - name: infrastructure
+    namespace: flux-system
+  force: false
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: enterprise-ai
+    namespace: production
+  interval: 10m
+  path: ./clusters/production
+  postBuild:
+    substitute:
+      cluster_name: production-cluster
+      region: us-west-2
+    substituteFrom:
+    - kind: ConfigMap
+      name: cluster-config
+    - kind: Secret
+      name: cluster-secrets
+  prune: true
+  retryInterval: 2m
+  sourceRef:
+    kind: GitRepository
+    name: enterprise-repo
+  timeout: 5m
+  validation: server
+  wait: true

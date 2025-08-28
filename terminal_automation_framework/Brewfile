@@ -1,0 +1,47 @@
+# Terminal Automation Framework - Homebrew Dependencies
+# Inspired by GitHub's approach to managing development dependencies
+# https://github.com/github/scripts-to-rule-them-all
+
+# Essential tools
+brew "bash"           # Latest Bash shell
+brew "git"            # Version control
+brew "curl"           # HTTP client
+brew "jq"             # JSON processor
+brew "yq"             # YAML processor
+
+# Shell development tools
+brew "shellcheck"     # Shell script static analysis
+brew "shfmt"          # Shell formatter
+brew "bats-core"      # Bash Automated Testing System
+
+# CI/CD and automation
+brew "gh"             # GitHub CLI
+brew "pre-commit"     # Git hooks framework
+
+# Development utilities
+brew "fzf"            # Fuzzy finder
+brew "ripgrep"        # Fast text search
+brew "bat"            # Better cat with syntax highlighting
+brew "exa"            # Better ls
+brew "zoxide"         # Smart cd
+brew "fd"             # Better find
+
+# Optional but recommended
+brew "tmux"           # Terminal multiplexer
+brew "htop"           # Process viewer
+brew "tree"           # Directory tree viewer
+brew "watch"          # Execute commands repeatedly
+
+# Security and validation
+brew "gpg"            # GNU Privacy Guard
+brew "openssl"        # Cryptography toolkit
+
+# Performance monitoring
+brew "hyperfine"      # Command-line benchmarking tool
+
+# Documentation
+brew "pandoc"         # Document converter (for generating docs)
+
+# Homebrew Cask applications (optional GUI tools)
+# cask "iterm2"       # Better terminal (uncomment if needed)
+# cask "visual-studio-code"  # Code editor (uncomment if needed)

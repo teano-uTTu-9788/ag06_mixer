@@ -1,0 +1,27 @@
+{
+  "auto_register_instances": true,
+  "instance_count": 4,
+  "instance_categories": [
+    "backend_development",
+    "frontend_development",
+    "testing_validation",
+    "documentation",
+    "api_integration",
+    "database_design"
+  ],
+  "auto_distribute_interval": 300,
+  "auto_monitor_interval": 60,
+  "auto_analyze_interval": 3600,
+  "task_simulation": true,
+  "completion_rate": 0.15,
+  "autonomous_features": {
+    "self_healing": true,
+    "auto_retry_failed_tasks": true,
+    "dynamic_instance_scaling": true,
+    "intelligent_task_prioritization": true,
+    "continuous_learning": false
+  },
+  "notification_webhook": null,
+  "max_concurrent_instances": 8,
+  "task_timeout_seconds": 1800
+}

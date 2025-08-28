@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AiOke Real-Time Audio Mixer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .mixer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0, 150, 255, 0.5);
+        }
+
+        .channels-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .channel {
+            background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        .channel:hover {
+            border-color: #00a8ff;
+            box-shadow: 0 0 20px rgba(0, 168, 255, 0.3);
+        }
+
+        .channel-header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .channel.muted {
+            opacity: 0.5;
+        }
+
+        .channel.soloed {
+            border-color: #ff9000;
+            box-shadow: 0 0 20px rgba(255, 144, 0, 0.5);
+        }
+
+        .fader-container {
+            position: relative;
+            height: 200px;
+            margin: 20px auto;
+            width: 60px;
+        }
+
+        .fader {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-appearance: slider-vertical;
+            writing-mode: bt-lr;
+            background: linear-gradient(to top, #00ff00, #ffff00, #ff0000);
+            border-radius: 5px;
+        }
+
+        .fader::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 60px;
+            height: 20px;
+            background: #fff;
+            border: 2px solid #333;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .level-meter {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            width: 10px;
+            height: 100%;
+            background: linear-gradient(to top, 
+                #00ff00 0%, #00ff00 70%, 
+                #ffff00 70%, #ffff00 90%,
+                #ff0000 90%, #ff0000 100%);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .level-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: #333;
+            transition: height 0.1s ease;
+        }
+
+        .knob-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .knob {
+            text-align: center;
+        }
+
+        .knob-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+
+        .knob input[type="range"] {
+            width: 50px;
+            height: 50px;
+            -webkit-appearance: none;
+            background: radial-gradient(circle, #555, #222);
+            border-radius: 50%;
+            border: 2px solid #666;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .knob input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #00a8ff;
+            border-radius: 50%;
+            position: relative;
+            top: 17px;
+            box-shadow: 0 0 10px #00a8ff;
+        }
+
+        .eq-section {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .eq-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #00a8ff;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #444;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #555;
+        }
+
+        .btn.active {
+            background: #00a8ff;
+        }
+
+        .btn-mute.active {
+            background: #ff3030;
+        }
+
+        .btn-solo.active {
+            background: #ff9000;
+        }
+
+        .master-section {
+            background: linear-gradient(180deg, #3a3a3a, #2a2a2a);
+            border-radius: 15px;
+            padding: 30px;
+            border: 3px solid #444;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .master-title {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .effects-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .effect-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #333;
+        }
+
+        .effect-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #00ff88;
+        }
+
+        .pan-slider {
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .pan-display {
+            text-align: center;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            .channels-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mixer-container">
+        <h1>🎚️ AiOke Real-Time Audio Mixer</h1>
+        
+        <div class="channels-container" id="channels">
+            <!-- Channels will be generated by JavaScript -->
+        </div>
+
+        <div class="master-section">
+            <div class="master-title">MASTER</div>
+            <div class="fader-container">
+                <input type="range" class="fader" id="master-volume" 
+                       min="0" max="100" value="80" orient="vertical">
+                <div class="level-meter">
+                    <div class="level-bar" id="master-level"></div>
+                </div>
+            </div>
+            <div class="buttons">
+                <button class="btn" id="master-limiter">LIMITER ON</button>
+            </div>
+        </div>
+
+        <div class="effects-section">
+            <div class="effect-panel">
+                <div class="effect-title">REVERB</div>
+                <div class="knob">
+                    <div class="knob-label">Return</div>
+                    <input type="range" id="reverb-return" min="0" max="100" value="100">
+                </div>
+                <div class="knob">
+                    <div class="knob-label">Size</div>
+                    <input type="range" id="reverb-size" min="0" max="100" value="70">
+                </div>
+                <div class="knob">
+                    <div class="knob-label">Damping</div>
+                    <input type="range" id="reverb-damping" min="0" max="100" value="50">
+                </div>
+            </div>
+
+            <div class="effect-panel">
+                <div class="effect-title">DELAY</div>
+                <div class="knob">
+                    <div class="knob-label">Return</div>
+                    <input type="range" id="delay-return" min="0" max="100" value="100">
+                </div>
+                <div class="knob">
+                    <div class="knob-label">Time (ms)</div>
+                    <input type="range" id="delay-time" min="10" max="1000" value="250">
+                    <div class="knob-label" id="delay-time-display">250ms</div>
+                </div>
+                <div class="knob">
+                    <div class="knob-label">Feedback</div>
+                    <input type="range" id="delay-feedback" min="0" max="90" value="30">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection to mixer
+        let ws = null;
+        const numChannels = 4;
+        
+        // Initialize channels
+        function initChannels() {
+            const container = document.getElementById('channels');
+            
+            for (let i = 0; i < numChannels; i++) {
+                const channel = document.createElement('div');
+                channel.className = 'channel';
+                channel.id = `channel-${i}`;
+                
+                channel.innerHTML = `
+                    <div class="channel-header">CHANNEL ${i + 1}</div>
+                    
+                    <div class="fader-container">
+                        <input type="range" class="fader" id="vol-${i}" 
+                               min="0" max="100" value="70" orient="vertical">
+                        <div class="level-meter">
+                            <div class="level-bar" id="level-${i}"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="pan-slider">
+                        <div class="knob-label">PAN</div>
+                        <input type="range" id="pan-${i}" min="0" max="100" value="50">
+                        <div class="pan-display" id="pan-display-${i}">C</div>
+                    </div>
+                    
+                    <div class="eq-section">
+                        <div class="eq-title">EQ</div>
+                        <div class="knob-container">
+                            <div class="knob">
+                                <div class="knob-label">LOW</div>
+                                <input type="range" id="low-${i}" min="-12" max="12" value="0">
+                            </div>
+                            <div class="knob">
+                                <div class="knob-label">MID</div>
+                                <input type="range" id="mid-${i}" min="-12" max="12" value="0">
+                            </div>
+                            <div class="knob">
+                                <div class="knob-label">HIGH</div>
+                                <input type="range" id="high-${i}" min="-12" max="12" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="eq-section">
+                        <div class="eq-title">SENDS</div>
+                        <div class="knob-container">
+                            <div class="knob">
+                                <div class="knob-label">REVERB</div>
+                                <input type="range" id="reverb-${i}" min="0" max="100" value="0">
+                            </div>
+                            <div class="knob">
+                                <div class="knob-label">DELAY</div>
+                                <input type="range" id="delay-${i}" min="0" max="100" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="buttons">
+                        <button class="btn btn-mute" id="mute-${i}">MUTE</button>
+                        <button class="btn btn-solo" id="solo-${i}">SOLO</button>
+                    </div>
+                `;
+                
+                container.appendChild(channel);
+                
+                // Add event listeners
+                setupChannelListeners(i);
+            }
+        }
+        
+        function setupChannelListeners(channelIndex) {
+            // Volume
+            document.getElementById(`vol-${channelIndex}`).addEventListener('input', (e) => {
+                sendCommand('volume', channelIndex, e.target.value / 100);
+            });
+            
+            // Pan
+            document.getElementById(`pan-${channelIndex}`).addEventListener('input', (e) => {
+                const value = e.target.value / 100;
+                sendCommand('pan', channelIndex, value);
+                updatePanDisplay(channelIndex, value);
+            });
+            
+            // EQ
+            ['low', 'mid', 'high'].forEach(band => {
+                document.getElementById(`${band}-${channelIndex}`).addEventListener('input', (e) => {
+                    sendCommand(`eq_${band}`, channelIndex, parseFloat(e.target.value));
+                });
+            });
+            
+            // Effects sends
+            ['reverb', 'delay'].forEach(effect => {
+                document.getElementById(`${effect}-${channelIndex}`).addEventListener('input', (e) => {
+                    sendCommand(`${effect}_send`, channelIndex, e.target.value / 100);
+                });
+            });
+            
+            // Mute/Solo
+            document.getElementById(`mute-${channelIndex}`).addEventListener('click', () => {
+                const btn = document.getElementById(`mute-${channelIndex}`);
+                btn.classList.toggle('active');
+                document.getElementById(`channel-${channelIndex}`).classList.toggle('muted');
+                sendCommand('mute', channelIndex, btn.classList.contains('active'));
+            });
+            
+            document.getElementById(`solo-${channelIndex}`).addEventListener('click', () => {
+                const btn = document.getElementById(`solo-${channelIndex}`);
+                btn.classList.toggle('active');
+                document.getElementById(`channel-${channelIndex}`).classList.toggle('soloed');
+                sendCommand('solo', channelIndex, btn.classList.contains('active'));
+            });
+        }
+        
+        function updatePanDisplay(channel, value) {
+            const display = document.getElementById(`pan-display-${channel}`);
+            if (value < 0.25) {
+                display.textContent = 'L';
+            } else if (value > 0.75) {
+                display.textContent = 'R';
+            } else {
+                display.textContent = 'C';
+            }
+        }
+        
+        // Master controls
+        document.addEventListener('DOMContentLoaded', () => {
+            initChannels();
+            
+            // Master volume
+            document.getElementById('master-volume').addEventListener('input', (e) => {
+                sendCommand('master_volume', null, e.target.value / 100);
+            });
+            
+            // Master limiter
+            document.getElementById('master-limiter').addEventListener('click', () => {
+                const btn = document.getElementById('master-limiter');
+                btn.classList.toggle('active');
+                sendCommand('master_limiter', null, btn.classList.contains('active'));
+            });
+            
+            // Reverb controls
+            document.getElementById('reverb-return').addEventListener('input', (e) => {
+                sendCommand('reverb_return', null, e.target.value / 100);
+            });
+            
+            // Delay controls
+            document.getElementById('delay-return').addEventListener('input', (e) => {
+                sendCommand('delay_return', null, e.target.value / 100);
+            });
+            
+            document.getElementById('delay-time').addEventListener('input', (e) => {
+                document.getElementById('delay-time-display').textContent = e.target.value + 'ms';
+                sendCommand('delay_time', null, parseFloat(e.target.value));
+            });
+            
+            document.getElementById('delay-feedback').addEventListener('input', (e) => {
+                sendCommand('delay_feedback', null, e.target.value / 100);
+            });
+            
+            // Connect WebSocket
+            connectWebSocket();
+            
+            // Update levels periodically
+            setInterval(updateLevels, 50);
+        });
+        
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8765');
+            
+            ws.onopen = () => {
+                console.log('Connected to mixer');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'levels') {
+                    updateLevelMeters(data.levels);
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = () => {
+                console.log('Disconnected from mixer');
+                // Attempt reconnect after 2 seconds
+                setTimeout(connectWebSocket, 2000);
+            };
+        }
+        
+        function sendCommand(type, channel, value) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: type,
+                    channel: channel,
+                    value: value
+                }));
+            }
+        }
+        
+        function updateLevels() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({type: 'get_levels'}));
+            }
+        }
+        
+        function updateLevelMeters(levels) {
+            // Update channel levels
+            if (levels.channels) {
+                levels.channels.forEach((level, i) => {
+                    const bar = document.getElementById(`level-${i}`);
+                    if (bar) {
+                        const height = Math.min(100, level * 100);
+                        bar.style.height = `${100 - height}%`;
+                    }
+                });
+            }
+            
+            // Update master level
+            if (levels.master !== undefined) {
+                const bar = document.getElementById('master-level');
+                if (bar) {
+                    const height = Math.min(100, levels.master * 100);
+                    bar.style.height = `${100 - height}%`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

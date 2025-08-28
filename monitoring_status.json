@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-08-29T02:00:54.306455",
+  "uptime": 125876.8756248951,
+  "services": {
+    "backend": {
+      "service": "backend",
+      "status": "healthy",
+      "response_time": 0.015040159225463867,
+      "timestamp": "2025-08-29 01:58:34.969176",
+      "message": "Service responding normally",
+      "details": {
+        "error_count": 0,
+        "processing": true,
+        "status": "healthy",
+        "total_events": 1509352,
+        "uptime": 280162.2919228077
+      }
+    },
+    "frontend": {
+      "service": "frontend",
+      "status": "healthy",
+      "response_time": 0.012024879455566406,
+      "timestamp": "2025-08-29 01:58:34.981597",
+      "message": "Service responding normally",
+      "details": {
+        "service": "enterprise-frontend",
+        "status": "healthy",
+        "timestamp": "2025-08-28T18:58:34.979523",
+        "version": "1.0.0-prod"
+      }
+    }
+  },
+  "system_metrics": null,
+  "availability_24h": {
+    "backend": 100.0,
+    "frontend": 100.0
+  },
+  "recent_alerts": [],
+  "alert_summary": {
+    "critical": 0,
+    "warning": 0
+  }
+}

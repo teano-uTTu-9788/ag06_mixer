@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export AUTOMATION_LIB_DIR="$SCRIPT_DIR/scripts/lib"
 
 # Load core library
-source "$AUTOMATION_LIB_DIR/core.sh"
+source "$SCRIPT_DIR/scripts/core.sh"
 
 # Load additional libraries as needed
 deps::require "homebrew"
@@ -19,35 +19,11 @@ deps::require "testing"
 deps::require "ci"
 
 # ============================================================================
-# Command Registry (Netflix Service Pattern)
+# Commands Available
 # ============================================================================
 
-declare -A COMMANDS
-declare -A COMMAND_DESCRIPTIONS
-
-register_command() {
-    local name="$1"
-    local description="$2"
-    COMMANDS["$name"]=1
-    COMMAND_DESCRIPTIONS["$name"]="$description"
-}
-
-# Register available commands
-register_command "bootstrap" "Bootstrap development environment"
-register_command "setup" "Setup project dependencies"
-register_command "build" "Build the project"
-register_command "test" "Run test suite"
-register_command "lint" "Run linters and formatters"
-register_command "fmt" "Format code automatically"
-register_command "ci" "Run CI checks locally"
-register_command "deploy" "Deploy to specified environment"
-register_command "doctor" "Check system health and dependencies"
-register_command "clean" "Clean build artifacts and caches"
-register_command "release" "Create a new release"
-register_command "benchmark" "Run performance benchmarks"
-register_command "security" "Run security scans"
-register_command "update" "Update dependencies"
-register_command "shell" "Enter development shell"
+# Available commands (simplified for compatibility)
+AVAILABLE_COMMANDS="bootstrap doctor build test lint fmt ci deploy clean security shell help version"
 
 # ============================================================================
 # Bootstrap Command (Dropbox Onboarding Pattern)
@@ -520,9 +496,17 @@ cmd::help() {
     echo "Available commands:"
     echo ""
     
-    for cmd in "${!COMMAND_DESCRIPTIONS[@]}"; do
-        printf "  %-12s %s\n" "$cmd" "${COMMAND_DESCRIPTIONS[$cmd]}"
-    done | sort
+    printf "  %-12s %s\n" "bootstrap" "Bootstrap development environment"
+    printf "  %-12s %s\n" "doctor" "Check system health and dependencies"
+    printf "  %-12s %s\n" "build" "Build the project"
+    printf "  %-12s %s\n" "test" "Run test suite"
+    printf "  %-12s %s\n" "lint" "Run linters and formatters"
+    printf "  %-12s %s\n" "fmt" "Format code automatically"
+    printf "  %-12s %s\n" "ci" "Run CI checks locally"
+    printf "  %-12s %s\n" "deploy" "Deploy to specified environment"
+    printf "  %-12s %s\n" "clean" "Clean build artifacts and caches"
+    printf "  %-12s %s\n" "security" "Run security scans"
+    printf "  %-12s %s\n" "shell" "Enter development shell"
     
     echo ""
     echo "Examples:"
@@ -542,8 +526,8 @@ main() {
     local command="${1:-help}"
     shift || true
     
-    # Check if command exists
-    if [[ -z "${COMMANDS[$command]:-}" ]] && [[ "$command" != "help" ]]; then
+    # Check if command exists (simplified validation)
+    if [[ "$AVAILABLE_COMMANDS" != *"$command"* ]] && [[ "$command" != "help" ]]; then
         log::error "Unknown command: $command"
         cmd::help
         exit 1
@@ -562,6 +546,7 @@ main() {
         clean)      cmd::clean "$@" ;;
         security)   cmd::security "$@" ;;
         shell)      cmd::shell "$@" ;;
+        version|-v|--version) framework::version ;;
         help|--help|-h) cmd::help ;;
         *)          
             log::error "Command not implemented: $command"

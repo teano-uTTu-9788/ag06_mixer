@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# Dev CLI - Main entry point for developer automation
+
+set -euo pipefail
+
+# Setup
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+readonly VERSION="1.0.0"
+
+# Source libraries
+# Simple logging functions (avoiding source conflicts)
+log_info() { echo -e "\033[0;34m[INFO]\033[0m $1"; }
+log_warn() { echo -e "\033[0;33m[WARN]\033[0m $1"; }
+log_error() { echo -e "\033[0;31m[ERROR]\033[0m $1" >&2; }
+log_success() { echo -e "\033[0;32m[SUCCESS]\033[0m $1"; }
+
+source "$ROOT_DIR/scripts/lib/utilities.sh"
+source "$ROOT_DIR/scripts/lib/platform.sh"
+
+# Commands
+cmd_doctor() {
+    echo "🏥 System Health Check"
+    echo "======================"
+    
+    local issues=0
+    
+    # Check required tools
+    local tools=("git" "brew" "docker" "gh" "jq")
+    for tool in "${tools[@]}"; do
+        if command_exists "$tool"; then
+            log_success "$tool is installed"
+        else
+            log_warn "$tool is not installed"
+            ((issues++))
+        fi
+    done
+    
+    # Check platform
+    echo ""
+    echo "Platform: $(get_platform)"
+    echo "Homebrew: $(get_brew_prefix)"
+    
+    # Check Docker
+    if docker_running 2>/dev/null; then
+        log_success "Docker is running"
+    else
+        log_warn "Docker is not running"
+        ((issues++))
+    fi
+    
+    if [[ $issues -eq 0 ]]; then
+        log_success "System is healthy"
+    else
+        log_warn "Found $issues issues"
+        echo "Run 'dev bootstrap' to fix"
+    fi
+}
+
+cmd_bootstrap() {
+    log_info "🚀 Bootstrapping development environment..."
+    
+    # Install Homebrew if needed
+    if ! has_homebrew; then
+        log_info "Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+    
+    # Install dependencies
+    if [[ -f "$ROOT_DIR/config/Brewfile" ]]; then
+        log_info "Installing dependencies from Brewfile..."
+        brew bundle --file="$ROOT_DIR/config/Brewfile"
+    fi
+    
+    # Setup Git hooks
+    if [[ -d "$ROOT_DIR/.git" ]]; then
+        log_info "Setting up Git hooks..."
+        ln -sf "$ROOT_DIR/scripts/hooks/pre-commit" "$ROOT_DIR/.git/hooks/pre-commit"
+    fi
+    
+    log_success "Bootstrap complete"
+}
+
+cmd_test() {
+    local test_type="${1:-all}"
+    "$ROOT_DIR/scripts/test/test_runner.sh" "$test_type"
+}
+
+cmd_deploy() {
+    local environment="${1:-staging}"
+    "$ROOT_DIR/scripts/deploy/deploy.sh" "$environment"
+}
+
+cmd_clean() {
+    log_info "🧹 Cleaning up..."
+    
+    # Clean build artifacts
+    rm -rf "$ROOT_DIR/build" "$ROOT_DIR/dist"
+    
+    # Clean logs
+    rm -rf "$ROOT_DIR/logs"
+    
+    # Docker cleanup
+    if command_exists docker && docker_running; then
+        docker system prune -f
+    fi
+    
+    log_success "Cleanup complete"
+}
+
+cmd_version() {
+    echo "dev version $VERSION"
+    echo "Platform: $(get_platform)"
+}
+
+cmd_help() {
+    cat <<EOF
+dev - Developer automation CLI
+
+Usage:
+    dev <command> [arguments]
+
+Commands:
+    doctor      System health check
+    bootstrap   Setup development environment
+    test        Run tests (unit|integration|smoke|all)
+    deploy      Deploy application (dev|staging|production)
+    clean       Clean up build artifacts
+    version     Show version information
+    help        Show this help message
+
+Examples:
+    dev doctor              # Check system health
+    dev bootstrap           # Setup environment
+    dev test                # Run all tests
+    dev deploy staging      # Deploy to staging
+
+EOF
+}
+
+# Main
+main() {
+    local cmd="${1:-help}"
+    shift || true
+    
+    case "$cmd" in
+        doctor)    cmd_doctor "$@" ;;
+        bootstrap) cmd_bootstrap "$@" ;;
+        test)      cmd_test "$@" ;;
+        deploy)    cmd_deploy "$@" ;;
+        clean)     cmd_clean "$@" ;;
+        version)   cmd_version "$@" ;;
+        help|--help|-h) cmd_help "$@" ;;
+        *)
+            log_error "Unknown command: $cmd"
+            cmd_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

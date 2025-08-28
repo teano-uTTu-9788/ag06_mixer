@@ -61,6 +61,10 @@ ${WHITE}COMMANDS:${NC}
   ${GREEN}universal:status${NC} Show universal workflow status
   ${GREEN}universal:distribute${NC} Distribute universal tasks to active instances
   ${GREEN}universal:monitor${NC} Monitor universal workflow progress
+  ${GREEN}universal:manu:check${NC} Check MANU compliance and agent status
+  ${GREEN}universal:manu:start${NC} Start MANU autonomous agents
+  ${GREEN}universal:manu:integrate${NC} Integrate with MANU/AiCan system
+  ${GREEN}universal:manu:status${NC} Show MANU integration status
   ${GREEN}version${NC}         Show version information
   ${GREEN}help${NC}            Show this help message
 
@@ -510,6 +514,20 @@ main() {
       ;;
     universal:monitor)
       "${FRAMEWORK_ROOT}/universal_parallel_orchestrator.sh" monitor "$@"
+      ;;
+    universal:manu:check)
+      python3 "${FRAMEWORK_ROOT}/manu_aican_integration.py" check
+      ;;
+    universal:manu:start)
+      python3 "${FRAMEWORK_ROOT}/manu_aican_integration.py" start
+      ;;
+    universal:manu:integrate)
+      shift
+      PROJECT_NAME="${1:-$(basename $(pwd))}"
+      python3 "${FRAMEWORK_ROOT}/manu_aican_integration.py" integrate "$PROJECT_NAME"
+      ;;
+    universal:manu:status)
+      python3 "${FRAMEWORK_ROOT}/manu_aican_integration.py" status
       ;;
     help|-h|--help)
       usage

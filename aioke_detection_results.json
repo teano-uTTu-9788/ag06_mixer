@@ -1,0 +1,42 @@
+{
+  "aioke_detected": false,
+  "detection_methods": {
+    "system_audio": {
+      "detected": false,
+      "raw_output": "Audio:\n\n    Devices:\n\n        The Anh\u2019s iPhone Microphone:\n\n          Input Channels: 1\n          Manufacturer: Apple Inc.\n          Current SampleRate: 48000\n          Transport: Unknown\n          Input Source: Default\n\n        BlackHole 2ch:\n\n          Input Channels: 2\n          Manufacturer: Existential Audio Inc.\n          Output Channels: 2\n          Current SampleRate: 48000\n          Transport: Virtual\n          Input Source: Default\n          Output Source: Default\n\n        MacBook Pro "
+    },
+    "usb_devices": {
+      "detected": false,
+      "usb_device_count": 3
+    },
+    "io_registry": {
+      "detected": false
+    },
+    "core_audio": {
+      "detected": false
+    },
+    "audio_midi": {
+      "detected": false
+    }
+  },
+  "diagnostics": {
+    "drivers_installed": false,
+    "driver_paths": [],
+    "usb_power_ok": false,
+    "coreaudiod_running": true
+  },
+  "troubleshooting": [
+    "\ud83d\udd0c Check that AiOke is powered on and connected via USB",
+    "\ud83d\udd04 Try a different USB cable or port",
+    "\ud83d\udcbf Install Yamaha Steinberg USB Driver from https://www.yamaha.com/support/",
+    "\ud83d\udd04 Restart your Mac after driver installation",
+    "\ud83d\udd12 Check System Settings > Privacy & Security for blocked software",
+    "\ud83c\udf9a\ufe0f Open Audio MIDI Setup and rescan for devices",
+    "\ud83d\udd27 Try restarting Core Audio: sudo killall coreaudiod",
+    "\ud83d\udcd6 Refer to AIOKE_TROUBLESHOOTING_GUIDE.md for detailed instructions"
+  ],
+  "system_info": {
+    "macos_version": "15.5",
+    "hardware_model": "MacBookPro18,3"
+  }
+}

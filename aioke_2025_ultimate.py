@@ -397,7 +397,7 @@ class AiOke2025UltimateServer:
     def setup_monitoring(self):
         """Setup comprehensive 2025 monitoring"""
         # Start Prometheus metrics server
-        start_http_server(8001)
+        start_http_server(8889)
         
     # ========================================================================
     # Google Vertex AI Endpoints

@@ -1,8 +1,8 @@
 {
   "total": 88,
-  "passed": 88,
-  "failed": 0,
-  "percentage": 100.0,
+  "passed": 35,
+  "failed": 53,
+  "percentage": 39.77272727272727,
   "results": [
     {
       "name": "Server process running",
@@ -18,27 +18,27 @@
     },
     {
       "name": "Health endpoint accessible",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Health returns valid JSON",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Service status is healthy",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Uptime is tracked",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "CORS headers present",
@@ -66,63 +66,63 @@
     },
     {
       "name": "GET /api/health works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "GET /api/mix works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "POST /api/mix works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "GET /api/stats works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "POST /api/youtube/search works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "POST /api/youtube/queue works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "GET /api/youtube/queue works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "POST /api/effects works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "POST /api/voice works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Content-Type is JSON",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Invalid endpoint returns 404",
@@ -132,21 +132,21 @@
     },
     {
       "name": "Empty POST handled gracefully",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Large payload handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Concurrent requests handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "API responds quickly",
@@ -156,171 +156,171 @@
     },
     {
       "name": "Search returns results",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Results have video_id",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Results have title",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Results have thumbnail",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Demo mode works without API key",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Queue adds songs",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Queue returns position",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Queue can be retrieved",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "AI mix applied on queue",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Search handles special characters",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Mixer has default settings",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Reverb can be adjusted",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Bass boost works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Vocal reduction works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Party effect applies",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Clean effect resets",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "No vocals effect works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Multiple settings update",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Settings persist",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Invalid effect handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Play command recognized",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Skip command works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Volume up command",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Volume down command",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Add reverb command",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Remove vocals command",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Command updates settings",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Empty command handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Manifest.json exists",
@@ -444,33 +444,33 @@
     },
     {
       "name": "Invalid JSON handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Missing required field handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Invalid mixer value handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Network timeout handled",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Server recovers from error",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "404 for non-existent files",
@@ -486,9 +486,9 @@
     },
     {
       "name": "SQL injection prevented",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "Health check < 100ms",
@@ -522,15 +522,15 @@
     },
     {
       "name": "Stats tracking works",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     },
     {
       "name": "System fully operational",
-      "passed": true,
+      "passed": false,
       "details": "",
-      "status": "\u2705 PASS"
+      "status": "\u274c FAIL"
     }
   ]
 }
