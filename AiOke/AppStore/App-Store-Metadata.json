@@ -1,0 +1,136 @@
+{
+  "app_name": "AiOke",
+  "subtitle": "AI-Powered Karaoke",
+  "description": "Transform any song into a karaoke experience with AiOke's intelligent vocal reduction technology. Perfect for aspiring singers, musicians, and karaoke enthusiasts.\n\n🎤 KEY FEATURES:\n• Smart vocal reduction for any audio track\n• Professional reverb and audio effects\n• High-quality audio recording\n• Clean, intuitive iOS interface\n• No internet required - works offline\n• Privacy-focused - all processing on device\n\n🎵 PERFECT FOR:\n• Karaoke practice at home\n• Musicians learning songs\n• Vocal training and practice\n• Creating backing tracks\n• Recording your performances\n\n🔊 AUDIO TECHNOLOGY:\n• Real-time audio processing\n• Professional-grade vocal isolation\n• Studio-quality reverb effects\n• Low-latency audio engine\n• Optimized for iOS performance\n\nAiOke uses advanced audio processing to reduce vocals in any song, creating instant karaoke tracks. Record your own vocals with professional effects and share your performances.\n\nPRIVACY: All audio processing happens locally on your device. Your recordings stay private unless you choose to share them.\n\nCompatible with iOS 15.0 and later. Works great with headphones or speakers.",
+  
+  "keywords": [
+    "karaoke",
+    "music",
+    "singing",
+    "vocal",
+    "audio",
+    "recording",
+    "AI",
+    "effects",
+    "reverb",
+    "practice"
+  ],
+  
+  "category": {
+    "primary": "Music",
+    "secondary": "Entertainment"
+  },
+  
+  "age_rating": "4+",
+  "content_rating_reasons": [],
+  
+  "pricing": {
+    "model": "Free",
+    "price": 0.0,
+    "in_app_purchases": false
+  },
+  
+  "supported_languages": [
+    "English (Primary)"
+  ],
+  
+  "supported_countries": [
+    "United States",
+    "Canada", 
+    "United Kingdom",
+    "Australia",
+    "Germany",
+    "France",
+    "Japan",
+    "South Korea"
+  ],
+  
+  "device_requirements": {
+    "minimum_ios_version": "15.0",
+    "supported_devices": [
+      "iPhone",
+      "iPad"
+    ],
+    "required_capabilities": [
+      "microphone",
+      "audio-playback"
+    ]
+  },
+  
+  "app_store_connect": {
+    "version": "1.0",
+    "build": "1",
+    "whats_new": "🎤 Welcome to AiOke!\n\n• Smart vocal reduction technology\n• Professional audio effects\n• High-quality recording\n• Beautiful iOS interface\n• Complete privacy protection\n\nStart your karaoke journey today!",
+    "support_url": "https://aioke.app/support",
+    "marketing_url": "https://aioke.app"
+  },
+  
+  "privacy_policy_url": "https://aioke.app/privacy",
+  
+  "app_review_information": {
+    "contact_email": "review@aioke.app",
+    "contact_phone": "+1-555-AIOKE-1",
+    "demo_account": {
+      "required": false,
+      "username": "",
+      "password": ""
+    },
+    "notes": "AiOke is a karaoke app that processes audio locally on the device. No internet connection required for core functionality. The app includes demo tracks for testing. All audio processing uses Apple's Core Audio frameworks."
+  },
+  
+  "screenshots": {
+    "iphone_6_5": [
+      "main-interface.png",
+      "song-selection.png", 
+      "audio-controls.png",
+      "recording-interface.png",
+      "effects-panel.png"
+    ],
+    "iphone_5_5": [
+      "main-interface-5.5.png",
+      "song-selection-5.5.png",
+      "audio-controls-5.5.png"
+    ],
+    "ipad_12_9": [
+      "ipad-main.png",
+      "ipad-controls.png",
+      "ipad-library.png"
+    ]
+  },
+  
+  "icon_assets": {
+    "app_icon_1024": "AppIcon-1024.png",
+    "app_icons": "AppIcon.appiconset"
+  },
+  
+  "marketing_assets": {
+    "feature_graphic": "feature-graphic.png",
+    "promotional_text": "Create professional karaoke tracks instantly with AI-powered vocal reduction. Record, practice, and perfect your performances with studio-quality effects.",
+    "promotional_keywords": "AI karaoke, vocal removal, singing practice, music app, audio effects"
+  },
+  
+  "localization": {
+    "default_language": "en-US",
+    "additional_languages": []
+  },
+  
+  "technical_requirements": {
+    "bundle_id": "com.aioke.app",
+    "team_id": "YOUR_TEAM_ID",
+    "signing_certificate": "iOS Distribution",
+    "provisioning_profile": "AiOke App Store Distribution"
+  },
+  
+  "submission_checklist": {
+    "privacy_policy_url_configured": true,
+    "support_url_configured": true,
+    "app_review_information_complete": true,
+    "screenshots_uploaded": false,
+    "app_icon_uploaded": false,
+    "build_uploaded": false,
+    "metadata_complete": true,
+    "pricing_configured": true,
+    "age_rating_complete": true,
+    "ready_for_review": false
+  }
+}

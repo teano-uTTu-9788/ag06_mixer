@@ -1,31 +1,31 @@
 {
-  "timestamp": "2025-08-29T02:15:54.322133",
-  "uptime": 126776.89168906212,
+  "timestamp": "2025-08-29T11:22:17.616798",
+  "uptime": 159560.185836792,
   "services": {
     "backend": {
       "service": "backend",
       "status": "healthy",
-      "response_time": 0.010626077651977539,
-      "timestamp": "2025-08-29 02:13:38.003767",
+      "response_time": 0.01864910125732422,
+      "timestamp": "2025-08-29 11:20:10.295500",
       "message": "Service responding normally",
       "details": {
         "error_count": 0,
         "processing": true,
         "status": "healthy",
-        "total_events": 1518010,
-        "uptime": 281065.3277697563
+        "total_events": 1822541,
+        "uptime": 313857.6195111275
       }
     },
     "frontend": {
       "service": "frontend",
       "status": "healthy",
-      "response_time": 0.00816488265991211,
-      "timestamp": "2025-08-29 02:13:38.012056",
+      "response_time": 0.007750988006591797,
+      "timestamp": "2025-08-29 11:20:10.303414",
       "message": "Service responding normally",
       "details": {
         "service": "enterprise-frontend",
         "status": "healthy",
-        "timestamp": "2025-08-28T19:13:38.010760",
+        "timestamp": "2025-08-29T04:20:10.301871",
         "version": "1.0.0-prod"
       }
     }

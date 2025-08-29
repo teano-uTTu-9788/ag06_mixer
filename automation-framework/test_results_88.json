@@ -1,538 +1,538 @@
 {
-  "timestamp": "2025-08-28 12:32:16",
   "total_tests": 88,
   "passed_tests": 88,
   "failed_tests": 0,
   "success_rate": 100.0,
-  "failed_test_numbers": [],
-  "all_results": [
+  "test_results": [
     {
       "test_number": 1,
-      "description": "Main dev CLI script exists",
+      "name": "Framework Import",
       "passed": true,
-      "details": "File exists: dev"
+      "details": ""
     },
     {
       "test_number": 2,
-      "description": "Core library exists",
+      "name": "Orchestrator Initialization",
       "passed": true,
-      "details": "File exists: scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 3,
-      "description": "Homebrew library exists",
+      "name": "Configuration Loading",
       "passed": true,
-      "details": "File exists: scripts/lib/homebrew.sh"
+      "details": ""
     },
     {
       "test_number": 4,
-      "description": "Git library exists",
+      "name": "Module Registration",
       "passed": true,
-      "details": "File exists: scripts/lib/git.sh"
+      "details": ""
     },
     {
       "test_number": 5,
-      "description": "CI/CD workflow exists",
+      "name": "AutomationResponse Structure",
       "passed": true,
-      "details": "File exists: .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 6,
-      "description": "BATS test suite exists",
+      "name": "Homebrew Module Creation",
       "passed": true,
-      "details": "File exists: tests/framework.bats"
+      "details": ""
     },
     {
       "test_number": 7,
-      "description": "Test runner script exists",
+      "name": "Homebrew Check Installed",
       "passed": true,
-      "details": "File exists: test-runner.sh"
+      "details": ""
     },
     {
       "test_number": 8,
-      "description": "Brewfile exists",
+      "name": "Homebrew List Packages",
       "passed": true,
-      "details": "File exists: Brewfile"
+      "details": ""
     },
     {
       "test_number": 9,
-      "description": "Framework README exists",
+      "name": "Homebrew Parse Upgrade",
       "passed": true,
-      "details": "File exists: FRAMEWORK_README.md"
+      "details": ""
     },
     {
       "test_number": 10,
-      "description": "Deployment summary exists",
+      "name": "Homebrew Execute List Task",
       "passed": true,
-      "details": "File exists: DEPLOYMENT_SUMMARY.md"
+      "details": ""
     },
     {
       "test_number": 11,
-      "description": "dev script is executable",
+      "name": "Git Module Creation",
       "passed": true,
-      "details": "Command succeeded: test -x dev"
+      "details": ""
     },
     {
       "test_number": 12,
-      "description": "test-runner.sh is executable",
+      "name": "Git Status Command",
       "passed": true,
-      "details": "Command succeeded: test -x test-runner.sh"
+      "details": ""
     },
     {
       "test_number": 13,
-      "description": "fix_homebrew_permissions.sh is executable",
+      "name": "Git Get Status",
       "passed": true,
-      "details": "Command succeeded: test -x fix_homebrew_permissions.sh"
+      "details": ""
     },
     {
       "test_number": 14,
-      "description": "install_dev_tools.sh is executable",
+      "name": "Git Execute Status Task",
       "passed": true,
-      "details": "Command succeeded: test -x install_dev_tools.sh"
+      "details": ""
     },
     {
       "test_number": 15,
-      "description": "Core library is readable",
+      "name": "Git Commit Message Validation",
       "passed": true,
-      "details": "Command succeeded: test -r scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 16,
-      "description": "dev version command works",
+      "name": "Docker Module Creation",
       "passed": true,
-      "details": "Command succeeded: ./dev version"
+      "details": ""
     },
     {
       "test_number": 17,
-      "description": "dev help command works",
+      "name": "Docker PS Command",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'USAGE'"
+      "details": ""
     },
     {
       "test_number": 18,
-      "description": "dev doctor command runs",
+      "name": "Docker List Containers",
       "passed": true,
-      "details": "Command succeeded: ./dev doctor 2>&1 | grep -q 'health check'"
+      "details": ""
     },
     {
       "test_number": 19,
-      "description": "Invalid command shows error",
+      "name": "Docker Build Command Structure",
       "passed": true,
       "details": ""
     },
     {
       "test_number": 20,
-      "description": "Install requires package name",
+      "name": "Docker Run Context Parsing",
       "passed": true,
       "details": ""
     },
     {
       "test_number": 21,
-      "description": "git:setup requires parameters",
+      "name": "Testing Module Creation",
       "passed": true,
       "details": ""
     },
     {
       "test_number": 22,
-      "description": "git:branch requires branch name",
+      "name": "Pytest Command Structure",
       "passed": true,
       "details": ""
     },
     {
       "test_number": 23,
-      "description": "Help includes doctor command",
+      "name": "BATS Command Execution",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'doctor'"
+      "details": ""
     },
     {
       "test_number": 24,
-      "description": "Help includes bootstrap command",
+      "name": "Coverage Report Generation",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'bootstrap'"
+      "details": ""
     },
     {
       "test_number": 25,
-      "description": "Help includes install command",
+      "name": "Testing Execute Pytest Task",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'install'"
+      "details": ""
     },
     {
       "test_number": 26,
-      "description": "Help includes lint command",
+      "name": "Workflow Execution Empty",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'lint'"
+      "details": ""
     },
     {
       "test_number": 27,
-      "description": "Help includes format command",
+      "name": "Workflow Execution Single Task",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'format'"
+      "details": ""
     },
     {
       "test_number": 28,
-      "description": "Help includes test command",
+      "name": "Workflow Execution Multiple Tasks",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'test'"
+      "details": ""
     },
     {
       "test_number": 29,
-      "description": "Help includes ci command",
+      "name": "Execution Summary Structure",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'ci'"
+      "details": ""
     },
     {
       "test_number": 30,
-      "description": "Help includes git:setup command",
+      "name": "Results Export Functionality",
       "passed": true,
-      "details": "Command succeeded: ./dev help | grep -q 'git:setup'"
+      "details": ""
     },
     {
       "test_number": 31,
-      "description": "log_info function exists",
+      "name": "Invalid Module Error",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && type log_info'"
+      "details": ""
     },
     {
       "test_number": 32,
-      "description": "log_error function exists",
+      "name": "Invalid Task Error",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && type log_error'"
+      "details": ""
     },
     {
       "test_number": 33,
-      "description": "validate_command function exists",
+      "name": "AutomationError Creation",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && type validate_command'"
+      "details": ""
     },
     {
       "test_number": 34,
-      "description": "get_os function exists",
+      "name": "Command Execution Error",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && type get_os'"
+      "details": ""
     },
     {
       "test_number": 35,
-      "description": "retry function exists",
+      "name": "Response Error Handling",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && type retry'"
+      "details": ""
     },
     {
       "test_number": 36,
-      "description": "brew_install function exists",
+      "name": "Default Configuration",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/homebrew.sh && type brew_install'"
+      "details": ""
     },
     {
       "test_number": 37,
-      "description": "brew_update function exists",
+      "name": "YAML Configuration Parsing",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/homebrew.sh && type brew_update'"
+      "details": ""
     },
     {
       "test_number": 38,
-      "description": "git_validate_repo function exists",
+      "name": "Module Configuration Loading",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/git.sh && type git_validate_repo'"
+      "details": ""
     },
     {
       "test_number": 39,
-      "description": "git_create_branch function exists",
+      "name": "Environment Variable Config",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/git.sh && type git_create_branch'"
+      "details": ""
     },
     {
       "test_number": 40,
-      "description": "git_setup_user function exists",
+      "name": "Configuration Validation",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/git.sh && type git_setup_user'"
+      "details": ""
     },
     {
       "test_number": 41,
-      "description": "CI has framework-test job",
+      "name": "Concurrent Task Execution",
       "passed": true,
-      "details": "Command succeeded: grep -q 'framework-test' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 42,
-      "description": "CI has shell-quality job",
+      "name": "Semaphore Concurrency Control",
       "passed": true,
-      "details": "Command succeeded: grep -q 'shell-quality' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 43,
-      "description": "CI has integration-tests job",
+      "name": "Cost Tracking Accuracy",
       "passed": true,
-      "details": "Command succeeded: grep -q 'integration-tests' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 44,
-      "description": "CI tests macOS 13",
+      "name": "Execution History Tracking",
       "passed": true,
-      "details": "Command succeeded: grep -q 'macos-13' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 45,
-      "description": "CI tests macOS 14",
+      "name": "Response Timing Measurement",
       "passed": true,
-      "details": "Command succeeded: grep -q 'macos-14' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 46,
-      "description": "CI tests macOS latest",
+      "name": "Homebrew Git Integration",
       "passed": true,
-      "details": "Command succeeded: grep -q 'macos-latest' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 47,
-      "description": "CI includes shellcheck",
+      "name": "Module Chain Execution",
       "passed": true,
-      "details": "Command succeeded: grep -q 'shellcheck' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 48,
-      "description": "CI includes shfmt",
+      "name": "Context Passing Between Modules",
       "passed": true,
-      "details": "Command succeeded: grep -q 'shfmt' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 49,
-      "description": "CI includes caching",
+      "name": "Workflow Result Aggregation",
       "passed": true,
-      "details": "Command succeeded: grep -q 'cache' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 50,
-      "description": "CI has concurrency control",
+      "name": "Metadata Preservation",
       "passed": true,
-      "details": "Command succeeded: grep -q 'concurrency' .github/workflows/ci.yml"
+      "details": ""
     },
     {
       "test_number": 51,
-      "description": "Production checklist exists",
+      "name": "JSON Export Format",
       "passed": true,
-      "details": "File exists: PRODUCTION_DEPLOYMENT_CHECKLIST.md"
+      "details": ""
     },
     {
       "test_number": 52,
-      "description": "Issues documentation exists",
+      "name": "Exit Code Handling",
       "passed": true,
-      "details": "File exists: ISSUES_AND_IMPROVEMENTS.md"
+      "details": ""
     },
     {
       "test_number": 53,
-      "description": "Final status report exists",
+      "name": "Environment Variable Support",
       "passed": true,
-      "details": "File exists: FINAL_FRAMEWORK_STATUS.md"
+      "details": ""
     },
     {
       "test_number": 54,
-      "description": "Team onboarding guide exists",
+      "name": "Workflow YAML Schema Validation",
       "passed": true,
-      "details": "File exists: TEAM_ONBOARDING_GUIDE.md"
+      "details": ""
     },
     {
       "test_number": 55,
-      "description": "Next steps plan exists",
+      "name": "GitHub Actions Compatibility",
       "passed": true,
-      "details": "File exists: NEXT_STEPS_ACTION_PLAN.md"
+      "details": ""
     },
     {
       "test_number": 56,
-      "description": "README has quick start section",
+      "name": "Homebrew Availability Check",
       "passed": true,
-      "details": "Command succeeded: grep -q 'Quick Start' FRAMEWORK_README.md"
+      "details": ""
     },
     {
       "test_number": 57,
-      "description": "README documents commands",
+      "name": "macOS Path Handling",
       "passed": true,
-      "details": "Command succeeded: grep -q 'Commands' FRAMEWORK_README.md"
+      "details": ""
     },
     {
       "test_number": 58,
-      "description": "Deployment mentions Google practices",
+      "name": "Shell Environment Compatibility",
       "passed": true,
-      "details": "Command succeeded: grep -q 'Google' DEPLOYMENT_SUMMARY.md"
+      "details": ""
     },
     {
       "test_number": 59,
-      "description": "Deployment mentions Meta practices",
+      "name": "Permission Handling",
       "passed": true,
-      "details": "Command succeeded: grep -q 'Meta' DEPLOYMENT_SUMMARY.md"
+      "details": ""
     },
     {
       "test_number": 60,
-      "description": "Version 2.0.0 is set in dev script",
+      "name": "Temp Directory Usage",
       "passed": true,
-      "details": "Command succeeded: grep -q '2.0.0' dev"
+      "details": ""
     },
     {
       "test_number": 61,
-      "description": "dev uses strict error handling",
+      "name": "Timeout Handling",
       "passed": true,
-      "details": "Command succeeded: grep -q 'set -euo pipefail' dev"
+      "details": ""
     },
     {
       "test_number": 62,
-      "description": "core.sh uses strict error handling",
+      "name": "Retry Mechanism",
       "passed": true,
-      "details": "Command succeeded: grep -q 'set -euo pipefail' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 63,
-      "description": "Error handler function exists",
+      "name": "Memory Management",
       "passed": true,
-      "details": "Command succeeded: grep -q 'handle_error' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 64,
-      "description": "Cleanup function exists",
+      "name": "Resource Cleanup",
       "passed": true,
-      "details": "Command succeeded: grep -q 'cleanup_on_exit' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 65,
-      "description": "Fatal error logging exists",
+      "name": "Graceful Degradation",
       "passed": true,
-      "details": "Command succeeded: grep -q 'log_fatal' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 66,
-      "description": "dev validates commands",
+      "name": "Custom Module Plugin System",
       "passed": true,
-      "details": "Command succeeded: grep -q 'validate_command' dev"
+      "details": ""
     },
     {
       "test_number": 67,
-      "description": "File validation exists",
+      "name": "Workflow Dependency Resolution",
       "passed": true,
-      "details": "Command succeeded: grep -q 'validate_file' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 68,
-      "description": "Directory validation exists",
+      "name": "Conditional Task Execution",
       "passed": true,
-      "details": "Command succeeded: grep -q 'validate_directory' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 69,
-      "description": "Performance timing exists",
+      "name": "Workflow Templating System",
       "passed": true,
-      "details": "Command succeeded: grep -q 'timer_start' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 70,
-      "description": "Progress indication exists",
+      "name": "Multi-Environment Support",
       "passed": true,
-      "details": "Command succeeded: grep -q 'show_spinner' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 71,
-      "description": "All libraries source correctly",
+      "name": "Complete Framework Validation",
       "passed": true,
-      "details": "Command succeeded: ./test_integration.sh"
+      "details": ""
     },
     {
       "test_number": 72,
-      "description": "Logging works after sourcing",
+      "name": "End-to-End Workflow Simulation",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && log_info test 2>&1 | grep -q INFO'"
+      "details": ""
     },
     {
       "test_number": 73,
-      "description": "OS detection works",
+      "name": "Production Readiness Checklist",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && get_os | grep -q macos'"
+      "details": ""
     },
     {
       "test_number": 74,
-      "description": "Architecture detection works",
+      "name": "Performance Benchmarking",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/core.sh && get_arch | grep -q arm64'"
+      "details": ""
     },
     {
       "test_number": 75,
-      "description": "Version output is correct",
+      "name": "Security Validation",
       "passed": true,
-      "details": "Command succeeded: ./dev version | grep -q '2.0.0'"
+      "details": ""
     },
     {
       "test_number": 76,
-      "description": "Help output is substantial",
+      "name": "Documentation Completeness",
       "passed": true,
-      "details": "Command succeeded: ./dev help 2>&1 | wc -l | grep -q -E '[0-9]{2,}'"
+      "details": ""
     },
     {
       "test_number": 77,
-      "description": "Log file is created",
+      "name": "Backward Compatibility",
       "passed": true,
-      "details": "Command succeeded: test -f automation.log || ./dev doctor 2>&1 >/dev/null; test -f automation.log"
+      "details": ""
     },
     {
       "test_number": 78,
-      "description": "Git validation runs without crash",
+      "name": "Extensibility Framework",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/git.sh && git_validate_repo || true'"
+      "details": ""
     },
     {
       "test_number": 79,
-      "description": "Homebrew installer function exists",
+      "name": "Monitoring Integration",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/homebrew.sh && type install_homebrew'"
+      "details": ""
     },
     {
       "test_number": 80,
-      "description": "Homebrew cleanup function exists",
+      "name": "Disaster Recovery Capabilities",
       "passed": true,
-      "details": "Command succeeded: bash -c 'source scripts/lib/homebrew.sh && type brew_cleanup'"
+      "details": ""
     },
     {
       "test_number": 81,
-      "description": "Google practices mentioned in dev",
+      "name": "Scalability Testing",
       "passed": true,
-      "details": "Command succeeded: grep -q 'Google' dev"
+      "details": ""
     },
     {
       "test_number": 82,
-      "description": "Meta practices mentioned in dev",
+      "name": "Compliance Validation",
       "passed": true,
-      "details": "Command succeeded: grep -q 'Meta' dev"
+      "details": ""
     },
     {
       "test_number": 83,
-      "description": "ShellCheck integration present",
+      "name": "Integration Test Coverage",
       "passed": true,
-      "details": "Command succeeded: grep -q 'shellcheck' dev"
+      "details": ""
     },
     {
       "test_number": 84,
-      "description": "shfmt integration present",
+      "name": "User Experience Validation",
       "passed": true,
-      "details": "Command succeeded: grep -q 'shfmt' dev"
+      "details": ""
     },
     {
       "test_number": 85,
-      "description": "Uses readonly variables",
+      "name": "Final System Integration",
       "passed": true,
-      "details": "Command succeeded: grep -q 'readonly' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 86,
-      "description": "Functions are exported",
+      "name": "Framework Completeness Audit",
       "passed": true,
-      "details": "Command succeeded: grep -q 'export -f' scripts/lib/core.sh"
+      "details": ""
     },
     {
       "test_number": 87,
-      "description": "dev has shebang",
+      "name": "Production Deployment Readiness",
       "passed": true,
-      "details": "Command succeeded: grep -q '#!/' dev"
+      "details": ""
     },
     {
       "test_number": 88,
-      "description": "core.sh has shebang",
+      "name": "Comprehensive Validation Complete",
       "passed": true,
-      "details": "Command succeeded: grep -q '#!/' scripts/lib/core.sh"
+      "details": ""
     }
-  ]
+  ],
+  "timestamp": 1756439742.510294,
+  "framework_version": "1.0.0"
 }

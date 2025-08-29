@@ -66,8 +66,22 @@ class EnterpriseAiCanValidator:
         print(f"   Status: {'✅ PASS' if deployment_result['status'] == 'PASS' else '❌ FAIL'}")
         print(f"   Score: {deployment_result['score']}/10")
         
-        # Calculate overall results
-        total_score = sum(comp['score'] for comp in validation_results["components"].values())
+        # Calculate overall results with proper score capping
+        component_max_scores = {
+            'sre_monitoring': 20,
+            'aws_well_architected': 25,
+            'azure_enterprise': 25,
+            'unified_orchestration': 20,  # Cap this at 20, not 21
+            'deployment_system': 10
+        }
+        
+        total_score = 0
+        for comp_name, comp_result in validation_results["components"].items():
+            capped_score = min(comp_result['score'], component_max_scores.get(comp_name, comp_result['score']))
+            total_score += capped_score
+            # Update the component result with capped score
+            validation_results["components"][comp_name]['score'] = capped_score
+            
         validation_results["total_score"] = total_score
         
         if total_score >= 80:
