@@ -681,8 +681,11 @@ class PerformanceOptimizationMonitor:
             if len(metric_group) < self.config['baseline']['minimum_samples']:
                 continue
             
-            component, metric_type_str = key.split('_', 1)
-            metric_type = PerformanceMetricType(metric_type_str)
+            # Extract component and metric type from the first metric in the group
+            # This avoids issues with underscores in component names
+            first_metric = metric_group[0]
+            component = first_metric.component
+            metric_type = first_metric.metric_type
             
             # Filter outliers if enabled
             values = [m.value for m in metric_group]
@@ -701,6 +704,11 @@ class PerformanceOptimizationMonitor:
             margin_of_error = 1.96 * (std_dev / np.sqrt(len(values)))  # 95% confidence
             confidence_interval = (baseline_value - margin_of_error, baseline_value + margin_of_error)
             
+            # Calculate seasonal patterns
+            seasonal_patterns = {}
+            if self.config['baseline'].get('seasonal_analysis', False):
+                seasonal_patterns = self._calculate_seasonal_patterns(metric_group, baseline_value)
+
             # Update baseline
             self.baselines[key] = PerformanceBaseline(
                 component=component,
@@ -710,7 +718,7 @@ class PerformanceOptimizationMonitor:
                 sample_size=len(values),
                 confidence_interval=confidence_interval,
                 last_updated=datetime.utcnow(),
-                seasonal_patterns={}  # TODO: Implement seasonal analysis
+                seasonal_patterns=seasonal_patterns
             )
         
         # Save baselines to disk
@@ -728,6 +736,32 @@ class PerformanceOptimizationMonitor:
             tags=["baseline", "update"]
         )
     
+    def _calculate_seasonal_patterns(self, metrics: List[PerformanceMetric], baseline_value: float) -> Dict[str, float]:
+        """Calculate seasonal patterns based on hour of day"""
+        if not metrics or baseline_value == 0:
+            return {}
+
+        # Initialize hourly aggregators
+        hourly_sums = {h: 0.0 for h in range(24)}
+        hourly_counts = {h: 0 for h in range(24)}
+
+        # Aggregate data by hour
+        for metric in metrics:
+            hour = metric.timestamp.hour
+            hourly_sums[hour] += metric.value
+            hourly_counts[hour] += 1
+
+        # Calculate seasonal factors
+        seasonal_patterns = {}
+        for hour in range(24):
+            # Require minimum samples per hour to form a pattern
+            if hourly_counts[hour] >= 5:
+                hourly_avg = hourly_sums[hour] / hourly_counts[hour]
+                factor = hourly_avg / baseline_value
+                seasonal_patterns[f"hour_{hour}"] = round(factor, 4)
+
+        return seasonal_patterns
+
     def _remove_outliers(self, values: List[float]) -> List[float]:
         """Remove outliers using IQR method"""
         if len(values) < 4:
