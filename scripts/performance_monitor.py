@@ -11,6 +11,9 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import statistics
 from dataclasses import dataclass
 from enum import Enum
@@ -59,6 +62,157 @@ class Alert:
     timestamp: datetime
 
 
+class NotificationManager:
+    """Handles sending notifications via various channels"""
+
+    def __init__(self):
+        # Load configuration from environment variables
+        self.slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+        self.pagerduty_routing_key = os.getenv("PAGERDUTY_ROUTING_KEY")
+
+        self.smtp_server = os.getenv("SMTP_SERVER")
+        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        self.smtp_username = os.getenv("SMTP_USERNAME")
+        self.smtp_password = os.getenv("SMTP_PASSWORD")
+        self.email_from = os.getenv("EMAIL_FROM")
+        self.email_to = os.getenv("EMAIL_TO")
+
+        self.twilio_account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+        self.twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        self.twilio_from_number = os.getenv("TWILIO_FROM_NUMBER")
+        self.sms_to_number = os.getenv("SMS_TO_NUMBER")
+
+    def send_notifications(self, alert: Alert):
+        """Send notifications to all configured channels"""
+        self.send_slack(alert)
+        self.send_pagerduty(alert)
+        self.send_email(alert)
+        self.send_sms(alert)
+
+    def send_slack(self, alert: Alert):
+        if not self.slack_webhook_url:
+            return
+
+        try:
+            # Construct Slack message payload
+            color = "#36a64f" if alert.severity == AlertSeverity.INFO else "#ffcc00" if alert.severity == AlertSeverity.WARNING else "#ff0000"
+            payload = {
+                "attachments": [
+                    {
+                        "color": color,
+                        "title": f"[{alert.severity.value.upper()}] {alert.metric}",
+                        "text": alert.message,
+                        "fields": [
+                            {"title": "Value", "value": f"{alert.value:.2f}", "short": True},
+                            {"title": "Threshold", "value": f"{alert.threshold:.2f}", "short": True},
+                            {"title": "Time", "value": alert.timestamp.strftime('%Y-%m-%d %H:%M:%S'), "short": True}
+                        ]
+                    }
+                ]
+            }
+            response = requests.post(self.slack_webhook_url, json=payload, timeout=5)
+            response.raise_for_status()
+            # print(f"Slack notification sent for {alert.metric}") # commented out to avoid cluttering dashboard
+        except Exception as e:
+            print(f"Failed to send Slack notification: {e}")
+
+    def send_pagerduty(self, alert: Alert):
+        if not self.pagerduty_routing_key:
+            return
+
+        # PagerDuty Events API v2
+        url = "https://events.pagerduty.com/v2/enqueue"
+
+        try:
+            payload = {
+                "routing_key": self.pagerduty_routing_key,
+                "event_action": "trigger",
+                "dedup_key": f"{alert.metric}-{alert.timestamp.strftime('%Y%m%d%H%M')}",
+                "payload": {
+                    "summary": f"[{alert.severity.value.upper()}] {alert.message}",
+                    "severity": alert.severity.value if alert.severity != AlertSeverity.WARNING else "warning", # PagerDuty uses info, warning, error, critical
+                    "source": "ag06-performance-monitor",
+                    "component": "mixer",
+                    "custom_details": {
+                        "metric": alert.metric,
+                        "value": alert.value,
+                        "threshold": alert.threshold,
+                        "timestamp": alert.timestamp.isoformat()
+                    }
+                }
+            }
+
+            # Map severity to PD severity
+            if alert.severity == AlertSeverity.CRITICAL:
+                payload["payload"]["severity"] = "critical"
+            elif alert.severity == AlertSeverity.WARNING:
+                payload["payload"]["severity"] = "warning"
+            else:
+                payload["payload"]["severity"] = "info"
+
+            response = requests.post(url, json=payload, timeout=5)
+            response.raise_for_status()
+            # print(f"PagerDuty notification sent for {alert.metric}")
+        except Exception as e:
+            print(f"Failed to send PagerDuty notification: {e}")
+
+    def send_email(self, alert: Alert):
+        if not all([self.smtp_server, self.smtp_username, self.smtp_password, self.email_from, self.email_to]):
+            return
+
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = self.email_from
+            msg['To'] = self.email_to
+            msg['Subject'] = f"[{alert.severity.value.upper()}] Alert: {alert.metric}"
+
+            body = f"""
+            Alert Details:
+
+            Severity: {alert.severity.value.upper()}
+            Metric: {alert.metric}
+            Message: {alert.message}
+            Value: {alert.value:.2f}
+            Threshold: {alert.threshold:.2f}
+            Time: {alert.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
+            """
+
+            msg.attach(MIMEText(body, 'plain'))
+
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            text = msg.as_string()
+            server.sendmail(self.email_from, self.email_to, text)
+            server.quit()
+            # print(f"Email notification sent for {alert.metric}")
+        except Exception as e:
+            print(f"Failed to send Email notification: {e}")
+
+    def send_sms(self, alert: Alert):
+        if not all([self.twilio_account_sid, self.twilio_auth_token, self.twilio_from_number, self.sms_to_number]):
+            return
+
+        try:
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
+            data = {
+                "From": self.twilio_from_number,
+                "To": self.sms_to_number,
+                "Body": f"[{alert.severity.value.upper()}] {alert.message} (Val: {alert.value:.2f})"
+            }
+
+            response = requests.post(
+                url,
+                data=data,
+                auth=(self.twilio_account_sid, self.twilio_auth_token),
+                timeout=5
+            )
+            response.raise_for_status()
+            # print(f"SMS notification sent for {alert.metric}")
+        except Exception as e:
+            print(f"Failed to send SMS notification: {e}")
+
+
 class PerformanceMonitor:
     """Performance monitoring system for AG06 Mixer"""
     
@@ -67,6 +221,7 @@ class PerformanceMonitor:
         self.metrics_history: Dict[str, List[Metric]] = {}
         self.alerts_history: List[Alert] = []
         self.last_alert_time: Dict[str, datetime] = {}
+        self.notification_manager = NotificationManager()
         
     def query_prometheus(self, query: str) -> Optional[Dict]:
         """Query Prometheus for metrics"""
@@ -286,11 +441,8 @@ class PerformanceMonitor:
         # Add to history
         self.alerts_history.append(alert)
         
-        # TODO: Implement actual notification mechanisms
-        # - Slack webhook
-        # - PagerDuty
-        # - Email
-        # - SMS
+        # Send notifications
+        self.notification_manager.send_notifications(alert)
     
     def calculate_statistics(self, metric_name: str, window_minutes: int = 60) -> Dict:
         """Calculate statistics for a metric over time window"""
@@ -459,6 +611,7 @@ class PerformanceMonitor:
 
 def main():
     """Main entry point"""
+    global MONITORING_INTERVAL
     import argparse
     
     parser = argparse.ArgumentParser(description="AG06 Mixer Performance Monitor")
@@ -479,13 +632,12 @@ def main():
     )
     
     args = parser.parse_args()
-    
-    # Override global settings
-    global MONITORING_INTERVAL
-    MONITORING_INTERVAL = args.interval
-    
+
+    if args.interval:
+        MONITORING_INTERVAL = args.interval
+
     monitor = PerformanceMonitor(prometheus_url=args.prometheus_url)
-    
+
     if args.export:
         # Export mode - collect metrics once and export
         metrics = []
