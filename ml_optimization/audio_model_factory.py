@@ -453,12 +453,121 @@ class AudioModelTrainingPipeline:
     
     def create_optimized_models(self, output_dir: str = "models/optimized"):
         """Create optimized versions of all models"""
-        from .model_optimizer import ModelOptimizationPipeline, OptimizationConfig
+        from .model_optimizer import ModelOptimizationPipeline, OptimizationConfig, create_optimizer
         
-        # This would convert the sklearn/numpy models to TensorFlow/ONNX format
-        # and then optimize them - implementation depends on model format
-        logger.info("Model optimization would be applied here")
-        # TODO: Implement model format conversion and optimization
+        # Create output directory
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Initialize optimization pipeline
+        pipeline = ModelOptimizationPipeline()
+
+        # Create optimizers
+        tflite_config = OptimizationConfig(
+            target_platform="mobile",
+            quantization="int8",
+            optimization_level=2
+        )
+        pipeline.add_optimizer("tflite", create_optimizer("tflite", tflite_config))
+
+        onnx_config = OptimizationConfig(
+            target_platform="edge",
+            quantization="fp16",
+            optimization_level=2
+        )
+        pipeline.add_optimizer("onnx", create_optimizer("onnx", onnx_config))
+
+        # Process each model
+        results = {}
+        for name, model in self.models.items():
+            logger.info(f"Optimizing model: {name}")
+
+            # 1. Convert to Keras/TensorFlow first (required for TFLite)
+            tf_model_path = output_path / f"{name}_tf.h5"
+            input_shape = (1, model.config.input_features)
+
+            try:
+                self._convert_to_tensorflow(model, input_shape, str(tf_model_path))
+                logger.info(f"Converted {name} to TensorFlow format: {tf_model_path}")
+
+                # 2. Run optimization pipeline
+                model_results = pipeline.optimize_all(str(tf_model_path))
+                results[name] = model_results
+
+            except Exception as e:
+                logger.error(f"Failed to optimize {name}: {e}")
+                results[name] = {'error': str(e)}
+
+        # Save results
+        pipeline.save_results(str(output_path / "optimization_results.json"))
+        return results
+
+    def _convert_to_tensorflow(self, model: SimpleGenreClassifier, input_shape: Tuple[int, ...], output_path: str):
+        """Convert a SimpleGenreClassifier to TensorFlow format"""
+        try:
+            import tensorflow as tf
+            from tensorflow import keras
+
+            # Create Keras model with same architecture
+            keras_model = keras.Sequential()
+            keras_model.add(keras.layers.InputLayer(input_shape=input_shape[1:]))
+
+            # Extract weights from the existing model
+            weights = []
+            biases = []
+
+            if hasattr(model.model, 'coefs_'):
+                # sklearn model
+                weights = model.model.coefs_
+                biases = model.model.intercepts_
+
+                # Add layers
+                for i, (w, b) in enumerate(zip(weights, biases)):
+                    # Add dense layer
+                    if i == len(weights) - 1:
+                        activation = 'softmax'
+                    else:
+                        activation = 'relu'
+
+                    layer = keras.layers.Dense(
+                        units=w.shape[1],
+                        activation=activation
+                    )
+                    keras_model.add(layer)
+                    layer.set_weights([w, b])
+
+            elif hasattr(model, 'weights'):
+                # numpy model
+                weights = model.weights
+                biases = model.biases
+
+                # Add layers
+                for i, (w, b) in enumerate(zip(weights, biases)):
+                    # Add dense layer
+                    if i == len(weights) - 1:
+                        activation = 'softmax'
+                    else:
+                        activation = 'relu'
+
+                    # Ensure biases shape matches Keras expectation
+                    b_reshaped = b.reshape(-1)
+
+                    layer = keras.layers.Dense(
+                        units=w.shape[1],
+                        activation=activation
+                    )
+                    keras_model.add(layer)
+                    layer.set_weights([w, b_reshaped])
+
+            else:
+                raise ValueError("Model format not recognized for conversion")
+
+            # Save model
+            keras_model.save(output_path)
+
+        except ImportError:
+            logger.error("TensorFlow not available for model conversion")
+            raise
 
 def demo_audio_model_training():
     """Demonstrate audio model training pipeline"""

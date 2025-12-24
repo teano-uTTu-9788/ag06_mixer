@@ -243,21 +243,72 @@ class ONNXOptimizer(BaseModelOptimizer):
         """Load ONNX model"""
         try:
             import onnx
-            self.original_model = onnx.load(model_path)
-            logger.info(f"Loaded ONNX model from {model_path}")
             
+            if model_path.endswith('.onnx'):
+                self.original_model = onnx.load(model_path)
+                logger.info(f"Loaded ONNX model from {model_path}")
+            elif model_path.endswith('.h5') or model_path.endswith('.keras') or model_path.endswith('.pb'):
+                # Try to convert from TensorFlow/Keras using tf2onnx
+                logger.info(f"Converting TensorFlow model {model_path} to ONNX...")
+                self._convert_tf_to_onnx(model_path)
+            else:
+                raise ValueError(f"Unsupported model format: {model_path}")
+
         except ImportError:
             logger.error("ONNX not available. Install with: pip install onnx")
             raise
+
+    def _convert_tf_to_onnx(self, model_path: str):
+        """Convert TensorFlow model to ONNX"""
+        try:
+            import tf2onnx
+            import tensorflow as tf
+
+            # Load Keras model
+            if model_path.endswith('.h5') or model_path.endswith('.keras'):
+                model = tf.keras.models.load_model(model_path)
+                # Fix for Keras 3/tf2onnx compatibility
+                if not hasattr(model, 'output_names') or not model.output_names:
+                    model.output_names = [f'output_{i}' for i in range(len(model.outputs))]
+            else:
+                model = tf.saved_model.load(model_path)
+
+            # Convert to ONNX
+            # Handle Keras 3 input shape difference
+            input_shape = model.input_shape
+            if isinstance(input_shape, list):
+                input_shape = input_shape[0]
+
+            spec = (tf.TensorSpec((1,) + input_shape[1:], tf.float32, name="input"),)
+            output_path = model_path.rsplit('.', 1)[0] + '.onnx'
+
+            model_proto, _ = tf2onnx.convert.from_keras(
+                model,
+                input_signature=spec,
+                opset=13,
+                output_path=output_path
+            )
+
+            self.original_model = model_proto
+            logger.info(f"Converted to ONNX and loaded from {output_path}")
+
+        except ImportError:
+            logger.error("tf2onnx not available. Install with: pip install tf2onnx")
+            raise
+        except Exception as e:
+            logger.error(f"TF to ONNX conversion failed: {e}")
+            raise
     
-    def optimize(self) -> Any:
+    def optimize(self, calibration_data: Optional[np.ndarray] = None) -> Any:
         """Optimize ONNX model"""
         try:
             import onnx
-            from onnxoptimizer import optimize as onnx_optimize
+            import onnxoptimizer
             
             # Basic optimizations
-            optimizations = [
+            available_passes = set(onnxoptimizer.get_available_passes())
+
+            desired_optimizations = [
                 'eliminate_deadend',
                 'eliminate_identity',
                 'eliminate_nop_dropout',
@@ -277,7 +328,7 @@ class ONNXOptimizer(BaseModelOptimizer):
             
             if self.config.optimization_level >= 2:
                 # Aggressive optimizations
-                optimizations.extend([
+                desired_optimizations.extend([
                     'eliminate_duplicate_initializer',
                     'eliminate_if_with_const_cond',
                     'eliminate_loop_with_const_iteration_count',
@@ -285,14 +336,21 @@ class ONNXOptimizer(BaseModelOptimizer):
                     'nop',
                 ])
             
+            # Filter optimizations to only include available ones
+            optimizations = [op for op in desired_optimizations if op in available_passes]
+
             # Apply optimizations
-            self.optimized_model = onnx_optimize(self.original_model, optimizations)
+            try:
+                self.optimized_model = onnxoptimizer.optimize(self.original_model, optimizations)
+                logger.info("ONNX model optimization completed")
+            except Exception as e:
+                logger.warning(f"ONNX optimization passes failed: {e}. Using unoptimized model.")
+                self.optimized_model = self.original_model
             
             # Quantization if requested
             if self.config.quantization in ["int8", "fp16"]:
                 self._apply_quantization()
             
-            logger.info("ONNX model optimization completed")
             return self.optimized_model
             
         except ImportError:
