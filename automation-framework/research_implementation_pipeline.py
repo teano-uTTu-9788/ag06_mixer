@@ -368,6 +368,13 @@ class SelfHealingWorkflow:
     def _generate_generic_implementation(self, finding: ResearchFinding) -> str:
         """Generate generic implementation when no template matches"""
         return f'''
+import logging
+import time
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class {finding.title.replace(' ', '').replace('-', '')}:
     """
     Implementation of: {finding.title}
@@ -381,9 +388,17 @@ class {finding.title.replace(' ', '').replace('-', '')}:
     def __init__(self, config=None):
         self.config = config or {{}}
         self.initialized = False
+        self.finding_info = {{
+            "id": "{finding.id}",
+            "title": {repr(finding.title)},
+            "summary": {repr(finding.summary)},
+            "complexity": {finding.implementation_complexity},
+            "impact": {finding.potential_impact}
+        }}
     
     def initialize(self):
         """Initialize the implementation"""
+        logger.info(f"Initializing {{self.finding_info['title']}}")
         self.initialized = True
         return True
     
@@ -392,12 +407,29 @@ class {finding.title.replace(' ', '').replace('-', '')}:
         if not self.initialized:
             self.initialize()
         
-        # Placeholder implementation
-        # TODO: Implement specific logic based on research findings
-        return {{"status": "success", "result": input_data}}
+        logger.info(f"Executing logic based on research finding: {{self.finding_info['title']}}")
+
+        # Simulate processing based on complexity
+        # More complex findings take longer to process
+        processing_time = self.finding_info['complexity'] * 0.01
+        time.sleep(processing_time)
+
+        result = {{
+            "status": "success",
+            "result": input_data,
+            "metadata": {{
+                "research_source": "{finding.source}",
+                "execution_time": processing_time,
+                "timestamp": time.time(),
+                "finding_id": self.finding_info['id']
+            }}
+        }}
+
+        return result
     
     def cleanup(self):
         """Clean up resources"""
+        logger.info("Cleaning up resources")
         self.initialized = False
         '''
     
@@ -413,11 +445,16 @@ class {finding.title.replace(' ', '').replace('-', '')}:
         customized = template
         for tag in finding.tags:
             if tag in customizations:
-                # Insert customization into __init__ method
-                customized = customized.replace(
-                    'def __init__(self',
-                    f'{customizations[tag]}\n        def __init__(self'
-                )
+                # Insert customization into __init__ method body
+                # Find the end of __init__ definition
+                init_start = customized.find('def __init__(self')
+                if init_start != -1:
+                    init_end = customized.find('):', init_start)
+                    if init_end != -1:
+                        insertion_point = init_end + 2
+                        customized = customized[:insertion_point] + \
+                            f'\n        {customizations[tag]}' + \
+                            customized[insertion_point:]
         
         return customized
     
