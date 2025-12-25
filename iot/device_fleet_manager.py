@@ -69,6 +69,7 @@ class CommandType(Enum):
     DIAGNOSTIC = "diagnostic"
     AUDIO_CALIBRATION = "audio_calibration"
     FACTORY_RESET = "factory_reset"
+    ROLLBACK = "rollback"
 
 
 @dataclass
@@ -564,8 +565,9 @@ class UpdateManager:
     - Update history tracking
     """
     
-    def __init__(self, registry: DeviceRegistry):
+    def __init__(self, registry: DeviceRegistry, command_dispatcher: Optional['CommandDispatcher'] = None):
         self.registry = registry
+        self.command_dispatcher = command_dispatcher
         
         # Active updates
         self.active_updates: Dict[str, OTAUpdate] = {}
@@ -680,12 +682,26 @@ class UpdateManager:
         
         logger.info(f"Triggering rollback for update {update_id}")
         
+        update = self.active_updates.get(update_id)
+        if not update:
+            logger.error(f"Cannot rollback unknown update {update_id}")
+            return
+
         # Mark all pending/in-progress devices for rollback
         for device_id, status in self.update_status[update_id].items():
             if status in [UpdateStatus.PENDING, UpdateStatus.DOWNLOADING, UpdateStatus.INSTALLING]:
                 self.update_status[update_id][device_id] = UpdateStatus.ROLLED_BACK
-        
-        # TODO: Send rollback command to devices
+
+                # Send rollback command to devices
+                if self.command_dispatcher:
+                    await self.command_dispatcher.send_command(
+                        device_id,
+                        CommandType.ROLLBACK,
+                        {
+                            'update_id': update_id,
+                            'target_version': update.rollback_version
+                        }
+                    )
     
     def get_update_status(self, update_id: str) -> Dict[str, Any]:
         """Get update deployment status"""
@@ -799,8 +815,8 @@ class DeviceFleetManager:
         # Initialize components
         self.registry = DeviceRegistry()
         self.monitor = FleetMonitor(alert_callback=self._handle_alert)
-        self.update_manager = UpdateManager(self.registry)
         self.command_dispatcher = CommandDispatcher()
+        self.update_manager = UpdateManager(self.registry, self.command_dispatcher)
         
         # Fleet state
         self.running = False
