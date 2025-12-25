@@ -8,6 +8,9 @@ import json
 import time
 import sys
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 import requests
@@ -29,6 +32,21 @@ ERROR_RATE_WARNING = 0.005
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
 MONITORING_INTERVAL = 30  # seconds
 ALERT_COOLDOWN = 300  # seconds between same alerts
+
+# Notification configuration
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
+PAGERDUTY_ROUTING_KEY = os.getenv("PAGERDUTY_ROUTING_KEY")
+
+EMAIL_SMTP_SERVER = os.getenv("EMAIL_SMTP_SERVER", "smtp.gmail.com")
+EMAIL_SMTP_PORT = int(os.getenv("EMAIL_SMTP_PORT", "587"))
+EMAIL_SENDER_USER = os.getenv("EMAIL_SENDER_USER")
+EMAIL_SENDER_PASSWORD = os.getenv("EMAIL_SENDER_PASSWORD")
+EMAIL_RECIPIENTS = os.getenv("EMAIL_RECIPIENTS")  # Comma separated
+
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
+SMS_RECIPIENTS = os.getenv("SMS_RECIPIENTS")  # Comma separated
 
 
 class AlertSeverity(Enum):
@@ -286,12 +304,124 @@ class PerformanceMonitor:
         # Add to history
         self.alerts_history.append(alert)
         
-        # TODO: Implement actual notification mechanisms
-        # - Slack webhook
-        # - PagerDuty
-        # - Email
-        # - SMS
+        # Send notifications
+        if SLACK_WEBHOOK_URL:
+            self.send_slack_alert(alert)
+
+        if PAGERDUTY_ROUTING_KEY:
+            self.send_pagerduty_alert(alert)
+
+        if EMAIL_SENDER_USER and EMAIL_RECIPIENTS:
+            self.send_email_alert(alert)
+
+        if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and SMS_RECIPIENTS:
+            self.send_sms_alert(alert)
     
+    def send_slack_alert(self, alert: Alert):
+        """Send alert to Slack"""
+        if not SLACK_WEBHOOK_URL:
+            return
+
+        try:
+            color = "#36a64f" if alert.severity == AlertSeverity.INFO else "#ffcc00" if alert.severity == AlertSeverity.WARNING else "#ff0000"
+            payload = {
+                "text": f"*{alert.severity.value.upper()}*: {alert.message}",
+                "attachments": [
+                    {
+                        "color": color,
+                        "fields": [
+                            {"title": "Metric", "value": alert.metric, "short": True},
+                            {"title": "Value", "value": str(alert.value), "short": True},
+                            {"title": "Threshold", "value": str(alert.threshold), "short": True},
+                            {"title": "Time", "value": alert.timestamp.strftime('%Y-%m-%d %H:%M:%S'), "short": True}
+                        ]
+                    }
+                ]
+            }
+            requests.post(SLACK_WEBHOOK_URL, json=payload, timeout=10)
+        except Exception as e:
+            print(f"Failed to send Slack alert: {e}")
+
+    def send_pagerduty_alert(self, alert: Alert):
+        """Send alert to PagerDuty"""
+        if not PAGERDUTY_ROUTING_KEY:
+            return
+
+        try:
+            payload = {
+                "routing_key": PAGERDUTY_ROUTING_KEY,
+                "event_action": "trigger",
+                "dedup_key": f"{alert.metric}_{alert.timestamp.strftime('%Y%m%d%H%M')}",
+                "payload": {
+                    "summary": f"{alert.severity.value.upper()}: {alert.message}",
+                    "severity": "critical" if alert.severity == AlertSeverity.CRITICAL else "warning" if alert.severity == AlertSeverity.WARNING else "info",
+                    "source": "ag06-mixer",
+                    "timestamp": alert.timestamp.isoformat(),
+                    "custom_details": {
+                        "metric": alert.metric,
+                        "value": alert.value,
+                        "threshold": alert.threshold
+                    }
+                }
+            }
+            requests.post("https://events.pagerduty.com/v2/enqueue", json=payload, timeout=10)
+        except Exception as e:
+            print(f"Failed to send PagerDuty alert: {e}")
+
+    def send_email_alert(self, alert: Alert):
+        """Send alert via Email"""
+        if not (EMAIL_SENDER_USER and EMAIL_RECIPIENTS):
+            return
+
+        try:
+            recipients = [r.strip() for r in EMAIL_RECIPIENTS.split(",")]
+            msg = MIMEMultipart()
+            msg['From'] = EMAIL_SENDER_USER
+            msg['To'] = ", ".join(recipients)
+            msg['Subject'] = f"AG06 Alert: {alert.severity.value.upper()} - {alert.metric}"
+
+            body = f"""
+AG06 Mixer Performance Alert
+
+Severity: {alert.severity.value.upper()}
+Metric: {alert.metric}
+Message: {alert.message}
+Value: {alert.value}
+Threshold: {alert.threshold}
+Time: {alert.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
+            """
+            msg.attach(MIMEText(body, 'plain'))
+
+            server = smtplib.SMTP(EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT)
+            server.starttls()
+            if EMAIL_SENDER_PASSWORD:
+                server.login(EMAIL_SENDER_USER, EMAIL_SENDER_PASSWORD)
+            server.sendmail(EMAIL_SENDER_USER, recipients, msg.as_string())
+            server.quit()
+        except Exception as e:
+            print(f"Failed to send Email alert: {e}")
+
+    def send_sms_alert(self, alert: Alert):
+        """Send alert via SMS (Twilio)"""
+        if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and SMS_RECIPIENTS):
+            return
+
+        try:
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
+            recipients = [r.strip() for r in SMS_RECIPIENTS.split(",")]
+
+            message = f"AG06 Alert [{alert.severity.value.upper()}]: {alert.message}. Value: {alert.value:.2f}"
+
+            for recipient in recipients:
+                data = {
+                    "From": TWILIO_FROM_NUMBER,
+                    "To": recipient,
+                    "Body": message
+                }
+                requests.post(url, data=data, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN), timeout=10)
+        except Exception as e:
+            print(f"Failed to send SMS alert: {e}")
+
     def calculate_statistics(self, metric_name: str, window_minutes: int = 60) -> Dict:
         """Calculate statistics for a metric over time window"""
         if metric_name not in self.metrics_history:
@@ -459,6 +589,7 @@ class PerformanceMonitor:
 
 def main():
     """Main entry point"""
+    global MONITORING_INTERVAL
     import argparse
     
     parser = argparse.ArgumentParser(description="AG06 Mixer Performance Monitor")
@@ -481,7 +612,6 @@ def main():
     args = parser.parse_args()
     
     # Override global settings
-    global MONITORING_INTERVAL
     MONITORING_INTERVAL = args.interval
     
     monitor = PerformanceMonitor(prometheus_url=args.prometheus_url)
