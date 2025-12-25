@@ -1,0 +1,14 @@
+{
+  "name": "Rock Vocals",
+  "category": "vocals",
+  "parameters": {
+    "input_gain": 6,
+    "output_gain": 3,
+    "eq_bands": [-2, 0, 3, 4, 2],
+    "reverb_level": 35,
+    "compression_ratio": 6
+  },
+  "created_at": "2025-01-01T00:00:00",
+  "modified_at": "2025-01-01T00:00:00",
+  "version": "1.0.0"
+}

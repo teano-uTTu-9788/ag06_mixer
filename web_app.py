@@ -804,16 +804,25 @@ class AG06WebApp:
         return Response(text=HTML_TEMPLATE, content_type='text/html')
     
     async def status_handler(self, request: Request) -> Response:
-        """API status endpoint"""
+        """API status endpoint - returns REAL data, no fake claims"""
         health = await self.deployment_mgr.get_health_status()
+
+        # Count actual passing services
+        passing_services = sum(1 for v in health.services.values() if v)
+        total_services = len(health.services)
+
+        # MANU compliance requires all services healthy
+        manu_compliant = health.healthy and all(health.services.values())
+
         return web.json_response({
-            "status": "online",
+            "status": "online" if health.healthy else "degraded",
             "version": "2.0.0",
             "healthy": health.healthy,
             "services": health.services,
             "metrics": health.metrics,
-            "tests": "88/88",
-            "manu_compliant": True
+            "service_health": f"{passing_services}/{total_services}",
+            "manu_compliant": manu_compliant,
+            "last_check": health.last_check.isoformat()
         })
     
     async def update_handler(self, request: Request) -> Response:
