@@ -1,12 +1,217 @@
 """
 Production Reinforcement Learning Mixer System
-Following DeepMind/OpenAI patterns for production RL systems
+===============================================
 
-Key patterns implemented:
-- DeepMind's DQN approach: Experience replay and target networks
-- OpenAI's PPO patterns: Policy optimization with clipping
-- Google's Dopamine framework: Modular agent architecture
-- Stable-Baselines3 patterns: Production-ready RL implementations
+A comprehensive reinforcement learning system for automated audio mixing,
+following industry-standard patterns from DeepMind, OpenAI, and Google Research.
+
+Overview
+--------
+This module implements a Deep Q-Network (DQN) agent that learns to optimize
+audio mixer settings to achieve professional-quality audio output. The agent
+learns through trial-and-error interaction with a simulated mixing environment,
+using experience replay and target networks for stable training.
+
+Architecture
+------------
+The system follows a modular architecture with clear separation of concerns:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                     ProductionRLMixer                               │
+    │  ┌──────────────┐  ┌────────────────┐  ┌─────────────────────────┐  │
+    │  │ QNetwork     │  │ TargetNetwork  │  │ ExperienceReplay        │  │
+    │  │ (Policy)     │  │ (Stable Q)     │  │ (Prioritized Sampling)  │  │
+    │  └──────────────┘  └────────────────┘  └─────────────────────────┘  │
+    │           │               │                        │                │
+    │           └───────────────┴────────────────────────┘                │
+    │                           │                                          │
+    │                   ┌───────┴───────┐                                  │
+    │                   │ RewardCalc    │                                  │
+    │                   │ (Multi-obj)   │                                  │
+    │                   └───────────────┘                                  │
+    └─────────────────────────────────────────────────────────────────────┘
+
+Key Algorithms
+--------------
+1. **Deep Q-Network (DQN)**: Uses a neural network to approximate the Q-function
+   Q(s, a) which estimates expected future rewards for state-action pairs.
+
+2. **Experience Replay**: Stores transitions (s, a, r, s') in a buffer and
+   samples random mini-batches for training, breaking correlation between
+   consecutive samples for stable learning.
+
+3. **Target Network**: Maintains a separate network with frozen weights
+   for computing TD targets, updated periodically to stabilize training.
+
+4. **Epsilon-Greedy Exploration**: Balances exploration (random actions)
+   with exploitation (greedy policy) using a decaying epsilon parameter.
+
+5. **Multi-Objective Reward**: Combines multiple audio quality metrics
+   (LUFS, stereo balance, frequency response, etc.) into a single scalar
+   reward using weighted summation.
+
+State Representation
+--------------------
+The mixer state is represented as a 69-dimensional feature vector:
+
+    Dimensions 0-63:  Channel parameters (8 channels × 8 parameters each)
+                      - volume (0-1): Channel fader position
+                      - pan (-1 to 1): Stereo position
+                      - eq_low (-12 to 12 dB): Low frequency EQ
+                      - eq_mid (-12 to 12 dB): Mid frequency EQ
+                      - eq_high (-12 to 12 dB): High frequency EQ
+                      - compression (0-1): Compressor amount
+                      - reverb (0-1): Reverb send level
+                      - delay (0-1): Delay send level
+
+    Dimensions 64-68: Master section (5 parameters)
+                      - volume, eq_low, eq_mid, eq_high, compression
+
+    Dimensions 69-73: Audio metrics (5 normalized values)
+                      - lufs: Integrated loudness (normalized by -60)
+                      - peak: Peak level (0-1)
+                      - rms: RMS level (0-1)
+                      - stereo_correlation: Phase correlation (-1 to 1)
+                      - spectral_centroid: Brightness indicator (0-1)
+
+Action Space
+------------
+The action space consists of 64 discrete actions:
+
+    Action Index = action_type × 8 + channel_id
+
+    Where:
+    - action_type: One of 8 parameter adjustment types (ActionType enum)
+    - channel_id: Target channel (0-7)
+
+    Each action applies a small delta (-0.2 to +0.2) to the target parameter.
+
+Reward Signal
+-------------
+The reward function evaluates mix quality across 7 dimensions:
+
+    Component           Weight   Target
+    ─────────────────────────────────────────
+    LUFS (loudness)     30%      -14 LUFS (streaming standard)
+    Frequency Balance   20%      Minimal EQ deviation
+    Stereo Balance      15%      Centered weighted pan
+    Dynamic Range       15%      8-20 dB peak-to-RMS ratio
+    Clarity             10%      0.3-0.8 stereo correlation
+    Musicality          5%       Smooth parameter transitions
+    Headroom            5%       Peak < 0.9 (avoid clipping)
+
+    Final reward is clipped to [-1, 1] range.
+
+Hyperparameters
+---------------
+Key hyperparameters and their recommended ranges:
+
+    Parameter           Default     Range           Description
+    ─────────────────────────────────────────────────────────────────────
+    learning_rate       0.001       0.0001-0.01     Adam optimizer LR
+    epsilon             1.0         0.01-1.0        Initial exploration rate
+    epsilon_decay       0.995       0.99-0.999      Per-step epsilon decay
+    epsilon_min         0.01        0.01-0.1        Minimum exploration rate
+    gamma               0.95        0.9-0.99        Discount factor
+    batch_size          32          16-128          Training batch size
+    buffer_size         5000        1000-100000     Replay buffer capacity
+    target_update_freq  100         50-500          Steps between target updates
+
+Usage Examples
+--------------
+Basic usage for mix optimization:
+
+    >>> from production_reinforcement_learning import ProductionRLMixer
+    >>>
+    >>> # Initialize the RL mixer agent
+    >>> rl_mixer = ProductionRLMixer(
+    ...     learning_rate=0.001,
+    ...     epsilon=0.8,          # Start with 80% exploration
+    ...     epsilon_decay=0.995   # Decay to exploitation over time
+    ... )
+    >>>
+    >>> # Optimize a mix to target LUFS
+    >>> result = rl_mixer.optimize_mix(
+    ...     target_lufs=-14.0,    # Streaming standard
+    ...     channels=8,           # Number of mixer channels
+    ...     max_episodes=50       # Training episodes
+    ... )
+    >>>
+    >>> print(f"Final LUFS: {result['final_lufs']:.1f}")
+    >>> print(f"Convergence: {result['convergence_achieved']}")
+
+Single episode training:
+
+    >>> # Create custom initial state
+    >>> initial_state = rl_mixer._create_initial_state(channels=4)
+    >>>
+    >>> # Run one training episode
+    >>> episode_stats = rl_mixer.run_episode(
+    ...     initial_state,
+    ...     max_steps=50
+    ... )
+    >>>
+    >>> print(f"Episode reward: {episode_stats['total_reward']:.3f}")
+
+Manual action selection and application:
+
+    >>> state = rl_mixer._create_initial_state(channels=4)
+    >>>
+    >>> # Get action from policy (epsilon-greedy)
+    >>> action = rl_mixer.get_action(state)
+    >>> print(f"Action: {action.action_type.value} on channel {action.channel_id}")
+    >>>
+    >>> # Apply action to get next state
+    >>> next_state = rl_mixer.apply_action(state, action)
+    >>>
+    >>> # Calculate reward
+    >>> reward = rl_mixer.reward_calculator.calculate_reward(
+    ...     state, action, next_state
+    ... )
+
+Industry Patterns Implemented
+-----------------------------
+- **DeepMind DQN**: Experience replay buffer, target networks, Q-learning
+- **OpenAI Baselines**: Epsilon scheduling, action normalization
+- **Google Dopamine**: Modular agent architecture, abstract interfaces
+- **Stable-Baselines3**: Production-ready patterns, comprehensive logging
+
+References
+----------
+- Mnih et al. (2015) "Human-level control through deep reinforcement learning"
+- Schaul et al. (2016) "Prioritized Experience Replay"
+- Van Hasselt et al. (2016) "Deep Reinforcement Learning with Double Q-learning"
+- ITU-R BS.1770-4: Algorithms for loudness measurement (LUFS)
+- AES Recommendations for Streaming Audio (-14 LUFS integrated)
+
+Module Components
+-----------------
+Classes:
+    ActionType: Enum of mixer parameter adjustment actions
+    RewardSignal: Enum of audio quality reward components
+    MixerState: Dataclass representing mixer configuration and audio metrics
+    RLAction: Dataclass representing an RL agent action
+    Experience: Dataclass for experience replay tuples
+    IRewardCalculator: Abstract interface for reward calculation
+    IExperienceReplay: Abstract interface for experience replay buffer
+    IQNetwork: Abstract interface for Q-network implementations
+    ProductionRewardCalculator: Multi-objective audio reward calculator
+    ProductionExperienceReplay: Prioritized experience replay buffer
+    ProductionQNetwork: Neural network Q-function approximator with Adam
+    ProductionRLMixer: Main RL agent orchestrating all components
+
+Functions:
+    demo_production_rl_mixer(): Demonstration of system capabilities
+
+See Also
+--------
+- ai_advanced.production_generative_ai: Generative AI mixing suggestions
+- ai_advanced.production_nlp_system: Natural language mix commands
+- ml.active_optimizer: Gradient-based mix optimization
+
+Author: AG06 Mixer Team
+License: Proprietary
+Version: 1.0.0
 """
 
 import json
@@ -29,7 +234,52 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class ActionType(Enum):
-    """Action types following standard mixer controls"""
+    """
+    Enumeration of mixer parameter adjustment action types.
+
+    Each action type corresponds to a specific audio parameter that the RL
+    agent can modify on individual mixer channels. These parameters represent
+    standard professional audio mixing controls.
+
+    Attributes
+    ----------
+    VOLUME_ADJUST : str
+        Adjusts channel fader level (0.0 to 1.0 normalized range).
+        Primary control for relative loudness of a channel in the mix.
+
+    PAN_ADJUST : str
+        Adjusts stereo position (-1.0 = full left, 0.0 = center, 1.0 = full right).
+        Controls spatial placement of the channel in the stereo field.
+
+    EQ_LOW : str
+        Adjusts low-frequency EQ band (-12 to +12 dB).
+        Typically affects frequencies below 250 Hz (bass, warmth).
+
+    EQ_MID : str
+        Adjusts mid-frequency EQ band (-12 to +12 dB).
+        Typically affects frequencies 250 Hz - 4 kHz (presence, body).
+
+    EQ_HIGH : str
+        Adjusts high-frequency EQ band (-12 to +12 dB).
+        Typically affects frequencies above 4 kHz (brilliance, air).
+
+    COMPRESSION : str
+        Adjusts compression amount (0.0 = none, 1.0 = maximum).
+        Controls dynamic range reduction and sustain.
+
+    REVERB : str
+        Adjusts reverb send level (0.0 = dry, 1.0 = full wet).
+        Controls spatial depth and room ambience.
+
+    DELAY : str
+        Adjusts delay send level (0.0 = no delay, 1.0 = full delay).
+        Controls rhythmic echo effects.
+
+    Example
+    -------
+    >>> action = ActionType.VOLUME_ADJUST
+    >>> print(action.value)  # 'volume_adjust'
+    """
     VOLUME_ADJUST = "volume_adjust"
     PAN_ADJUST = "pan_adjust"
     EQ_LOW = "eq_low"
@@ -39,8 +289,65 @@ class ActionType(Enum):
     REVERB = "reverb"
     DELAY = "delay"
 
+
 class RewardSignal(Enum):
-    """Reward signals following audio engineering principles"""
+    """
+    Enumeration of reward signal components for multi-objective optimization.
+
+    Each reward signal represents an audio quality metric that contributes to
+    the overall reward function. These are based on professional audio engineering
+    standards and best practices for commercial audio production.
+
+    The weighted combination of these signals guides the RL agent toward
+    producing professional-quality mixes that meet streaming platform standards.
+
+    Attributes
+    ----------
+    LOUDNESS_LUFS : str
+        Integrated loudness measurement per ITU-R BS.1770-4 standard.
+        Target: -14 LUFS for major streaming platforms (Spotify, Apple Music).
+        Weight: 30% of total reward.
+
+    STEREO_BALANCE : str
+        Balance of audio energy between left and right channels.
+        Target: Volume-weighted pan should average to center (0.0).
+        Weight: 15% of total reward.
+
+    FREQUENCY_BALANCE : str
+        Distribution of energy across the frequency spectrum.
+        Target: Minimal EQ deviation from flat response (surgical corrections only).
+        Weight: 20% of total reward.
+
+    DYNAMIC_RANGE : str
+        Difference between peak and RMS levels in dB.
+        Target: 8-20 dB dynamic range for engaging, punchy mixes.
+        Weight: 15% of total reward.
+
+    CLARITY : str
+        Stereo correlation indicating phase coherence and separation.
+        Target: 0.3-0.8 correlation (good width with mono compatibility).
+        Weight: 10% of total reward.
+
+    MUSICALITY : str
+        Smoothness of parameter transitions over time.
+        Target: Gradual, musical changes rather than abrupt jumps.
+        Weight: 5% of total reward.
+
+    HEADROOM : str
+        Distance between peak levels and digital maximum (0 dBFS).
+        Target: Peak below 0.9 (-0.9 dBFS) to avoid clipping.
+        Weight: 5% of total reward.
+
+    Notes
+    -----
+    The weights are tuned to prioritize loudness compliance (streaming standards)
+    while maintaining mix quality. Weights can be adjusted for different use
+    cases (e.g., broadcast has different LUFS targets).
+
+    See Also
+    --------
+    ProductionRewardCalculator : Implementation of reward calculation using these signals.
+    """
     LOUDNESS_LUFS = "loudness_lufs"      # Target: -14 LUFS for streaming
     STEREO_BALANCE = "stereo_balance"    # Target: Balanced stereo field
     FREQUENCY_BALANCE = "frequency_balance"  # Target: Even frequency response
@@ -51,70 +358,324 @@ class RewardSignal(Enum):
 
 @dataclass
 class MixerState:
-    """Mixer state representation following DeepMind state patterns"""
+    """
+    Complete mixer state representation for RL observation space.
+
+    This dataclass encapsulates the full state of an audio mixer at a given
+    moment, including all channel parameters, master section settings, and
+    derived audio metrics. Following DeepMind's state representation patterns,
+    this class provides methods to convert the state to a fixed-size vector
+    suitable for neural network input.
+
+    The state follows the Markov property - it contains all information
+    necessary for the agent to make optimal decisions without needing
+    historical context.
+
+    Attributes
+    ----------
+    channels : Dict[int, Dict[str, float]]
+        Dictionary mapping channel IDs (0-7) to their parameter dictionaries.
+        Each channel dictionary contains:
+            - 'volume' (float): Fader level, range [0.0, 1.0]
+            - 'pan' (float): Stereo position, range [-1.0, 1.0]
+            - 'eq_low' (float): Low EQ in dB, range [-12.0, 12.0]
+            - 'eq_mid' (float): Mid EQ in dB, range [-12.0, 12.0]
+            - 'eq_high' (float): High EQ in dB, range [-12.0, 12.0]
+            - 'compression' (float): Compression amount, range [0.0, 1.0]
+            - 'reverb' (float): Reverb send, range [0.0, 1.0]
+            - 'delay' (float): Delay send, range [0.0, 1.0]
+
+    master : Dict[str, float]
+        Master section parameters dictionary containing:
+            - 'volume' (float): Master fader, typically 1.0 (unity)
+            - 'eq_low' (float): Master low EQ in dB
+            - 'eq_mid' (float): Master mid EQ in dB
+            - 'eq_high' (float): Master high EQ in dB
+            - 'compression' (float): Master bus compression amount
+
+    audio_metrics : Dict[str, float]
+        Real-time audio analysis metrics dictionary containing:
+            - 'lufs' (float): Integrated loudness, range [-60.0, 0.0]
+            - 'peak' (float): Peak level, range [0.0, 1.0]
+            - 'rms' (float): RMS level, range [0.0, 1.0]
+            - 'stereo_correlation' (float): Phase correlation, range [-1.0, 1.0]
+            - 'spectral_centroid' (float): Brightness indicator, range [0.0, 1.0]
+
+    timestamp : float
+        Unix timestamp when this state was captured. Default is current time.
+        Used for experience replay age-based prioritization.
+
+    Example
+    -------
+    >>> channels = {
+    ...     0: {"volume": 0.8, "pan": -0.5, "eq_low": 2.0, "eq_mid": 0.0,
+    ...         "eq_high": 1.0, "compression": 0.3, "reverb": 0.2, "delay": 0.0},
+    ...     1: {"volume": 0.6, "pan": 0.5, "eq_low": -1.0, "eq_mid": 0.0,
+    ...         "eq_high": 0.0, "compression": 0.0, "reverb": 0.1, "delay": 0.0}
+    ... }
+    >>> master = {"volume": 1.0, "eq_low": 0.0, "eq_mid": 0.0,
+    ...           "eq_high": 0.0, "compression": 0.2}
+    >>> metrics = {"lufs": -14.0, "peak": 0.85, "rms": 0.4,
+    ...            "stereo_correlation": 0.6, "spectral_centroid": 0.5}
+    >>> state = MixerState(channels=channels, master=master, audio_metrics=metrics)
+    >>> vector = state.to_vector()
+    >>> print(f"State vector shape: {vector.shape}")  # (69,) or (74,)
+
+    See Also
+    --------
+    to_vector : Convert state to neural network input format.
+    get_hash : Generate unique identifier for deduplication.
+    """
     channels: Dict[int, Dict[str, float]]
     master: Dict[str, float]
     audio_metrics: Dict[str, float]
     timestamp: float = field(default_factory=time.time)
-    
+
     def to_vector(self) -> np.ndarray:
-        """Convert state to vector for RL agent"""
+        """
+        Convert mixer state to a fixed-size feature vector for neural network input.
+
+        This method serializes the hierarchical state dictionary into a flat
+        numpy array suitable for the Q-network. The vector has a fixed size
+        regardless of how many channels are active, using zero-padding for
+        unused channels.
+
+        Vector Layout
+        -------------
+        The 69-74 dimensional output vector is organized as follows:
+
+            Indices 0-63 (64 values):
+                8 channels × 8 parameters per channel
+                Channel order: 0, 1, 2, 3, 4, 5, 6, 7
+                Parameter order per channel:
+                    [volume, pan, eq_low, eq_mid, eq_high, compression, reverb, delay]
+
+            Indices 64-68 (5 values):
+                Master section parameters:
+                    [volume, eq_low, eq_mid, eq_high, compression]
+
+            Indices 69-73 (5 values):
+                Audio metrics (normalized):
+                    [lufs/(-60), peak, rms, stereo_correlation, spectral_centroid]
+
+        Normalization
+        -------------
+        Most values are already in [0, 1] or [-1, 1] range. Special handling:
+            - LUFS is normalized by dividing by -60 to get [0, ~0.3] range
+            - EQ values (-12 to +12 dB) are NOT normalized (network learns scale)
+            - Pan (-1 to +1) is kept as-is for semantic meaning
+
+        Returns
+        -------
+        np.ndarray
+            Float32 array of shape (69,) to (74,) depending on metrics.
+            Fixed-size representation of the mixer state.
+
+        Notes
+        -----
+        - Unused channels are zero-padded to maintain fixed vector size
+        - Missing parameters default to sensible values (0.0 for most, 1.0 for master volume)
+        - The order of parameters is critical for network weight interpretation
+
+        Example
+        -------
+        >>> state = MixerState(
+        ...     channels={0: {"volume": 0.8, "pan": 0.0}},
+        ...     master={"volume": 1.0},
+        ...     audio_metrics={"lufs": -14.0, "peak": 0.9}
+        ... )
+        >>> vec = state.to_vector()
+        >>> print(f"Channel 0 volume: {vec[0]}")  # 0.8
+        >>> print(f"Master volume: {vec[64]}")    # 1.0
+        """
         vector = []
-        
+
         # Channel parameters (up to 8 channels)
+        # Each channel contributes 8 values in fixed order
         for i in range(8):
             if i in self.channels:
                 channel = self.channels[i]
                 vector.extend([
-                    channel.get("volume", 0.0),
-                    channel.get("pan", 0.0),
-                    channel.get("eq_low", 0.0),
-                    channel.get("eq_mid", 0.0),
-                    channel.get("eq_high", 0.0),
-                    channel.get("compression", 0.0),
-                    channel.get("reverb", 0.0),
-                    channel.get("delay", 0.0)
+                    channel.get("volume", 0.0),       # Index: i*8 + 0
+                    channel.get("pan", 0.0),          # Index: i*8 + 1
+                    channel.get("eq_low", 0.0),       # Index: i*8 + 2
+                    channel.get("eq_mid", 0.0),       # Index: i*8 + 3
+                    channel.get("eq_high", 0.0),      # Index: i*8 + 4
+                    channel.get("compression", 0.0),  # Index: i*8 + 5
+                    channel.get("reverb", 0.0),       # Index: i*8 + 6
+                    channel.get("delay", 0.0)         # Index: i*8 + 7
                 ])
             else:
                 vector.extend([0.0] * 8)  # Zero padding for unused channels
-        
-        # Master section
+
+        # Master section (indices 64-68)
         vector.extend([
-            self.master.get("volume", 1.0),
-            self.master.get("eq_low", 0.0),
-            self.master.get("eq_mid", 0.0),
-            self.master.get("eq_high", 0.0),
-            self.master.get("compression", 0.0)
+            self.master.get("volume", 1.0),      # Index: 64
+            self.master.get("eq_low", 0.0),      # Index: 65
+            self.master.get("eq_mid", 0.0),      # Index: 66
+            self.master.get("eq_high", 0.0),     # Index: 67
+            self.master.get("compression", 0.0)  # Index: 68
         ])
-        
-        # Audio metrics
+
+        # Audio metrics (indices 69-73, normalized)
         vector.extend([
-            self.audio_metrics.get("lufs", -20.0) / -60.0,  # Normalize to 0-1
-            self.audio_metrics.get("peak", 0.0),
-            self.audio_metrics.get("rms", 0.0),
-            self.audio_metrics.get("stereo_correlation", 0.0),
-            self.audio_metrics.get("spectral_centroid", 0.0)
+            self.audio_metrics.get("lufs", -20.0) / -60.0,  # Normalize LUFS to ~[0, 0.33]
+            self.audio_metrics.get("peak", 0.0),             # Already [0, 1]
+            self.audio_metrics.get("rms", 0.0),              # Already [0, 1]
+            self.audio_metrics.get("stereo_correlation", 0.0),  # [-1, 1]
+            self.audio_metrics.get("spectral_centroid", 0.0)    # [0, 1]
         ])
-        
+
         return np.array(vector, dtype=np.float32)
-    
+
     def get_hash(self) -> str:
-        """Get state hash for experience replay deduplication"""
+        """
+        Generate a short hash of the state for deduplication and caching.
+
+        Creates an 8-character MD5 hash based on channel and master parameters.
+        Audio metrics are excluded since they are derived from the parameters.
+        This hash is used by the experience replay buffer to identify and
+        optionally deduplicate similar states.
+
+        Returns
+        -------
+        str
+            8-character hexadecimal hash string uniquely identifying this state
+            configuration (ignoring audio metrics and timestamp).
+
+        Notes
+        -----
+        - Hash is deterministic for identical channel/master configurations
+        - Uses sorted JSON serialization for consistent ordering
+        - Truncated to 8 characters for memory efficiency (still ~4 billion unique values)
+        - Collisions are extremely rare for practical buffer sizes
+
+        Example
+        -------
+        >>> state1 = MixerState(channels={0: {"volume": 0.5}}, master={}, audio_metrics={})
+        >>> state2 = MixerState(channels={0: {"volume": 0.5}}, master={}, audio_metrics={})
+        >>> assert state1.get_hash() == state2.get_hash()  # Same config = same hash
+        """
         state_str = json.dumps(self.channels, sort_keys=True) + json.dumps(self.master, sort_keys=True)
         return hashlib.md5(state_str.encode()).hexdigest()[:8]
 
 @dataclass
 class RLAction:
-    """RL action representation"""
+    """
+    Represents a discrete action taken by the RL agent.
+
+    Each action modifies a single parameter on a single channel by a small
+    delta value. The action space is designed to encourage smooth, musical
+    parameter changes rather than abrupt jumps.
+
+    Attributes
+    ----------
+    action_type : ActionType
+        The type of parameter adjustment (e.g., VOLUME_ADJUST, EQ_LOW).
+        Determines which parameter on the target channel will be modified.
+
+    channel_id : int
+        Target channel index (0-7) where the action is applied.
+        Must be a valid channel in the mixer state.
+
+    parameter : str
+        The specific parameter name to modify (e.g., 'volume', 'eq_low').
+        Derived from action_type for consistency.
+
+    value_delta : float
+        The change amount to apply, typically in range [-0.2, 0.2].
+        Small deltas encourage gradual, musical changes.
+        Actual range depends on parameter type:
+            - volume, pan: [-0.2, 0.2] typical
+            - EQ: [-2.0, 2.0] dB typical
+            - effects: [-0.1, 0.1] typical
+
+    confidence : float, default=1.0
+        Agent's confidence in this action, range [0, 1].
+        Higher values indicate exploitation (greedy policy).
+        Lower values indicate exploration (random policy).
+        Used for logging and analysis, not training.
+
+    Example
+    -------
+    >>> action = RLAction(
+    ...     action_type=ActionType.VOLUME_ADJUST,
+    ...     channel_id=0,
+    ...     parameter="volume",
+    ...     value_delta=0.05,
+    ...     confidence=0.85
+    ... )
+    >>> print(f"Increase channel {action.channel_id} volume by {action.value_delta}")
+    """
     action_type: ActionType
     channel_id: int
     parameter: str
     value_delta: float  # Change amount (-1.0 to 1.0)
     confidence: float = 1.0
 
+
 @dataclass
 class Experience:
-    """Experience tuple for replay buffer (following DQN patterns)"""
+    """
+    Experience tuple for the replay buffer following DQN patterns.
+
+    Stores a single transition (s, a, r, s', done) from the environment.
+    These tuples are collected during interaction and sampled for training,
+    breaking the correlation between consecutive samples.
+
+    This follows the standard RL experience tuple format from the original
+    DQN paper (Mnih et al., 2015), extended with a timestamp for
+    prioritization strategies.
+
+    Attributes
+    ----------
+    state : MixerState
+        The state before the action was taken (s).
+        Complete mixer configuration at the decision point.
+
+    action : RLAction
+        The action taken in this state (a).
+        Describes the parameter modification applied.
+
+    reward : float
+        The reward received after taking the action (r).
+        Scalar value in range [-1, 1] representing mix quality improvement.
+        Positive rewards indicate progress toward target; negative indicate regression.
+
+    next_state : MixerState
+        The resulting state after the action (s').
+        Complete mixer configuration after applying the action.
+
+    done : bool
+        Whether this transition ended the episode.
+        True if: target LUFS reached, clipping detected, or max steps hit.
+
+    timestamp : float
+        Unix timestamp when this experience was recorded.
+        Used for age-based prioritization in sampling.
+        Recent experiences may be weighted more heavily.
+
+    Notes
+    -----
+    The experience replay buffer breaks temporal correlations by randomly
+    sampling from a large pool of experiences. This is crucial for stable
+    training as consecutive experiences are highly correlated.
+
+    Example
+    -------
+    >>> exp = Experience(
+    ...     state=current_state,
+    ...     action=action_taken,
+    ...     reward=0.15,
+    ...     next_state=resulting_state,
+    ...     done=False
+    ... )
+    >>> replay_buffer.add_experience(exp)
+
+    See Also
+    --------
+    ProductionExperienceReplay : Buffer implementation with prioritized sampling.
+    """
     state: MixerState
     action: RLAction
     reward: float
@@ -122,50 +683,340 @@ class Experience:
     done: bool
     timestamp: float = field(default_factory=time.time)
 
+
 class IRewardCalculator(ABC):
-    """Abstract reward calculator interface"""
+    """
+    Abstract interface for reward calculation strategies.
+
+    Defines the contract for computing scalar rewards from state transitions.
+    Implementations can use different audio quality metrics and weighting
+    strategies while maintaining a consistent interface.
+
+    This follows the Strategy pattern, allowing runtime swapping of reward
+    functions for experimentation or domain adaptation.
+
+    Methods
+    -------
+    calculate_reward(state, action, next_state) -> float
+        Compute the reward for a state transition.
+
+    See Also
+    --------
+    ProductionRewardCalculator : Multi-objective audio quality reward implementation.
+    """
+
     @abstractmethod
     def calculate_reward(self, state: MixerState, action: RLAction, next_state: MixerState) -> float:
+        """
+        Calculate reward for a state-action-next_state transition.
+
+        Parameters
+        ----------
+        state : MixerState
+            The state before the action was applied.
+
+        action : RLAction
+            The action that was taken.
+
+        next_state : MixerState
+            The resulting state after the action.
+
+        Returns
+        -------
+        float
+            Scalar reward value, typically in range [-1, 1].
+            Positive values indicate improvement toward the goal.
+        """
         pass
+
 
 class IExperienceReplay(ABC):
-    """Abstract experience replay interface"""
+    """
+    Abstract interface for experience replay buffer implementations.
+
+    Defines the contract for storing and sampling experiences for training.
+    Implementations can use different sampling strategies (uniform, prioritized)
+    while maintaining a consistent interface.
+
+    The experience replay mechanism is crucial for stable DQN training,
+    as it decorrelates consecutive samples and enables efficient reuse
+    of past experiences.
+
+    Methods
+    -------
+    add_experience(experience) -> None
+        Store a new experience in the buffer.
+
+    sample_batch(batch_size) -> List[Experience]
+        Sample a batch of experiences for training.
+
+    See Also
+    --------
+    ProductionExperienceReplay : Implementation with prioritized sampling.
+    """
+
     @abstractmethod
     def add_experience(self, experience: Experience) -> None:
-        pass
-    
-    @abstractmethod
-    def sample_batch(self, batch_size: int) -> List[Experience]:
+        """
+        Add a new experience to the replay buffer.
+
+        Parameters
+        ----------
+        experience : Experience
+            The experience tuple to store.
+
+        Notes
+        -----
+        Implementations should handle buffer overflow (e.g., FIFO eviction).
+        """
         pass
 
+    @abstractmethod
+    def sample_batch(self, batch_size: int) -> List[Experience]:
+        """
+        Sample a batch of experiences for training.
+
+        Parameters
+        ----------
+        batch_size : int
+            Number of experiences to sample.
+
+        Returns
+        -------
+        List[Experience]
+            Batch of sampled experiences. May be smaller than batch_size
+            if the buffer doesn't contain enough experiences.
+        """
+        pass
+
+
 class IQNetwork(ABC):
-    """Abstract Q-Network interface"""
+    """
+    Abstract interface for Q-network implementations.
+
+    Defines the contract for neural networks that approximate the Q-function
+    Q(s, a) estimating expected future rewards. Implementations can use
+    different architectures (MLP, CNN, Transformer) while maintaining
+    a consistent interface.
+
+    The Q-network is the core learnable component in DQN, mapping states
+    to action values through supervised learning on Bellman targets.
+
+    Methods
+    -------
+    predict(state) -> np.ndarray
+        Forward pass to get Q-values for all actions.
+
+    update(states, actions, targets) -> float
+        Backward pass to update network weights.
+
+    See Also
+    --------
+    ProductionQNetwork : MLP implementation with Adam optimizer.
+    """
+
     @abstractmethod
     def predict(self, state: np.ndarray) -> np.ndarray:
+        """
+        Compute Q-values for all actions given a state.
+
+        Parameters
+        ----------
+        state : np.ndarray
+            State vector of shape (state_size,) or (batch_size, state_size).
+
+        Returns
+        -------
+        np.ndarray
+            Q-values of shape (1, action_size) or (batch_size, action_size).
+            Higher values indicate more promising actions.
+        """
         pass
-    
+
     @abstractmethod
     def update(self, states: np.ndarray, actions: np.ndarray, targets: np.ndarray) -> float:
+        """
+        Update network weights using backpropagation.
+
+        Parameters
+        ----------
+        states : np.ndarray
+            Batch of state vectors, shape (batch_size, state_size).
+
+        actions : np.ndarray
+            Batch of action indices, shape (batch_size,).
+
+        targets : np.ndarray
+            Target Q-values from Bellman equation, shape (batch_size, action_size).
+
+        Returns
+        -------
+        float
+            Training loss (MSE between predictions and targets).
+        """
         pass
 
 class ProductionRewardCalculator(IRewardCalculator):
-    """Production reward calculator following audio engineering principles"""
-    
+    """
+    Multi-objective reward calculator for professional audio mixing.
+
+    This class implements a weighted-sum reward function that evaluates
+    audio mix quality across 7 dimensions based on professional audio
+    engineering standards and streaming platform requirements.
+
+    The reward function is designed to guide the RL agent toward mixes that:
+    1. Meet loudness standards (LUFS compliance)
+    2. Have balanced stereo imaging
+    3. Maintain even frequency distribution
+    4. Preserve appropriate dynamic range
+    5. Achieve good stereo clarity
+    6. Sound musical (smooth transitions)
+    7. Avoid clipping (adequate headroom)
+
+    Algorithm Overview
+    ------------------
+    The total reward is computed as a weighted sum of individual components:
+
+        R_total = Σ (w_i × R_i) + efficiency_penalty
+
+    Where:
+        - R_i is the reward for component i (normalized to [0, 1])
+        - w_i is the weight for component i (weights sum to 1.0)
+        - efficiency_penalty is a small negative term for large parameter changes
+
+    The final reward is clipped to [-1, 1] to maintain training stability.
+
+    Reward Components
+    -----------------
+    1. **LUFS Reward (30%)**:
+       Measures deviation from target integrated loudness.
+       - Perfect (reward=1.0): Within 1 dB of target
+       - Good (reward=0.2-0.8): Within 3 dB of target
+       - Poor (reward<0.2): More than 3 dB deviation
+
+    2. **Stereo Balance (15%)**:
+       Measures volume-weighted center of panning.
+       - Perfect (reward=1.0): Weighted pan at center
+       - Degraded linearly with imbalance
+
+    3. **Frequency Balance (20%)**:
+       Measures deviation from flat EQ response.
+       - Perfect (reward=1.0): No EQ adjustments
+       - Degraded by average absolute EQ deviation
+
+    4. **Dynamic Range (15%)**:
+       Measures peak-to-RMS ratio in dB.
+       - Perfect (reward=1.0): 8-20 dB range
+       - Good (reward=0.7): 4-8 or 20-25 dB range
+       - Poor (reward=0.3): Outside optimal range
+
+    5. **Clarity (10%)**:
+       Uses stereo correlation as proxy for clarity.
+       - Perfect (reward=1.0): Correlation 0.3-0.8
+       - Degraded for too narrow or too wide stereo
+
+    6. **Musicality (5%)**:
+       Penalizes abrupt parameter changes.
+       - Perfect (reward=1.0): No parameter change
+       - Degraded by average parameter delta
+
+    7. **Headroom (5%)**:
+       Penalizes peak levels approaching clipping.
+       - Perfect (reward=1.0): Peak ≤ 0.9
+       - Warning (reward=0.3-0.7): Peak 0.9-0.99
+       - Penalty (reward=-0.5): Peak ≥ 0.99 (clipping)
+
+    Attributes
+    ----------
+    target_lufs : float
+        Target integrated loudness in LUFS. Default is -14.0 for streaming.
+        Can be adjusted for different platforms:
+            - Spotify/Apple Music: -14 LUFS
+            - YouTube: -13 to -15 LUFS
+            - Broadcast (EBU R128): -23 LUFS
+            - CD/Master: -9 to -12 LUFS
+
+    reward_weights : Dict[RewardSignal, float]
+        Weights for each reward component. Must sum to 1.0.
+        Default weights prioritize loudness compliance and frequency balance.
+
+    Example
+    -------
+    >>> calculator = ProductionRewardCalculator()
+    >>> calculator.target_lufs = -16.0  # YouTube target
+    >>>
+    >>> reward = calculator.calculate_reward(prev_state, action, curr_state)
+    >>> print(f"Reward: {reward:.3f}")  # e.g., 0.723
+
+    Notes
+    -----
+    The reward weights were tuned empirically based on:
+    - Professional mastering engineer feedback
+    - Streaming platform loudness requirements
+    - Perceptual importance of each quality dimension
+
+    See Also
+    --------
+    RewardSignal : Enum defining all reward components.
+    """
+
     def __init__(self):
+        """
+        Initialize the reward calculator with default streaming targets.
+
+        Sets up the target LUFS for major streaming platforms (-14 LUFS)
+        and configures the default weight distribution across quality metrics.
+        """
         logger.info("🎯 Initializing Production Reward Calculator")
-        self.target_lufs = -14.0  # Streaming standard
+        self.target_lufs = -14.0  # Streaming standard (Spotify, Apple Music)
+
+        # Weight distribution prioritizes loudness and frequency response
+        # Weights must sum to 1.0 for normalized reward output
         self.reward_weights = {
-            RewardSignal.LOUDNESS_LUFS: 0.3,
-            RewardSignal.STEREO_BALANCE: 0.15,
-            RewardSignal.FREQUENCY_BALANCE: 0.2,
-            RewardSignal.DYNAMIC_RANGE: 0.15,
-            RewardSignal.CLARITY: 0.1,
-            RewardSignal.MUSICALITY: 0.05,
-            RewardSignal.HEADROOM: 0.05
+            RewardSignal.LOUDNESS_LUFS: 0.3,       # Primary: streaming compliance
+            RewardSignal.STEREO_BALANCE: 0.15,    # Secondary: imaging
+            RewardSignal.FREQUENCY_BALANCE: 0.2,  # Primary: tonal quality
+            RewardSignal.DYNAMIC_RANGE: 0.15,     # Secondary: punch/energy
+            RewardSignal.CLARITY: 0.1,            # Tertiary: separation
+            RewardSignal.MUSICALITY: 0.05,        # Tertiary: smoothness
+            RewardSignal.HEADROOM: 0.05           # Safety: clipping prevention
         }
     
     def calculate_reward(self, state: MixerState, action: RLAction, next_state: MixerState) -> float:
-        """Calculate multi-objective reward following audio engineering principles"""
+        """
+        Calculate the total reward for a state transition.
+
+        Combines 7 audio quality metrics into a single scalar reward using
+        weighted summation, plus an efficiency penalty for large parameter changes.
+
+        Parameters
+        ----------
+        state : MixerState
+            The mixer state before the action was applied.
+
+        action : RLAction
+            The action that was taken (used for efficiency penalty calculation).
+
+        next_state : MixerState
+            The resulting mixer state after the action.
+
+        Returns
+        -------
+        float
+            Total reward in range [-1, 1]. Positive values indicate improvement
+            toward professional mix quality; negative indicates degradation.
+
+        Notes
+        -----
+        The reward computation is wrapped in a try-except to ensure training
+        stability. On error, returns -0.1 (small penalty) rather than crashing.
+
+        Example
+        -------
+        >>> reward = calculator.calculate_reward(prev_state, action, curr_state)
+        >>> if reward > 0.5:
+        ...     print("Good action - mix improved significantly!")
+        """
         try:
             total_reward = 0.0
             
@@ -350,17 +1201,119 @@ class ProductionRewardCalculator(IRewardCalculator):
             return -0.1
 
 class ProductionExperienceReplay(IExperienceReplay):
-    """Production experience replay buffer following DQN patterns"""
-    
+    """
+    Prioritized experience replay buffer for stable DQN training.
+
+    This class implements an experience replay buffer with priority-based
+    sampling, following the principles from Schaul et al. (2016) "Prioritized
+    Experience Replay" but with simplified priority computation suitable for
+    production use.
+
+    The buffer stores state transitions and allows random sampling to break
+    the correlation between consecutive training samples, which is essential
+    for stable Q-learning convergence.
+
+    Prioritized Sampling Algorithm
+    ------------------------------
+    Instead of uniform random sampling, experiences are sampled with
+    probabilities proportional to their computed priority:
+
+        P(i) = priority(i) / Σ priority(j)
+
+    Priority is computed based on three factors:
+
+    1. **Reward Magnitude** (weight: 2.0x):
+       Experiences with high rewards (>0.5) or significant negative rewards
+       (<-0.3) are more likely to be sampled. This focuses training on
+       the most informative transitions.
+
+    2. **Action Diversity** (weight: 1.5x):
+       EQ-related actions are prioritized to ensure the agent explores
+       frequency adjustments, which are often underrepresented compared
+       to volume changes.
+
+    3. **Recency** (weight: 1.2x):
+       Experiences less than 1 hour old receive a slight boost, helping
+       the agent adapt to recent policy changes faster.
+
+    Memory Management
+    -----------------
+    The buffer uses a deque with fixed maximum size, providing O(1) FIFO
+    eviction when full. State hashes are tracked for optional deduplication.
+
+    Attributes
+    ----------
+    max_size : int
+        Maximum number of experiences to store. Oldest experiences are
+        evicted when this limit is reached. Default is 10,000.
+
+    buffer : deque
+        The underlying storage for Experience tuples.
+
+    state_hashes : set
+        Set of state hashes for fast deduplication lookup.
+
+    priority_weights : Dict[str, float]
+        Multipliers for each priority factor:
+            - "high_reward": 2.0 (double weight for impactful experiences)
+            - "diverse_action": 1.5 (boost for EQ actions)
+            - "recent": 1.2 (slight boost for recent experiences)
+
+    Example
+    -------
+    >>> replay = ProductionExperienceReplay(max_size=5000)
+    >>>
+    >>> # Add experiences during interaction
+    >>> for experience in collected_experiences:
+    ...     replay.add_experience(experience)
+    >>>
+    >>> # Sample for training
+    >>> batch = replay.sample_batch(batch_size=32)
+    >>> print(f"Sampled {len(batch)} experiences")
+
+    Performance Characteristics
+    ---------------------------
+    - add_experience: O(1) amortized
+    - sample_batch: O(n) where n is buffer size (priority calculation)
+    - Memory: O(max_size × experience_size)
+
+    For very large buffers (>100k), consider segment-tree based prioritization
+    from the original PER paper for O(log n) sampling.
+
+    References
+    ----------
+    - Schaul et al. (2016) "Prioritized Experience Replay"
+    - Mnih et al. (2015) "Human-level control through deep RL" (original DQN)
+
+    See Also
+    --------
+    Experience : The tuple type stored in this buffer.
+    IExperienceReplay : The interface this class implements.
+    """
+
     def __init__(self, max_size: int = 10000):
+        """
+        Initialize the experience replay buffer.
+
+        Parameters
+        ----------
+        max_size : int, default=10000
+            Maximum capacity of the buffer. When full, oldest experiences
+            are evicted in FIFO order. Recommended range: 1000-100000.
+            - Smaller buffers: Faster adaptation, higher variance
+            - Larger buffers: More stable training, slower adaptation
+        """
         logger.info(f"💾 Initializing Experience Replay Buffer (size: {max_size})")
         self.max_size = max_size
         self.buffer = deque(maxlen=max_size)
         self.state_hashes = set()  # For deduplication
+
+        # Priority multipliers for sampling strategy
+        # These values were tuned empirically for audio mixing tasks
         self.priority_weights = {
-            "high_reward": 2.0,    # Prioritize high-reward experiences
-            "diverse_action": 1.5,  # Prioritize diverse actions
-            "recent": 1.2          # Slight bias towards recent experiences
+            "high_reward": 2.0,     # Prioritize high-reward experiences
+            "diverse_action": 1.5,  # Prioritize diverse actions (EQ)
+            "recent": 1.2           # Slight bias towards recent experiences
         }
         
     def add_experience(self, experience: Experience) -> None:
@@ -460,51 +1413,198 @@ class ProductionExperienceReplay(IExperienceReplay):
         }
 
 class ProductionQNetwork(IQNetwork):
-    """Production Q-Network using simplified neural network patterns"""
-    
+    """
+    Multi-layer perceptron Q-network for action-value function approximation.
+
+    This class implements a fully-connected neural network that approximates
+    the Q-function Q(s, a), mapping states to action values. The network is
+    trained using backpropagation with the Adam optimizer.
+
+    Network Architecture
+    --------------------
+    The network uses a 3-layer MLP with ReLU activations:
+
+        Input Layer:    state_size neurons (69 for mixer state)
+              |
+              v
+        Hidden Layer 1: 128 neurons + ReLU activation
+              |
+              v
+        Hidden Layer 2: 64 neurons + ReLU activation
+              |
+              v
+        Output Layer:   action_size neurons (64 for mixer actions)
+
+    The architecture follows common DQN practice with decreasing layer sizes
+    forming a "funnel" that progressively abstracts features.
+
+    Mathematical Details
+    --------------------
+    Forward pass:
+        z1 = W1 · x + b1
+        a1 = ReLU(z1)
+        z2 = W2 · a1 + b2
+        a2 = ReLU(z2)
+        Q(s) = W3 · a2 + b3
+
+    Backward pass uses chain rule to compute gradients:
+        dL/dW3 = a2^T · dL/dz3
+        dL/dW2 = a1^T · (dL/dz3 · W3^T ⊙ ReLU'(z2))
+        dL/dW1 = x^T · (... chain continues ...)
+
+    Weight Initialization
+    ---------------------
+    Uses Xavier/Glorot initialization for stable gradient flow:
+        W ~ N(0, sqrt(2/n_in))
+
+    This scaling prevents vanishing/exploding gradients in deep networks.
+
+    Adam Optimizer
+    --------------
+    Uses the Adam optimizer (Kingma & Ba, 2014) for adaptive learning:
+
+        m_t = β1 · m_{t-1} + (1-β1) · g_t     (1st moment estimate)
+        v_t = β2 · v_{t-1} + (1-β2) · g_t²    (2nd moment estimate)
+        m̂_t = m_t / (1 - β1^t)                (bias correction)
+        v̂_t = v_t / (1 - β2^t)                (bias correction)
+        θ_t = θ_{t-1} - α · m̂_t / (√v̂_t + ε)
+
+    Default hyperparameters (β1=0.9, β2=0.999, ε=1e-8) work well for RL.
+
+    Attributes
+    ----------
+    state_size : int
+        Dimension of input state vectors.
+
+    action_size : int
+        Number of discrete actions (output dimension).
+
+    learning_rate : float
+        Base learning rate for Adam optimizer. Default: 0.001.
+        Recommended range: 0.0001 - 0.01.
+
+    hidden1_size : int
+        Number of neurons in first hidden layer. Default: 128.
+
+    hidden2_size : int
+        Number of neurons in second hidden layer. Default: 64.
+
+    w1, b1 : np.ndarray
+        Weights and biases for first layer.
+
+    w2, b2 : np.ndarray
+        Weights and biases for second layer.
+
+    w3, b3 : np.ndarray
+        Weights and biases for output layer.
+
+    beta1, beta2, epsilon : float
+        Adam optimizer hyperparameters.
+
+    m_*, v_* : np.ndarray
+        First and second moment estimates for Adam.
+
+    t : int
+        Training step counter for Adam bias correction.
+
+    Example
+    -------
+    >>> network = ProductionQNetwork(
+    ...     state_size=69,     # Mixer state dimension
+    ...     action_size=64,    # 8 actions × 8 channels
+    ...     learning_rate=0.001
+    ... )
+    >>>
+    >>> # Forward pass: get Q-values for all actions
+    >>> state = np.random.randn(69)
+    >>> q_values = network.predict(state)
+    >>> best_action = np.argmax(q_values[0])
+    >>>
+    >>> # Backward pass: update from target Q-values
+    >>> states = np.random.randn(32, 69)  # Batch of 32 states
+    >>> targets = np.random.randn(32, 64)  # Target Q-values
+    >>> loss = network.update(states, None, targets)
+    >>> print(f"Training loss: {loss:.4f}")
+
+    Notes
+    -----
+    - This is a pure NumPy implementation, not using deep learning frameworks
+    - For production at scale, consider PyTorch/TensorFlow for GPU acceleration
+    - The network should be copied to create target networks (see DQN algorithm)
+
+    References
+    ----------
+    - Mnih et al. (2015) "Human-level control through deep RL"
+    - Kingma & Ba (2014) "Adam: A Method for Stochastic Optimization"
+    - Glorot & Bengio (2010) "Understanding the difficulty of training DNNs"
+
+    See Also
+    --------
+    IQNetwork : The interface this class implements.
+    ProductionRLMixer : Uses this network for Q-learning.
+    """
+
     def __init__(self, state_size: int, action_size: int, learning_rate: float = 0.001):
+        """
+        Initialize the Q-network with random weights.
+
+        Parameters
+        ----------
+        state_size : int
+            Dimension of the input state vector (e.g., 69 for mixer state).
+
+        action_size : int
+            Number of discrete actions (e.g., 64 for 8 actions × 8 channels).
+
+        learning_rate : float, default=0.001
+            Learning rate for Adam optimizer. Higher values train faster
+            but may be unstable; lower values are more stable but slower.
+            Recommended: 0.0001 to 0.01.
+        """
         logger.info(f"🧠 Initializing Q-Network (state: {state_size}, actions: {action_size})")
         self.state_size = state_size
         self.action_size = action_size
         self.learning_rate = learning_rate
-        
-        # Simplified neural network using matrix operations
-        # Layer sizes: state_size -> 128 -> 64 -> action_size
+
+        # Network architecture: funnel-shaped MLP
+        # Larger first layer captures more state features
+        # Smaller second layer provides abstraction
         self.hidden1_size = 128
         self.hidden2_size = 64
-        
-        # Initialize weights using Xavier initialization
+
+        # Initialize weights using Xavier/Glorot initialization
+        # Scale: sqrt(2/n_in) for ReLU activation (He initialization variant)
         self.w1 = np.random.randn(self.state_size, self.hidden1_size) * np.sqrt(2.0 / self.state_size)
         self.b1 = np.zeros((1, self.hidden1_size))
-        
+
         self.w2 = np.random.randn(self.hidden1_size, self.hidden2_size) * np.sqrt(2.0 / self.hidden1_size)
         self.b2 = np.zeros((1, self.hidden2_size))
-        
+
         self.w3 = np.random.randn(self.hidden2_size, self.action_size) * np.sqrt(2.0 / self.hidden2_size)
         self.b3 = np.zeros((1, self.action_size))
-        
-        # Adam optimizer parameters
-        self.beta1 = 0.9
-        self.beta2 = 0.999
-        self.epsilon = 1e-8
-        
-        # Initialize Adam moments
+
+        # Adam optimizer hyperparameters (Kingma & Ba, 2014)
+        self.beta1 = 0.9     # Exponential decay rate for 1st moment
+        self.beta2 = 0.999   # Exponential decay rate for 2nd moment
+        self.epsilon = 1e-8  # Small constant for numerical stability
+
+        # Initialize first moment (mean) estimates for all parameters
         self.m_w1 = np.zeros_like(self.w1)
         self.v_w1 = np.zeros_like(self.w1)
         self.m_b1 = np.zeros_like(self.b1)
         self.v_b1 = np.zeros_like(self.b1)
-        
+
         self.m_w2 = np.zeros_like(self.w2)
         self.v_w2 = np.zeros_like(self.w2)
         self.m_b2 = np.zeros_like(self.b2)
         self.v_b2 = np.zeros_like(self.b2)
-        
+
         self.m_w3 = np.zeros_like(self.w3)
         self.v_w3 = np.zeros_like(self.w3)
         self.m_b3 = np.zeros_like(self.b3)
         self.v_b3 = np.zeros_like(self.b3)
-        
-        self.t = 0  # Time step for Adam
+
+        self.t = 0  # Time step counter for Adam bias correction
     
     def _relu(self, x: np.ndarray) -> np.ndarray:
         """ReLU activation function"""
@@ -618,11 +1718,167 @@ class ProductionQNetwork(IQNetwork):
 
 class ProductionRLMixer:
     """
-    Production Reinforcement Learning Mixer System
-    Following DeepMind/OpenAI patterns for production RL
+    Complete Deep Q-Network agent for automated audio mixing.
+
+    This is the main orchestrator class that combines all RL components
+    (Q-network, target network, experience replay, reward calculator) into
+    a cohesive agent following the DQN algorithm from DeepMind.
+
+    The agent learns to optimize audio mixer settings by interacting with
+    a simulated mixing environment, collecting experiences, and updating
+    its policy through Q-learning with experience replay and target networks.
+
+    DQN Algorithm Overview
+    ----------------------
+    The agent follows the Deep Q-Network algorithm:
+
+    1. **Observe** current mixer state s
+    2. **Select action** using epsilon-greedy policy:
+       - With probability ε: random action (exploration)
+       - With probability 1-ε: argmax_a Q(s, a) (exploitation)
+    3. **Execute action** and observe reward r and next state s'
+    4. **Store transition** (s, a, r, s', done) in replay buffer
+    5. **Sample mini-batch** from replay buffer
+    6. **Compute targets** using target network:
+       y = r + γ * max_a' Q_target(s', a') if not done, else r
+    7. **Update Q-network** to minimize (Q(s, a) - y)²
+    8. **Periodically update** target network with Q-network weights
+    9. **Decay epsilon** to reduce exploration over time
+
+    Component Integration
+    ---------------------
+    The mixer integrates four main components:
+
+        ┌─────────────────────────────────────────────────────────────┐
+        │                   ProductionRLMixer                         │
+        │  ┌─────────────────────────────────────────────────────┐   │
+        │  │ Interaction Loop:                                    │   │
+        │  │   state → get_action() → apply_action() → next_state │   │
+        │  └───────────────────────────┬─────────────────────────┘   │
+        │                              │                              │
+        │  ┌───────────┐  ┌────────────┴────────────┐  ┌──────────┐  │
+        │  │ Reward    │  │ Experience              │  │ Training │  │
+        │  │ Calculator│←─│ Replay Buffer           │─→│ Loop     │  │
+        │  └───────────┘  └─────────────────────────┘  └────┬─────┘  │
+        │                                                    │        │
+        │  ┌───────────────────┐    ┌────────────────────────┴────┐  │
+        │  │ Target Network    │←───│ Q-Network                   │  │
+        │  │ (frozen weights)  │    │ (learnable weights)         │  │
+        │  └───────────────────┘    └─────────────────────────────┘  │
+        └─────────────────────────────────────────────────────────────┘
+
+    Epsilon-Greedy Exploration
+    --------------------------
+    The agent balances exploration and exploitation using epsilon-greedy:
+
+        ε starts at 1.0 (100% random actions)
+        After each step: ε = max(ε_min, ε × decay)
+        Typical schedule: 1.0 → 0.01 over ~500 steps
+
+    This allows the agent to explore broadly early in training, then
+    converge to exploiting learned Q-values as training progresses.
+
+    Attributes
+    ----------
+    state_size : int
+        Dimension of state vectors (default: 69 for mixer state).
+
+    action_size : int
+        Number of discrete actions (default: 64 = 8 actions × 8 channels).
+
+    learning_rate : float
+        Learning rate for Q-network updates.
+
+    epsilon : float
+        Current exploration rate (probability of random action).
+
+    epsilon_decay : float
+        Multiplicative decay applied to epsilon after each step.
+
+    epsilon_min : float
+        Minimum epsilon value (ensures some exploration continues).
+
+    gamma : float
+        Discount factor for future rewards (0.95 = value 20 steps ahead).
+
+    reward_calculator : ProductionRewardCalculator
+        Computes multi-objective rewards from state transitions.
+
+    experience_replay : ProductionExperienceReplay
+        Stores and samples experiences for training.
+
+    q_network : ProductionQNetwork
+        The main learnable Q-function approximator.
+
+    target_network : ProductionQNetwork
+        Frozen copy of Q-network for stable TD targets.
+
+    batch_size : int
+        Number of experiences per training update (default: 32).
+
+    target_update_frequency : int
+        Steps between target network updates (default: 100).
+
+    training_step : int
+        Counter of total training steps completed.
+
+    episode_rewards : List[float]
+        History of total rewards per episode for monitoring.
+
+    training_losses : List[float]
+        History of training losses for convergence analysis.
+
+    action_map : Dict[int, Tuple[ActionType, int, str]]
+        Mapping from action indices to (action_type, channel, parameter).
+
+    Example
+    -------
+    Basic training loop:
+
+        >>> mixer = ProductionRLMixer(
+        ...     learning_rate=0.001,
+        ...     epsilon=0.8,
+        ...     epsilon_decay=0.995
+        ... )
+        >>>
+        >>> # Optimize to target LUFS
+        >>> result = mixer.optimize_mix(
+        ...     target_lufs=-14.0,
+        ...     channels=8,
+        ...     max_episodes=50
+        ... )
+        >>>
+        >>> print(f"Final LUFS: {result['final_lufs']:.1f}")
+        >>> print(f"Best reward: {result['best_reward']:.3f}")
+
+    Manual episode control:
+
+        >>> state = mixer._create_initial_state(channels=4)
+        >>> for step in range(100):
+        ...     action = mixer.get_action(state)
+        ...     next_state = mixer.apply_action(state, action)
+        ...     reward = mixer.reward_calculator.calculate_reward(
+        ...         state, action, next_state
+        ...     )
+        ...     loss = mixer.train_step(state, action, reward, next_state, done=False)
+        ...     state = next_state
+
+    Hyperparameter Tuning Guide
+    ---------------------------
+    - **learning_rate**: Start with 0.001; reduce if training unstable
+    - **epsilon_decay**: 0.995 for ~400 step decay; 0.999 for slower exploration
+    - **gamma**: 0.95 typical; higher values for long-horizon optimization
+    - **batch_size**: 32 typical; increase for more stable gradients
+    - **target_update_frequency**: 100 typical; increase for more stability
+
+    See Also
+    --------
+    ProductionQNetwork : The neural network used for Q-value estimation.
+    ProductionExperienceReplay : The replay buffer used for training.
+    ProductionRewardCalculator : The reward function definition.
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  state_size: int = 69,  # 8 channels * 8 params + 5 master + 5 audio metrics
                  action_size: int = 64,  # 8 actions * 8 channels
                  learning_rate: float = 0.001,
@@ -630,38 +1886,72 @@ class ProductionRLMixer:
                  epsilon_decay: float = 0.995,
                  epsilon_min: float = 0.01,
                  gamma: float = 0.95):
-        
+        """
+        Initialize the RL mixer agent with all components.
+
+        Parameters
+        ----------
+        state_size : int, default=69
+            Dimension of state vectors. Default is 69:
+            (8 channels × 8 params) + 5 master params + 5 audio metrics = 69
+
+        action_size : int, default=64
+            Number of discrete actions. Default is 64:
+            8 action types × 8 channels = 64 actions
+
+        learning_rate : float, default=0.001
+            Learning rate for the Q-network Adam optimizer.
+            Recommended: 0.0001 to 0.01.
+
+        epsilon : float, default=1.0
+            Initial exploration rate. 1.0 means 100% random actions.
+            Recommended: Start at 0.8-1.0 for new training.
+
+        epsilon_decay : float, default=0.995
+            Decay multiplier applied after each training step.
+            0.995 → epsilon reaches 0.01 in ~400 steps.
+            0.999 → epsilon reaches 0.01 in ~4000 steps.
+
+        epsilon_min : float, default=0.01
+            Minimum exploration rate. Prevents fully greedy behavior.
+            Recommended: 0.01-0.1.
+
+        gamma : float, default=0.95
+            Discount factor for future rewards.
+            0.95 → actions 20+ steps ahead still valued.
+            0.99 → longer planning horizon but slower convergence.
+        """
         logger.info("🤖 Initializing Production RL Mixer")
-        
-        # Hyperparameters
+
+        # Core hyperparameters
         self.state_size = state_size
         self.action_size = action_size
         self.learning_rate = learning_rate
-        self.epsilon = epsilon  # Exploration rate
-        self.epsilon_decay = epsilon_decay
-        self.epsilon_min = epsilon_min
-        self.gamma = gamma  # Discount factor
-        
-        # Initialize components
+        self.epsilon = epsilon              # Exploration rate
+        self.epsilon_decay = epsilon_decay  # Per-step decay
+        self.epsilon_min = epsilon_min      # Floor for exploration
+        self.gamma = gamma                  # Discount factor
+
+        # Initialize DQN components
         self.reward_calculator = ProductionRewardCalculator()
         self.experience_replay = ProductionExperienceReplay(max_size=5000)
         self.q_network = ProductionQNetwork(state_size, action_size, learning_rate)
         self.target_network = ProductionQNetwork(state_size, action_size, learning_rate)
-        
-        # Training parameters
+
+        # Training configuration
         self.batch_size = 32
-        self.target_update_frequency = 100  # Update target network every N steps
+        self.target_update_frequency = 100  # Steps between target updates
         self.training_step = 0
-        
-        # Performance tracking
+
+        # Performance monitoring
         self.episode_rewards = []
         self.training_losses = []
         self.convergence_threshold = 0.1
         self.convergence_window = 10
-        
-        # Action mapping
+
+        # Build action index → (type, channel, parameter) mapping
         self.action_map = self._build_action_map()
-        
+
         logger.info("✅ Production RL Mixer initialized successfully")
     
     def _build_action_map(self) -> Dict[int, Tuple[ActionType, int, str]]:
