@@ -38,9 +38,20 @@ import { api } from '../api/client';
 // Type definitions
 type MixerActionType = 'UPDATE' | 'RESET' | 'LOAD_PRESET';
 
+interface MasterConfig {
+  gain: number;
+  mute: boolean;
+  mono: boolean;
+  limiter: boolean;
+  levelL?: number;
+  levelR?: number;
+  peakL?: number;
+  peakR?: number;
+}
+
 interface MixerState {
   channels: Record<string, ChannelConfig>;
-  master: any;
+  master: MasterConfig;
   effects: Record<string, number>;
 }
 
@@ -52,6 +63,9 @@ interface ChannelConfig {
   level?: number;
   peak?: number;
 }
+
+// Channel property value type
+type ChannelPropertyValue = number | boolean;
 
 const MixerControl: React.FC = () => {
   const dispatch = useDispatch();
@@ -110,12 +124,12 @@ const MixerControl: React.FC = () => {
   
   // Channel control handlers
   const handleChannelChange = useCallback(
-    (channelId: number, property: keyof ChannelConfig, value: any) => {
+    (channelId: number, property: keyof ChannelConfig, value: ChannelPropertyValue) => {
       const update = { channel: channelId, config: { [property]: value } };
-      
+
       // Optimistic update
       dispatch(mixerActions.updateChannel(update));
-      
+
       // Send to server
       socket?.emit('channel:update', update);
       updateMixerMutation.mutate({
@@ -131,14 +145,17 @@ const MixerControl: React.FC = () => {
     [dispatch, socket, updateMixerMutation, mixerState.channels]
   );
   
+  // Master property value type
+  type MasterPropertyValue = number | boolean;
+
   // Master control handlers
   const handleMasterChange = useCallback(
-    (property: string, value: any) => {
+    (property: keyof MasterConfig, value: MasterPropertyValue) => {
       const update = { master: { [property]: value } };
-      
+
       // Optimistic update
       dispatch(mixerActions.updateMaster(update));
-      
+
       // Send to server
       socket?.emit('master:update', update);
       updateMixerMutation.mutate({

@@ -37,6 +37,40 @@ import { styled } from '@mui/material/styles';
 import { WebAudioProcessor, EffectsConfig } from '../audio/WebAudioProcessor';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Type definitions for status change callback
+export interface KaraokeActiveStatus {
+  active: true;
+  effects: EffectsConfig;
+}
+
+export interface KaraokeInactiveStatus {
+  active: false;
+}
+
+export type KaraokeStatus = KaraokeActiveStatus | KaraokeInactiveStatus;
+
+// Custom event types
+export interface PitchDetectedEvent extends CustomEvent {
+  detail: {
+    frequency: number;
+    note: string;
+  };
+}
+
+export interface LevelUpdateEvent extends CustomEvent {
+  detail: {
+    level: number;
+    peak: number;
+  };
+}
+
+// Effect value types based on effect category
+type AutoTuneValue = boolean | number | string | 'major' | 'minor' | 'chromatic';
+type ReverbValue = boolean | number;
+type CompressionValue = boolean | number;
+type EQValue = boolean | number | { freq: number; gain: number };
+type EffectValue = AutoTuneValue | ReverbValue | CompressionValue | EQValue;
+
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -62,7 +96,7 @@ const PitchIndicator = styled(Box)(({ theme }) => ({
 }));
 
 interface KaraokeInterfaceProps {
-  onStatusChange?: (status: any) => void;
+  onStatusChange?: (status: KaraokeStatus) => void;
 }
 
 export const KaraokeInterface: React.FC<KaraokeInterfaceProps> = ({
@@ -137,8 +171,9 @@ export const KaraokeInterface: React.FC<KaraokeInterfaceProps> = ({
       if (onStatusChange) {
         onStatusChange({ active: true, effects });
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to initialize audio');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize audio';
+      setError(errorMessage);
       console.error('Audio initialization error:', err);
     } finally {
       setIsLoading(false);
@@ -171,22 +206,24 @@ export const KaraokeInterface: React.FC<KaraokeInterfaceProps> = ({
   }, [onStatusChange]);
 
   // Handle pitch detection
-  const handlePitchDetected = useCallback((event: any) => {
-    const { frequency, note } = event.detail;
+  const handlePitchDetected = useCallback((event: Event) => {
+    const customEvent = event as PitchDetectedEvent;
+    const { frequency, note } = customEvent.detail;
     setPitchFrequency(frequency);
     setCurrentPitch(note);
   }, []);
 
   // Handle level updates
-  const handleLevelUpdate = useCallback((event: any) => {
-    const { level, peak } = event.detail;
+  const handleLevelUpdate = useCallback((event: Event) => {
+    const customEvent = event as LevelUpdateEvent;
+    const { level, peak } = customEvent.detail;
     setCurrentLevel(level * 100);
     setPeakLevel(peak * 100);
   }, []);
 
   // Update effects
   const updateEffect = useCallback(
-    (category: keyof EffectsConfig, field: string, value: any) => {
+    (category: keyof EffectsConfig, field: string, value: EffectValue) => {
       const newEffects = {
         ...effects,
         [category]: {

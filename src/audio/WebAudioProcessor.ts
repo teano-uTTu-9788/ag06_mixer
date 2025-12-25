@@ -40,6 +40,36 @@ export interface EffectsConfig {
   };
 }
 
+export interface WorkletPitchMessage {
+  type: 'pitch';
+  frequency: number;
+  note: string;
+}
+
+export interface WorkletLevelMessage {
+  type: 'level';
+  level: number;
+  peak: number;
+}
+
+export interface WorkletClippingMessage {
+  type: 'clipping';
+}
+
+export type WorkletMessage = WorkletPitchMessage | WorkletLevelMessage | WorkletClippingMessage;
+
+export interface AudioProcessorStatus {
+  isProcessing: boolean;
+  sampleRate: number;
+  latency: number;
+  effects: EffectsConfig;
+}
+
+export interface AnalyserData {
+  frequencies: Uint8Array;
+  waveform: Uint8Array;
+}
+
 export class WebAudioProcessor {
   private audioContext: AudioContext | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
@@ -310,7 +340,7 @@ export class WebAudioProcessor {
     currentNode.connect(this.audioContext.destination);
   }
 
-  private handleWorkletMessage(data: any): void {
+  private handleWorkletMessage(data: WorkletMessage): void {
     switch (data.type) {
       case 'pitch':
         this.onPitchDetected(data.frequency, data.note);
@@ -368,7 +398,7 @@ export class WebAudioProcessor {
     }
   }
 
-  getAnalyserData(): { frequencies: Uint8Array; waveform: Uint8Array } | null {
+  getAnalyserData(): AnalyserData | null {
     if (!this.analyser) return null;
 
     const frequencies = new Uint8Array(this.analyser.frequencyBinCount);
@@ -408,12 +438,7 @@ export class WebAudioProcessor {
     console.log('Audio processor stopped');
   }
 
-  getStatus(): {
-    isProcessing: boolean;
-    sampleRate: number;
-    latency: number;
-    effects: EffectsConfig;
-  } {
+  getStatus(): AudioProcessorStatus {
     return {
       isProcessing: this.isProcessing,
       sampleRate: this.audioContext?.sampleRate || 0,
