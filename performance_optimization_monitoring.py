@@ -681,9 +681,25 @@ class PerformanceOptimizationMonitor:
             if len(metric_group) < self.config['baseline']['minimum_samples']:
                 continue
             
-            component, metric_type_str = key.split('_', 1)
-            metric_type = PerformanceMetricType(metric_type_str)
+            # key format is component_metric_type
+            # We need to find the split point.
+            # Since component can have underscores, we should iterate over PerformanceMetricType values to find the match.
+            metric_type = None
+            component = None
+            for mt in PerformanceMetricType:
+                if key.endswith(mt.value):
+                     metric_type = mt
+                     component = key[:-len(mt.value)-1] # -1 for the underscore
+                     break
             
+            if not metric_type:
+                 # Fallback for unexpected keys
+                 try:
+                    component, metric_type_str = key.split('_', 1)
+                    metric_type = PerformanceMetricType(metric_type_str)
+                 except ValueError:
+                    continue
+
             # Filter outliers if enabled
             values = [m.value for m in metric_group]
             if self.config['baseline']['outlier_rejection_enabled']:
@@ -701,6 +717,11 @@ class PerformanceOptimizationMonitor:
             margin_of_error = 1.96 * (std_dev / np.sqrt(len(values)))  # 95% confidence
             confidence_interval = (baseline_value - margin_of_error, baseline_value + margin_of_error)
             
+            # Calculate seasonal patterns
+            seasonal_patterns = {}
+            if self.config['baseline'].get('seasonal_analysis', False):
+                seasonal_patterns = self._calculate_seasonal_patterns(metric_group)
+
             # Update baseline
             self.baselines[key] = PerformanceBaseline(
                 component=component,
@@ -710,7 +731,7 @@ class PerformanceOptimizationMonitor:
                 sample_size=len(values),
                 confidence_interval=confidence_interval,
                 last_updated=datetime.utcnow(),
-                seasonal_patterns={}  # TODO: Implement seasonal analysis
+                seasonal_patterns=seasonal_patterns
             )
         
         # Save baselines to disk
@@ -728,6 +749,28 @@ class PerformanceOptimizationMonitor:
             tags=["baseline", "update"]
         )
     
+    def _calculate_seasonal_patterns(self, metrics: List[PerformanceMetric]) -> Dict[str, float]:
+        """
+        Calculate seasonal patterns from metrics.
+        Currently implements hourly seasonality (0-23).
+        """
+        hourly_values: Dict[int, List[float]] = {}
+
+        for metric in metrics:
+            hour = metric.timestamp.hour
+            if hour not in hourly_values:
+                hourly_values[hour] = []
+            hourly_values[hour].append(metric.value)
+
+        seasonal_patterns: Dict[str, float] = {}
+
+        for hour, values in hourly_values.items():
+            if values:
+                avg_val = statistics.mean(values)
+                seasonal_patterns[f"hour_{hour}"] = avg_val
+
+        return seasonal_patterns
+
     def _remove_outliers(self, values: List[float]) -> List[float]:
         """Remove outliers using IQR method"""
         if len(values) < 4:
