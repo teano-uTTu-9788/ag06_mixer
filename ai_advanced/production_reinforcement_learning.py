@@ -1516,12 +1516,12 @@ class ProductionQNetwork(IQNetwork):
     ... )
     >>>
     >>> # Forward pass: get Q-values for all actions
-    >>> state = np.random.randn(69)
+    >>> state = np.random.randn(74)
     >>> q_values = network.predict(state)
     >>> best_action = np.argmax(q_values[0])
     >>>
     >>> # Backward pass: update from target Q-values
-    >>> states = np.random.randn(32, 69)  # Batch of 32 states
+    >>> states = np.random.randn(32, 74)  # Batch of 32 states
     >>> targets = np.random.randn(32, 64)  # Target Q-values
     >>> loss = network.update(states, None, targets)
     >>> print(f"Training loss: {loss:.4f}")
@@ -1551,7 +1551,7 @@ class ProductionQNetwork(IQNetwork):
         Parameters
         ----------
         state_size : int
-            Dimension of the input state vector (e.g., 69 for mixer state).
+            Dimension of the input state vector (e.g., 74 for mixer state).
 
         action_size : int
             Number of discrete actions (e.g., 64 for 8 actions × 8 channels).
@@ -1781,7 +1781,7 @@ class ProductionRLMixer:
     Attributes
     ----------
     state_size : int
-        Dimension of state vectors (default: 69 for mixer state).
+        Dimension of state vectors (default: 74 for mixer state).
 
     action_size : int
         Number of discrete actions (default: 64 = 8 actions × 8 channels).
