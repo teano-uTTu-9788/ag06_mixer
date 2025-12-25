@@ -1,0 +1,627 @@
+{
+  "total_tests": 88,
+  "passed": 47,
+  "failed": 38,
+  "skipped": 3,
+  "success_percentage": 53.40909090909091,
+  "status": "\u26a0\ufe0f  POOR - System has major issues, significant work needed",
+  "results": [
+    {
+      "test": 1,
+      "description": "ChatGPT server process running on port 8090",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.420253"
+    },
+    {
+      "test": 2,
+      "description": "Correct ChatGPT server process identified",
+      "status": "PASS",
+      "details": "Found 1 processes",
+      "timestamp": "2025-08-26T14:11:06.503805"
+    },
+    {
+      "test": 3,
+      "description": "Required file exists: chatgpt_enterprise_minimal.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.503872"
+    },
+    {
+      "test": 4,
+      "description": "Required file exists: chatgpt_openapi_spec.yaml",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.503879"
+    },
+    {
+      "test": 5,
+      "description": "Required file exists: CHATGPT_INTEGRATION_GUIDE.md",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.503888"
+    },
+    {
+      "test": 6,
+      "description": "Required file exists: .env.enterprise",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.503893"
+    },
+    {
+      "test": 7,
+      "description": "API token available and valid format",
+      "status": "PASS",
+      "details": "Token: cgt_9374d891cc8d42d7...",
+      "timestamp": "2025-08-26T14:11:06.503898"
+    },
+    {
+      "test": 8,
+      "description": "API token has correct prefix (cgt_)",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.503903"
+    },
+    {
+      "test": 9,
+      "description": "Environment file readable",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.503953"
+    },
+    {
+      "test": 10,
+      "description": "OpenAPI spec contains live tunnel URL",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.505116"
+    },
+    {
+      "test": 11,
+      "description": "Local health endpoint (/health) responding",
+      "status": "PASS",
+      "details": "Healthy",
+      "timestamp": "2025-08-26T14:11:06.522507"
+    },
+    {
+      "test": 12,
+      "description": "Local code execution (/execute) working",
+      "status": "PASS",
+      "details": "Execution successful in 0.03289484977722168s",
+      "timestamp": "2025-08-26T14:11:06.561028"
+    },
+    {
+      "test": 13,
+      "description": "Authentication system functional",
+      "status": "FAIL",
+      "details": "Should require auth but got HTTP 403",
+      "timestamp": "2025-08-26T14:11:06.564061"
+    },
+    {
+      "test": 14,
+      "description": "Local /metrics endpoint responding",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.566351"
+    },
+    {
+      "test": 15,
+      "description": "Local /status endpoint responding",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:06.570847"
+    },
+    {
+      "test": 16,
+      "description": "JavaScript execution support",
+      "status": "PASS",
+      "details": "JS execution working",
+      "timestamp": "2025-08-26T14:11:06.621296"
+    },
+    {
+      "test": 17,
+      "description": "Python execution support",
+      "status": "PASS",
+      "details": "Execution time: 0.035225868225097656s",
+      "timestamp": "2025-08-26T14:11:06.714951"
+    },
+    {
+      "test": 18,
+      "description": "Timeout handling",
+      "status": "FAIL",
+      "details": "Execution time: 0.18485617637634277s",
+      "timestamp": "2025-08-26T14:11:06.924581"
+    },
+    {
+      "test": 19,
+      "description": "Error handling",
+      "status": "PASS",
+      "details": "Error handling working",
+      "timestamp": "2025-08-26T14:11:06.955034"
+    },
+    {
+      "test": 20,
+      "description": "Security validation",
+      "status": "PASS",
+      "details": "Security validation working",
+      "timestamp": "2025-08-26T14:11:06.958345"
+    },
+    {
+      "test": 21,
+      "description": "Tunnel process running (localtunnel/ngrok)",
+      "status": "FAIL",
+      "details": "Found 0 tunnel processes",
+      "timestamp": "2025-08-26T14:11:07.036997"
+    },
+    {
+      "test": 22,
+      "description": "Tunnel health endpoint accessible: https://olive-animals-watch.loca.lt",
+      "status": "FAIL",
+      "details": "HTTP 503",
+      "timestamp": "2025-08-26T14:11:08.927229"
+    },
+    {
+      "test": 23,
+      "description": "Tunnel code execution",
+      "status": "SKIP",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927245"
+    },
+    {
+      "test": 24,
+      "description": "Tunnel /metrics endpoint",
+      "status": "SKIP",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927249"
+    },
+    {
+      "test": 25,
+      "description": "Tunnel /status endpoint",
+      "status": "SKIP",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927251"
+    },
+    {
+      "test": 26,
+      "description": "Tunnel HTTPS encryption",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927258"
+    },
+    {
+      "test": 27,
+      "description": "Tunnel CORS headers",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927261"
+    },
+    {
+      "test": 28,
+      "description": "Tunnel rate limiting",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927263"
+    },
+    {
+      "test": 29,
+      "description": "Tunnel authentication",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927265"
+    },
+    {
+      "test": 30,
+      "description": "Tunnel error responses",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927267"
+    },
+    {
+      "test": 31,
+      "description": "Tunnel JSON parsing",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927269"
+    },
+    {
+      "test": 32,
+      "description": "Tunnel request validation",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927271"
+    },
+    {
+      "test": 33,
+      "description": "Tunnel timeout handling",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927273"
+    },
+    {
+      "test": 34,
+      "description": "Tunnel concurrent requests",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927275"
+    },
+    {
+      "test": 35,
+      "description": "Tunnel security headers",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927277"
+    },
+    {
+      "test": 36,
+      "description": "Tunnel response compression",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927279"
+    },
+    {
+      "test": 37,
+      "description": "Tunnel keepalive",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927281"
+    },
+    {
+      "test": 38,
+      "description": "Tunnel SSL certificate",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927283"
+    },
+    {
+      "test": 39,
+      "description": "Tunnel domain resolution",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927285"
+    },
+    {
+      "test": 40,
+      "description": "Tunnel latency test",
+      "status": "FAIL",
+      "details": "Tunnel not accessible",
+      "timestamp": "2025-08-26T14:11:08.927286"
+    },
+    {
+      "test": 41,
+      "description": "OpenAPI spec has servers section",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927426"
+    },
+    {
+      "test": 42,
+      "description": "OpenAPI spec has authentication",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927429"
+    },
+    {
+      "test": 43,
+      "description": "OpenAPI spec has /execute endpoint",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927431"
+    },
+    {
+      "test": 44,
+      "description": "OpenAPI spec has proper examples",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927433"
+    },
+    {
+      "test": 45,
+      "description": "OpenAPI spec has response schemas",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927434"
+    },
+    {
+      "test": 46,
+      "description": "OpenAPI spec version 3.0+",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927436"
+    },
+    {
+      "test": 47,
+      "description": "OpenAPI spec has security schemes",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927437"
+    },
+    {
+      "test": 48,
+      "description": "OpenAPI spec has error responses",
+      "status": "FAIL",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927439"
+    },
+    {
+      "test": 49,
+      "description": "OpenAPI spec has live tunnel URL",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927440"
+    },
+    {
+      "test": 50,
+      "description": "OpenAPI spec has proper content types",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.927442"
+    },
+    {
+      "test": 51,
+      "description": "Setup guide has API token",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934476"
+    },
+    {
+      "test": 52,
+      "description": "Setup guide has tunnel URL",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934493"
+    },
+    {
+      "test": 53,
+      "description": "Setup guide has step-by-step instructions",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934495"
+    },
+    {
+      "test": 54,
+      "description": "Setup guide has test examples",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934497"
+    },
+    {
+      "test": 55,
+      "description": "Setup guide has authentication info",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934500"
+    },
+    {
+      "test": 56,
+      "description": "Setup guide has troubleshooting",
+      "status": "FAIL",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934502"
+    },
+    {
+      "test": 57,
+      "description": "Setup guide has Custom GPT instructions",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934503"
+    },
+    {
+      "test": 58,
+      "description": "Setup guide has copy-paste ready format",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934505"
+    },
+    {
+      "test": 59,
+      "description": "Setup guide has security information",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934506"
+    },
+    {
+      "test": 60,
+      "description": "Setup guide is complete",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-26T14:11:08.934508"
+    },
+    {
+      "test": 61,
+      "description": "Rate limiting active",
+      "status": "PASS",
+      "details": "Feature found in status",
+      "timestamp": "2025-08-26T14:11:08.938081"
+    },
+    {
+      "test": 62,
+      "description": "Circuit breaker implemented",
+      "status": "PASS",
+      "details": "Feature found in status",
+      "timestamp": "2025-08-26T14:11:08.940634"
+    },
+    {
+      "test": 63,
+      "description": "Security validation working",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.944490"
+    },
+    {
+      "test": 64,
+      "description": "Error handling comprehensive",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.946330"
+    },
+    {
+      "test": 65,
+      "description": "Logging structured",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.948900"
+    },
+    {
+      "test": 66,
+      "description": "Health checks detailed",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.952877"
+    },
+    {
+      "test": 67,
+      "description": "Metrics collection active",
+      "status": "PASS",
+      "details": "Feature found in status",
+      "timestamp": "2025-08-26T14:11:08.955009"
+    },
+    {
+      "test": 68,
+      "description": "Authentication secure",
+      "status": "PASS",
+      "details": "Feature found in status",
+      "timestamp": "2025-08-26T14:11:08.958407"
+    },
+    {
+      "test": 69,
+      "description": "Input validation thorough",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.960750"
+    },
+    {
+      "test": 70,
+      "description": "Response format consistent",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.970298"
+    },
+    {
+      "test": 71,
+      "description": "Timeout handling proper",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.975615"
+    },
+    {
+      "test": 72,
+      "description": "Concurrent request support",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.991940"
+    },
+    {
+      "test": 73,
+      "description": "Memory usage efficient",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.993742"
+    },
+    {
+      "test": 74,
+      "description": "CPU usage optimized",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.995357"
+    },
+    {
+      "test": 75,
+      "description": "Disk usage minimal",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.996776"
+    },
+    {
+      "test": 76,
+      "description": "Network efficiency",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:08.998944"
+    },
+    {
+      "test": 77,
+      "description": "Scalability ready",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:09.000682"
+    },
+    {
+      "test": 78,
+      "description": "Monitoring comprehensive",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:09.002363"
+    },
+    {
+      "test": 79,
+      "description": "Alerting functional",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:09.004191"
+    },
+    {
+      "test": 80,
+      "description": "Recovery mechanisms",
+      "status": "FAIL",
+      "details": "Feature not found in status",
+      "timestamp": "2025-08-26T14:11:09.006269"
+    },
+    {
+      "test": 81,
+      "description": "Complete Python code execution workflow",
+      "status": "PASS",
+      "details": "Execution successful in 0.07181787490844727s",
+      "timestamp": "2025-08-26T14:11:09.091176"
+    },
+    {
+      "test": 82,
+      "description": "Complete JavaScript code execution workflow",
+      "status": "PASS",
+      "details": "JS execution successful",
+      "timestamp": "2025-08-26T14:11:09.188595"
+    },
+    {
+      "test": 83,
+      "description": "Authentication + execution combined test",
+      "status": "PASS",
+      "details": "Auth and execution both working",
+      "timestamp": "2025-08-26T14:11:09.188611"
+    },
+    {
+      "test": 84,
+      "description": "Error handling + recovery test",
+      "status": "PASS",
+      "details": "Error handling working",
+      "timestamp": "2025-08-26T14:11:09.256927"
+    },
+    {
+      "test": 85,
+      "description": "Performance benchmarking test",
+      "status": "PASS",
+      "details": "Execution time: 0.11s",
+      "timestamp": "2025-08-26T14:11:09.367951"
+    },
+    {
+      "test": 86,
+      "description": "Security validation comprehensive test",
+      "status": "PASS",
+      "details": "Security score: 3/4",
+      "timestamp": "2025-08-26T14:11:09.367986"
+    },
+    {
+      "test": 87,
+      "description": "ChatGPT integration readiness verified",
+      "status": "PASS",
+      "details": "Readiness score: 4/5",
+      "timestamp": "2025-08-26T14:11:09.367997"
+    },
+    {
+      "test": 88,
+      "description": "System production readiness confirmed",
+      "status": "FAIL",
+      "details": "Success rate: 56.0% (47/84)",
+      "timestamp": "2025-08-26T14:11:09.368014"
+    }
+  ],
+  "claim_accuracy": false
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "backup_id": "backup_1756055408_full",
+    "timestamp": "2025-08-25T00:10:08.747104",
+    "backup_type": "full",
+    "size_bytes": 2284,
+    "checksum": "5725a46ae70ecdcaa9185840b65449475513c4ea6bb82f3d22cc3a45b765b761",
+    "status": "BackupStatus.COMPLETED",
+    "retention_days": 2555,
+    "storage_location": "backups/backup_1756055408_full.tar.gz",
+    "components": [
+      "system_state",
+      "agent_data",
+      "workflow_events",
+      "configuration",
+      "logs"
+    ],
+    "compression_ratio": 4.117338003502627,
+    "duration_seconds": 0.4656219482421875,
+    "error_message": null
+  }
+]

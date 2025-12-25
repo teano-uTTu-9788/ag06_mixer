@@ -1,0 +1,23 @@
+# Ignore virtual environments
+venv/
+.venv/
+env/
+.env
+
+# Ignore node modules
+node_modules/
+
+# Ignore backups
+*_backup_*/
+*.bak
+*.tmp
+
+# Ignore OS files
+.DS_Store
+
+# Ignore large build artifacts
+*.dylib
+*.so
+*.dll
+*.o
+*.a

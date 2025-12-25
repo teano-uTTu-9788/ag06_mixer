@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-08-25T01:22:56.679501",
+  "summary": {
+    "total_slos": 4,
+    "healthy": 2,
+    "warning": 1,
+    "critical": 1,
+    "unknown": 0
+  },
+  "slos": {
+    "api_availability": {
+      "name": "API Availability",
+      "service": "ag06_api",
+      "target": 99.9,
+      "current_performance": 99.89114328797459,
+      "error_budget_remaining": 91.14328797457979,
+      "burn_rate": 0.00885671202541971,
+      "compliance": "warning",
+      "time_to_exhaustion_hours": 10.290871794519639,
+      "last_updated": "2025-08-25T01:22:56.677962"
+    },
+    "api_latency": {
+      "name": "API Latency P95",
+      "service": "ag06_api",
+      "target": 95.0,
+      "current_performance": 83.62141056736348,
+      "error_budget_remaining": 0.0,
+      "burn_rate": 11.378589432636517,
+      "compliance": "critical",
+      "time_to_exhaustion_hours": 0.0,
+      "last_updated": "2025-08-25T01:22:56.679450"
+    },
+    "api_success_rate": {
+      "name": "API Success Rate",
+      "service": "ag06_api",
+      "target": 99.5,
+      "current_performance": 99.91623451245457,
+      "error_budget_remaining": 100.0,
+      "burn_rate": 0,
+      "compliance": "healthy",
+      "time_to_exhaustion_hours": null,
+      "last_updated": "2025-08-25T01:22:56.679493"
+    },
+    "workflow_success": {
+      "name": "Workflow Success Rate",
+      "service": "ag06_workflows",
+      "target": 99.0,
+      "current_performance": 99.83650847279311,
+      "error_budget_remaining": 100.0,
+      "burn_rate": 0,
+      "compliance": "healthy",
+      "time_to_exhaustion_hours": null,
+      "last_updated": "2025-08-25T01:22:56.679499"
+    }
+  },
+  "recommendations": [
+    {
+      "slo": "api_availability",
+      "severity": "MEDIUM",
+      "action": "SOON",
+      "recommendation": "SLO api_availability is approaching limits. Monitor closely and prepare mitigation strategies"
+    },
+    {
+      "slo": "api_latency",
+      "severity": "HIGH",
+      "action": "IMMEDIATE",
+      "recommendation": "SLO api_latency is in critical state. Consider: 1) Rolling back recent changes, 2) Implementing circuit breakers, 3) Scaling resources"
+    }
+  ]
+}

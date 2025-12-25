@@ -1,0 +1,87 @@
+{
+  "deployment_id": "deployment_1756064004",
+  "started_at": "2025-08-25T02:33:24.187008",
+  "components": {
+    "environment": {
+      "status": "completed",
+      "environment_check": {
+        "python_available": true,
+        "pip_available": true,
+        "basic_imports": true,
+        "numpy": true,
+        "json": true,
+        "asyncio": true,
+        "logging": true
+      },
+      "ready_for_deployment": true
+    },
+    "orchestrator": {
+      "status": "completed",
+      "agents_registered": 3,
+      "test_workflow": {
+        "success": false,
+        "execution_time": 14.005561828613281,
+        "nodes_executed": 1
+      },
+      "orchestrator_ready": false
+    },
+    "agent_factory": {
+      "status": "completed",
+      "agents_created": [
+        "code_analyst",
+        "workflow_optimizer"
+      ],
+      "factory_ready": true,
+      "available_templates": 2
+    },
+    "research_pipeline": {
+      "status": "completed",
+      "pipeline_ready": true,
+      "test_cycle": {
+        "findings_discovered": 5,
+        "candidates_evaluated": 5,
+        "patterns_implemented": 0
+      }
+    }
+  },
+  "integration_tests": {
+    "orchestrator_agent_factory": true,
+    "agent_factory_pipeline": true,
+    "pipeline_orchestrator": true,
+    "end_to_end_workflow": false
+  },
+  "performance_benchmarks": {
+    "orchestrator": {
+      "avg_execution_time": 28.017709016799927,
+      "success_rate": 0.0,
+      "workflows_completed": 0
+    },
+    "agent_factory": {
+      "agents_created": 2,
+      "templates_available": 2,
+      "avg_creation_time": 0.5
+    },
+    "research_pipeline": {
+      "implementation_success_rate": 0,
+      "avg_performance_improvement": 0,
+      "total_implementations": 0
+    },
+    "system_integration": {
+      "integration_test_time": 0.1021578311920166,
+      "components_integrated": 4,
+      "integration_success": true
+    }
+  },
+  "documentation": {
+    "status": "completed",
+    "files_generated": [
+      "README.md",
+      "API_DOCUMENTATION.md",
+      "USAGE_EXAMPLES.md"
+    ],
+    "documentation_path": ".deployments/deployment_1756064004/documentation"
+  },
+  "completed_at": "2025-08-25T02:33:52.395744",
+  "deployment_time": 28.20891809463501,
+  "overall_success": 100.0
+}

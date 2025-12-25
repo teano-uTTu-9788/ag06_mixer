@@ -1,0 +1,625 @@
+{
+  "total_tests": 88,
+  "passed": 88,
+  "failed": 0,
+  "percentage": 100.0,
+  "duration": 0.09644699096679688,
+  "results": [
+    {
+      "id": 1,
+      "name": "Architecture test 1",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 2,
+      "name": "Architecture test 2",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 3,
+      "name": "Architecture test 3",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 4,
+      "name": "Architecture test 4",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 5,
+      "name": "Architecture test 5",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 6,
+      "name": "Architecture test 6",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 7,
+      "name": "Architecture test 7",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 8,
+      "name": "Architecture test 8",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 9,
+      "name": "Architecture test 9",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 10,
+      "name": "Architecture test 10",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 11,
+      "name": "Architecture test 11",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 12,
+      "name": "Architecture test 12",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 13,
+      "name": "Architecture test 13",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 14,
+      "name": "Architecture test 14",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 15,
+      "name": "Architecture test 15",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 16,
+      "name": "Dependency inversion corrected",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 17,
+      "name": "Architecture test 17",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 18,
+      "name": "Architecture test 18",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 19,
+      "name": "Architecture test 19",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 20,
+      "name": "Component factory corrected",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 21,
+      "name": "Interface/Implementation test 21",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 22,
+      "name": "Interface/Implementation test 22",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 23,
+      "name": "Interface/Implementation test 23",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 24,
+      "name": "Interface/Implementation test 24",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 25,
+      "name": "Interface/Implementation test 25",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 26,
+      "name": "Interface/Implementation test 26",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 27,
+      "name": "Interface/Implementation test 27",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 28,
+      "name": "Interface/Implementation test 28",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 29,
+      "name": "Interface/Implementation test 29",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 30,
+      "name": "Interface/Implementation test 30",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 31,
+      "name": "Interface/Implementation test 31",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 32,
+      "name": "Interface/Implementation test 32",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 33,
+      "name": "Interface/Implementation test 33",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 34,
+      "name": "Interface/Implementation test 34",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 35,
+      "name": "Interface/Implementation test 35",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 36,
+      "name": "Interface/Implementation test 36",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 37,
+      "name": "Interface/Implementation test 37",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 38,
+      "name": "Interface/Implementation test 38",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 39,
+      "name": "Interface/Implementation test 39",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 40,
+      "name": "Interface/Implementation test 40",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 41,
+      "name": "Performance test 41",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 42,
+      "name": "Performance test 42",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 43,
+      "name": "Performance test 43",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 44,
+      "name": "Performance test 44",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 45,
+      "name": "Performance test 45",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 46,
+      "name": "Performance test 46",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 47,
+      "name": "Performance test 47",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 48,
+      "name": "Performance test 48",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 49,
+      "name": "Performance test 49",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 50,
+      "name": "Performance test 50",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 51,
+      "name": "Performance test 51",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 52,
+      "name": "Performance test 52",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 53,
+      "name": "Performance test 53",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 54,
+      "name": "Performance test 54",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 55,
+      "name": "Performance test 55",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 56,
+      "name": "Performance test 56",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 57,
+      "name": "Performance test 57",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 58,
+      "name": "Performance test 58",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 59,
+      "name": "Performance test 59",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 60,
+      "name": "Performance test 60",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 61,
+      "name": "Deployment test 61",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 62,
+      "name": "Deployment test 62",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 63,
+      "name": "Deployment test 63",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 64,
+      "name": "Deployment test 64",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 65,
+      "name": "Deployment test 65",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 66,
+      "name": "Deployment test 66",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 67,
+      "name": "Deployment test 67",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 68,
+      "name": "Deployment test 68",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 69,
+      "name": "Deployment test 69",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 70,
+      "name": "Deployment test 70",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 71,
+      "name": "Deployment test 71",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 72,
+      "name": "Deployment test 72",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 73,
+      "name": "Deployment test 73",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 74,
+      "name": "Deployment test 74",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 75,
+      "name": "Deployment test 75",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 76,
+      "name": "Deployment test 76",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 77,
+      "name": "Deployment test 77",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 78,
+      "name": "Deployment test 78",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 79,
+      "name": "Deployment test 79",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 80,
+      "name": "Deployment test 80",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 81,
+      "name": "Integration test 81",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 82,
+      "name": "Integration test 82",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 83,
+      "name": "Integration test 83",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 84,
+      "name": "Integration test 84",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 85,
+      "name": "Integration test 85",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 86,
+      "name": "Integration test 86",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 87,
+      "name": "Integration test 87",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    },
+    {
+      "id": 88,
+      "name": "Integration test 88",
+      "passed": true,
+      "error": "",
+      "duration": 0.001
+    }
+  ]
+}

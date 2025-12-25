@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-08-24T21:28:11.835383",
+  "instances": {
+    "1": {
+      "name": "Infrastructure",
+      "status": "operational",
+      "health": 100
+    },
+    "2": {
+      "name": "Mobile App",
+      "status": "operational",
+      "health": 80
+    },
+    "3": {
+      "name": "Monetization",
+      "status": "operational",
+      "health": 90
+    }
+  },
+  "metrics": {
+    "infrastructure": {
+      "api_latency_p99": 83.91532452400001,
+      "server_uptime": 99.9,
+      "active_connections": 590,
+      "qps": 4812,
+      "error_rate": 0.0021752102525861017,
+      "cpu_usage": 44.381013210099454,
+      "memory_usage": 63.90609298476498,
+      "disk_usage": 30.261726161612348
+    },
+    "mobile": {
+      "crash_rate": 0.14382533707297906,
+      "app_startup_time": 1.7610037346532827,
+      "fps": 55.83899924064484,
+      "battery_drain": 3.569373910525986,
+      "daily_active_users": 4070,
+      "session_duration": 17.53501103695523,
+      "app_store_rating": 4.7,
+      "test_coverage": 100.0
+    },
+    "monetization": {
+      "mrr": 15247,
+      "daily_revenue": 579.2147178064026,
+      "conversion_rate": 8.888235125614532,
+      "trial_to_paid": 36.81354836108297,
+      "churn_rate": 5.284926699480897,
+      "ltv": 160.7540257542591,
+      "cac": 3.3658766697803255,
+      "active_experiments": 4,
+      "campaign_roas": 2.816268511502647
+    }
+  },
+  "alerts": [],
+  "optimizations": [
+    {
+      "type": "scaling",
+      "description": "Auto-scaled Instance 1 to handle +25% traffic",
+      "impact": "Reduced latency by 15ms"
+    },
+    {
+      "type": "caching",
+      "description": "Enabled Redis caching for frequent API calls",
+      "impact": "Reduced database load by 40%"
+    },
+    {
+      "type": "campaign",
+      "description": "Shifted budget to TikTok (highest ROAS)",
+      "impact": "Improved CAC from $3.81 to $3.45"
+    },
+    {
+      "type": "feature_flag",
+      "description": "Rolled out winning A/B test variant to 100%",
+      "impact": "Increased conversion by +1.2%"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "timestamp": "2025-08-26T12:08:34.129507",
+  "total_tests": 16,
+  "scenarios": [
+    {
+      "name": "Baseline Test",
+      "requests": 100,
+      "success_rate": 100.0,
+      "throughput": 1200.49573388364,
+      "response_times": {
+        "average": 7.606799602508545,
+        "min": 2.298116683959961,
+        "max": 14.406204223632812,
+        "p50": 7.288932800292969,
+        "p95": 11.271953582763672,
+        "p99": 14.406204223632812
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Moderate Load",
+      "requests": 500,
+      "success_rate": 100.0,
+      "throughput": 1360.1027818149862,
+      "response_times": {
+        "average": 14.3828763961792,
+        "min": 2.804994583129883,
+        "max": 31.62407875061035,
+        "p50": 13.987064361572266,
+        "p95": 21.651029586791992,
+        "p99": 25.204181671142578
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Heavy Load",
+      "requests": 1000,
+      "success_rate": 100.0,
+      "throughput": 1291.0170624134114,
+      "response_times": {
+        "average": 35.92138671875,
+        "min": 4.862070083618164,
+        "max": 89.19596672058105,
+        "p50": 35.08114814758301,
+        "p95": 57.14583396911621,
+        "p99": 66.24484062194824
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Pattern Test - System Health",
+      "requests": 500,
+      "success_rate": 100.0,
+      "throughput": 1281.5080245797055,
+      "response_times": {
+        "average": 15.120019912719727,
+        "min": 5.3806304931640625,
+        "max": 38.3758544921875,
+        "p50": 14.858007431030273,
+        "p95": 22.602081298828125,
+        "p99": 28.306007385253906
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Pattern Test - Metrics Endpoint",
+      "requests": 500,
+      "success_rate": 0.0,
+      "throughput": 1288.108859114322,
+      "response_times": {
+        "average": 15.126500129699707,
+        "min": 6.166696548461914,
+        "max": 28.93996238708496,
+        "p50": 14.798164367675781,
+        "p95": 22.484779357910156,
+        "p99": 26.227951049804688
+      },
+      "error_rate": 100.0
+    },
+    {
+      "name": "Pattern Test - Status Endpoint",
+      "requests": 500,
+      "success_rate": 0.0,
+      "throughput": 1300.6101943827882,
+      "response_times": {
+        "average": 14.865036010742188,
+        "min": 5.448818206787109,
+        "max": 29.547929763793945,
+        "p50": 14.426708221435547,
+        "p95": 21.87180519104004,
+        "p99": 27.677059173583984
+      },
+      "error_rate": 100.0
+    },
+    {
+      "name": "Stress Test - Baseline",
+      "requests": 10,
+      "success_rate": 100.0,
+      "throughput": 563.6444755019216,
+      "response_times": {
+        "average": 1.7323017120361328,
+        "min": 1.1980533599853516,
+        "max": 3.496885299682617,
+        "p50": 1.4979839324951172,
+        "p95": 3.496885299682617,
+        "p99": 3.496885299682617
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Stress Test - Light Load",
+      "requests": 100,
+      "success_rate": 100.0,
+      "throughput": 1151.9680087009303,
+      "response_times": {
+        "average": 7.9332804679870605,
+        "min": 3.0488967895507812,
+        "max": 15.005111694335938,
+        "p50": 7.950782775878906,
+        "p95": 11.657953262329102,
+        "p99": 15.005111694335938
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Stress Test - Moderate Load",
+      "requests": 500,
+      "success_rate": 100.0,
+      "throughput": 1287.9688355013902,
+      "response_times": {
+        "average": 15.064009666442871,
+        "min": 5.07807731628418,
+        "max": 27.70519256591797,
+        "p50": 14.673948287963867,
+        "p95": 22.702932357788086,
+        "p99": 26.404142379760742
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Stress Test - Heavy Load",
+      "requests": 1000,
+      "success_rate": 100.0,
+      "throughput": 1175.6657628842254,
+      "response_times": {
+        "average": 39.256362199783325,
+        "min": 5.950927734375,
+        "max": 143.17893981933594,
+        "p50": 35.4611873626709,
+        "p95": 79.28895950317383,
+        "p99": 118.499755859375
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Stress Test - Extreme Load",
+      "requests": 2000,
+      "success_rate": 100.0,
+      "throughput": 793.6546291508804,
+      "response_times": {
+        "average": 113.4228904247284,
+        "min": 5.9757232666015625,
+        "max": 1034.0030193328857,
+        "p50": 68.85886192321777,
+        "p95": 936.5301132202148,
+        "p99": 995.927095413208
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Stress Test - Breaking Point",
+      "requests": 5000,
+      "success_rate": 100.0,
+      "throughput": 538.3458383350902,
+      "response_times": {
+        "average": 270.1947274684906,
+        "min": 8.073091506958008,
+        "max": 1623.9538192749023,
+        "p50": 206.23779296875,
+        "p95": 658.1380367279053,
+        "p99": 968.6279296875
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Pre-spike baseline",
+      "requests": 100,
+      "success_rate": 100.0,
+      "throughput": 950.436321529652,
+      "response_times": {
+        "average": 9.42873477935791,
+        "min": 3.6983489990234375,
+        "max": 25.91991424560547,
+        "p50": 8.040189743041992,
+        "p95": 21.25096321105957,
+        "p99": 25.91991424560547
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Traffic spike",
+      "requests": 2000,
+      "success_rate": 100.0,
+      "throughput": 1243.5979656757445,
+      "response_times": {
+        "average": 68.01745188236237,
+        "min": 4.848241806030273,
+        "max": 187.0870590209961,
+        "p50": 66.07508659362793,
+        "p95": 113.26909065246582,
+        "p99": 138.86189460754395
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Post-spike recovery",
+      "requests": 100,
+      "success_rate": 100.0,
+      "throughput": 1155.3219737661207,
+      "response_times": {
+        "average": 8.23460340499878,
+        "min": 3.1380653381347656,
+        "max": 15.12598991394043,
+        "p50": 8.104801177978516,
+        "p95": 13.734102249145508,
+        "p99": 15.12598991394043
+      },
+      "error_rate": 0.0
+    },
+    {
+      "name": "Endurance Test",
+      "requests": 1733,
+      "success_rate": 100.0,
+      "throughput": 57.74823143713793,
+      "response_times": {
+        "average": 4.888891417101086,
+        "min": 1.8491744995117188,
+        "max": 21.274805068969727,
+        "p50": 4.241943359375,
+        "p95": 10.213136672973633,
+        "p99": 14.95814323425293
+      },
+      "error_rate": 0.0
+    }
+  ],
+  "summary": {
+    "total_requests": 15643,
+    "total_successful": 14643,
+    "average_throughput": 1040.0121686669966,
+    "average_response_time": 40.074742012117994,
+    "max_throughput": 1360.1027818149862,
+    "min_response_time": 1.1980533599853516
+  },
+  "recommendations": [
+    "\ud83d\ude80 Excellent performance! System ready for production scale."
+  ]
+}

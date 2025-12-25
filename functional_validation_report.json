@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-08-19T13:22:22.934966",
+  "total_tests": 10,
+  "passed": 1,
+  "failed": 9,
+  "percentage": 10.0,
+  "results": [
+    {
+      "test": "Audio Processing Pipeline",
+      "passed": false
+    },
+    {
+      "test": "MIDI Control Processing",
+      "passed": false
+    },
+    {
+      "test": "Ring Buffer Performance",
+      "passed": false
+    },
+    {
+      "test": "Parallel Event Bus",
+      "passed": false
+    },
+    {
+      "test": "Preset Management",
+      "passed": false
+    },
+    {
+      "test": "Workflow Orchestration",
+      "passed": false
+    },
+    {
+      "test": "Dependency Injection",
+      "passed": false
+    },
+    {
+      "test": "Optimization Agent",
+      "passed": true
+    },
+    {
+      "test": "Buffer Pool Efficiency",
+      "passed": false
+    },
+    {
+      "test": "Karaoke Processing",
+      "passed": false
+    }
+  ]
+}

@@ -1,0 +1,548 @@
+{
+  "metadata": {
+    "generated": "2025-08-26T09:26:27.079426",
+    "version": "2025.1.0",
+    "practices": [
+      "Google Anthos Config Management",
+      "ArgoCD GitOps",
+      "Flux v2 GitOps",
+      "Flagger Progressive Delivery",
+      "Istio Service Mesh",
+      "Multi-cloud Terraform"
+    ]
+  },
+  "config_management": {
+    "anthos": {
+      "apiVersion": "configmanagement.gke.io/v1",
+      "kind": "ConfigManagement",
+      "metadata": {
+        "name": "config-management",
+        "namespace": "config-management-system"
+      },
+      "spec": {
+        "sourceFormat": "unstructured",
+        "git": {
+          "syncRepo": "https://github.com/enterprise/config-repo",
+          "syncBranch": "main",
+          "syncRev": "HEAD",
+          "syncWait": 30,
+          "policyDir": "config/",
+          "auth": "token",
+          "secretRef": {
+            "name": "git-creds"
+          }
+        },
+        "policyController": {
+          "enabled": true,
+          "templateLibraryInstalled": true,
+          "auditIntervalSeconds": 60,
+          "exemptableNamespaces": [
+            "kube-system",
+            "config-management-system"
+          ],
+          "referentialRulesEnabled": true,
+          "logDeniesEnabled": true,
+          "mutationEnabled": true
+        },
+        "hierarchyController": {
+          "enabled": true,
+          "enableHierarchicalResourceQuota": true,
+          "enablePodTreeLabels": true
+        }
+      }
+    },
+    "policies": [
+      {
+        "apiVersion": "templates.gatekeeper.sh/v1beta1",
+        "kind": "K8sRequiredLabels",
+        "metadata": {
+          "name": "must-have-environment"
+        },
+        "spec": {
+          "match": {
+            "kinds": [
+              {
+                "apiGroups": [
+                  "apps"
+                ],
+                "kinds": [
+                  "Deployment",
+                  "StatefulSet"
+                ]
+              }
+            ]
+          },
+          "parameters": {
+            "labels": [
+              "environment",
+              "team",
+              "cost-center"
+            ]
+          }
+        }
+      },
+      {
+        "apiVersion": "templates.gatekeeper.sh/v1beta1",
+        "kind": "K8sContainerLimits",
+        "metadata": {
+          "name": "container-must-have-limits"
+        },
+        "spec": {
+          "match": {
+            "kinds": [
+              {
+                "apiGroups": [
+                  "apps"
+                ],
+                "kinds": [
+                  "Deployment"
+                ]
+              }
+            ]
+          },
+          "parameters": {
+            "cpu": "4000m",
+            "memory": "8Gi"
+          }
+        }
+      }
+    ]
+  },
+  "gitops": {
+    "argocd": {
+      "apiVersion": "argoproj.io/v1alpha1",
+      "kind": "Application",
+      "metadata": {
+        "name": "enterprise-ai-2025",
+        "namespace": "argocd",
+        "finalizers": [
+          "resources-finalizer.argocd.argoproj.io"
+        ]
+      },
+      "spec": {
+        "project": "production",
+        "source": {
+          "repoURL": "https://github.com/enterprise/k8s-manifests",
+          "targetRevision": "HEAD",
+          "path": "environments/production",
+          "helm": {
+            "valueFiles": [
+              "values-production.yaml"
+            ],
+            "parameters": [
+              {
+                "name": "image.tag",
+                "value": "2025.1.0"
+              },
+              {
+                "name": "replicaCount",
+                "value": "5"
+              }
+            ]
+          },
+          "kustomize": {
+            "images": [
+              "enterprise-ai:2025.1.0"
+            ]
+          }
+        },
+        "destination": {
+          "server": "https://kubernetes.default.svc",
+          "namespace": "production"
+        },
+        "syncPolicy": {
+          "automated": {
+            "prune": true,
+            "selfHeal": true,
+            "allowEmpty": false
+          },
+          "syncOptions": [
+            "CreateNamespace=true",
+            "PrunePropagationPolicy=foreground",
+            "PruneLast=true"
+          ],
+          "retry": {
+            "limit": 5,
+            "backoff": {
+              "duration": "5s",
+              "factor": 2,
+              "maxDuration": "3m"
+            }
+          }
+        },
+        "revisionHistoryLimit": 10,
+        "ignoreDifferences": [
+          {
+            "group": "apps",
+            "kind": "Deployment",
+            "jsonPointers": [
+              "/spec/replicas"
+            ]
+          }
+        ],
+        "info": [
+          {
+            "name": "environment",
+            "value": "production"
+          },
+          {
+            "name": "team",
+            "value": "platform-engineering"
+          }
+        ]
+      }
+    },
+    "flux": {
+      "apiVersion": "kustomize.toolkit.fluxcd.io/v1",
+      "kind": "Kustomization",
+      "metadata": {
+        "name": "enterprise-ai-2025",
+        "namespace": "flux-system"
+      },
+      "spec": {
+        "interval": "10m",
+        "retryInterval": "2m",
+        "timeout": "5m",
+        "sourceRef": {
+          "kind": "GitRepository",
+          "name": "enterprise-repo"
+        },
+        "path": "./clusters/production",
+        "prune": true,
+        "wait": true,
+        "postBuild": {
+          "substitute": {
+            "cluster_name": "production-cluster",
+            "region": "us-west-2"
+          },
+          "substituteFrom": [
+            {
+              "kind": "ConfigMap",
+              "name": "cluster-config"
+            },
+            {
+              "kind": "Secret",
+              "name": "cluster-secrets"
+            }
+          ]
+        },
+        "healthChecks": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "enterprise-ai",
+            "namespace": "production"
+          }
+        ],
+        "dependsOn": [
+          {
+            "name": "infrastructure",
+            "namespace": "flux-system"
+          }
+        ],
+        "validation": "server",
+        "force": false
+      }
+    }
+  },
+  "progressive_delivery": {
+    "canary": {
+      "apiVersion": "flagger.app/v1beta1",
+      "kind": "Canary",
+      "metadata": {
+        "name": "enterprise-ai",
+        "namespace": "production"
+      },
+      "spec": {
+        "targetRef": {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "name": "enterprise-ai"
+        },
+        "progressDeadlineSeconds": 600,
+        "service": {
+          "port": 8090,
+          "targetPort": 8090,
+          "gateways": [
+            "public-gateway.istio-system.svc.cluster.local"
+          ],
+          "hosts": [
+            "api.enterprise.com"
+          ],
+          "trafficPolicy": {
+            "tls": {
+              "mode": "SIMPLE"
+            }
+          },
+          "retries": {
+            "attempts": 3,
+            "perTryTimeout": "10s",
+            "retryOn": "gateway-error,connect-failure,refused-stream"
+          }
+        },
+        "skipAnalysis": false,
+        "analysis": {
+          "interval": "1m",
+          "threshold": 10,
+          "maxWeight": 50,
+          "stepWeight": 5,
+          "stepWeights": [
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            40,
+            50
+          ],
+          "stepWeightPromotion": 30,
+          "metrics": [
+            {
+              "name": "request-success-rate",
+              "templateRef": {
+                "name": "success-rate",
+                "namespace": "flagger-system"
+              },
+              "thresholdRange": {
+                "min": 99
+              },
+              "interval": "30s"
+            },
+            {
+              "name": "request-duration",
+              "templateRef": {
+                "name": "latency",
+                "namespace": "flagger-system"
+              },
+              "thresholdRange": {
+                "max": 500
+              },
+              "interval": "30s"
+            }
+          ],
+          "webhooks": [
+            {
+              "name": "load-test",
+              "url": "http://flagger-loadtester.test/",
+              "timeout": "5s",
+              "metadata": {
+                "cmd": "hey -z 1m -q 10 -c 2 http://enterprise-ai-canary.production:8090/"
+              }
+            },
+            {
+              "name": "acceptance-test",
+              "type": "pre-rollout",
+              "url": "http://flagger-loadtester.test/",
+              "timeout": "30s",
+              "metadata": {
+                "type": "bash",
+                "cmd": "curl -sd \"test\" http://enterprise-ai-canary:8090/health | grep \"healthy\""
+              }
+            }
+          ],
+          "alerts": [
+            {
+              "name": "slack",
+              "severity": "info",
+              "providerRef": {
+                "name": "slack",
+                "namespace": "flagger-system"
+              }
+            }
+          ]
+        },
+        "autoscalerRef": {
+          "apiVersion": "autoscaling/v2",
+          "kind": "HorizontalPodAutoscaler",
+          "name": "enterprise-ai"
+        }
+      }
+    }
+  },
+  "service_mesh": {
+    "virtualService": {
+      "apiVersion": "networking.istio.io/v1beta1",
+      "kind": "VirtualService",
+      "metadata": {
+        "name": "enterprise-ai",
+        "namespace": "production"
+      },
+      "spec": {
+        "hosts": [
+          "enterprise-ai.production.svc.cluster.local"
+        ],
+        "http": [
+          {
+            "match": [
+              {
+                "headers": {
+                  "x-canary": {
+                    "exact": "true"
+                  }
+                }
+              }
+            ],
+            "route": [
+              {
+                "destination": {
+                  "host": "enterprise-ai-canary",
+                  "port": {
+                    "number": 8090
+                  }
+                },
+                "weight": 100
+              }
+            ]
+          },
+          {
+            "route": [
+              {
+                "destination": {
+                  "host": "enterprise-ai-primary",
+                  "port": {
+                    "number": 8090
+                  }
+                },
+                "weight": 100
+              }
+            ],
+            "timeout": "30s",
+            "retries": {
+              "attempts": 3,
+              "perTryTimeout": "10s"
+            }
+          }
+        ]
+      }
+    },
+    "destinationRule": {
+      "apiVersion": "networking.istio.io/v1beta1",
+      "kind": "DestinationRule",
+      "metadata": {
+        "name": "enterprise-ai",
+        "namespace": "production"
+      },
+      "spec": {
+        "host": "enterprise-ai.production.svc.cluster.local",
+        "trafficPolicy": {
+          "connectionPool": {
+            "tcp": {
+              "maxConnections": 100
+            },
+            "http": {
+              "http1MaxPendingRequests": 100,
+              "http2MaxRequests": 100,
+              "maxRequestsPerConnection": 2
+            }
+          },
+          "loadBalancer": {
+            "simple": "LEAST_REQUEST"
+          },
+          "outlierDetection": {
+            "consecutiveErrors": 5,
+            "interval": "30s",
+            "baseEjectionTime": "30s",
+            "maxEjectionPercent": 50,
+            "minHealthPercent": 30,
+            "splitExternalLocalOriginErrors": true
+          },
+          "tls": {
+            "mode": "ISTIO_MUTUAL"
+          }
+        },
+        "subsets": [
+          {
+            "name": "primary",
+            "labels": {
+              "version": "stable"
+            }
+          },
+          {
+            "name": "canary",
+            "labels": {
+              "version": "canary"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "infrastructure": {
+    "terraform": "\nterraform {\n  required_version = \">= 1.5.0\"\n  \n  required_providers {\n    google = {\n      source  = \"hashicorp/google\"\n      version = \"~> 5.0\"\n    }\n    azurerm = {\n      source  = \"hashicorp/azurerm\"\n      version = \"~> 3.0\"\n    }\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 5.0\"\n    }\n    kubernetes = {\n      source  = \"hashicorp/kubernetes\"\n      version = \"~> 2.23\"\n    }\n  }\n  \n  backend \"gcs\" {\n    bucket = \"enterprise-terraform-state\"\n    prefix = \"production/state\"\n  }\n}\n\n# Google GKE Cluster\nmodule \"gke_cluster\" {\n  source = \"./modules/gke\"\n  \n  project_id     = var.google_project_id\n  region         = \"us-central1\"\n  cluster_name   = \"enterprise-production-gke\"\n  \n  node_pools = [\n    {\n      name               = \"default-pool\"\n      machine_type       = \"n2-standard-8\"\n      min_count          = 3\n      max_count          = 20\n      disk_size_gb       = 100\n      disk_type          = \"pd-ssd\"\n      auto_repair        = true\n      auto_upgrade       = true\n      preemptible        = false\n      enable_secure_boot = true\n    }\n  ]\n  \n  features = {\n    workload_identity = true\n    binary_authorization = true\n    shielded_nodes = true\n    confidential_nodes = true\n    network_policy = true\n    vertical_pod_autoscaling = true\n    cluster_autoscaling = true\n  }\n}\n\n# Azure AKS Cluster\nmodule \"aks_cluster\" {\n  source = \"./modules/aks\"\n  \n  resource_group_name = azurerm_resource_group.main.name\n  location           = \"westus2\"\n  cluster_name       = \"enterprise-production-aks\"\n  \n  default_node_pool = {\n    name                = \"system\"\n    vm_size            = \"Standard_DS4_v2\"\n    node_count         = 3\n    enable_auto_scaling = true\n    min_count          = 3\n    max_count          = 10\n  }\n  \n  features = {\n    azure_policy_enabled = true\n    azure_ad_rbac_enabled = true\n    defender_enabled = true\n    key_vault_secrets_provider_enabled = true\n    workload_identity_enabled = true\n  }\n}\n\n# AWS EKS Cluster\nmodule \"eks_cluster\" {\n  source = \"./modules/eks\"\n  \n  cluster_name    = \"enterprise-production-eks\"\n  cluster_version = \"1.28\"\n  region         = \"us-west-2\"\n  \n  node_groups = {\n    main = {\n      instance_types = [\"m5.2xlarge\"]\n      min_size      = 3\n      max_size      = 20\n      desired_size  = 5\n      \n      labels = {\n        Environment = \"production\"\n        Tier        = \"backend\"\n      }\n    }\n  }\n  \n  features = {\n    enable_irsa = true\n    enable_ssm = true\n    enable_cluster_autoscaler = true\n    enable_metrics_server = true\n    enable_aws_load_balancer_controller = true\n  }\n}\n\n# Anthos Config Management for all clusters\nresource \"google_gke_hub_membership\" \"clusters\" {\n  for_each = {\n    gke = module.gke_cluster.cluster_endpoint\n    aks = module.aks_cluster.cluster_endpoint\n    eks = module.eks_cluster.cluster_endpoint\n  }\n  \n  membership_id = each.key\n  endpoint {\n    gke_cluster {\n      resource_link = each.value\n    }\n  }\n}\n\n# Output endpoints\noutput \"cluster_endpoints\" {\n  value = {\n    gke = module.gke_cluster.endpoint\n    aks = module.aks_cluster.endpoint\n    eks = module.eks_cluster.endpoint\n  }\n  sensitive = true\n}\n"
+  },
+  "deployment_strategy": {
+    "type": "progressive_canary",
+    "stages": [
+      {
+        "name": "dev",
+        "auto_promote": true,
+        "duration": "10m"
+      },
+      {
+        "name": "staging",
+        "auto_promote": true,
+        "duration": "30m"
+      },
+      {
+        "name": "canary",
+        "auto_promote": false,
+        "traffic": "5%"
+      },
+      {
+        "name": "production",
+        "auto_promote": false,
+        "traffic": "100%"
+      }
+    ],
+    "rollback": {
+      "automatic": true,
+      "on_failure_threshold": 0.01,
+      "on_latency_threshold": 500
+    }
+  },
+  "observability": {
+    "metrics": [
+      "prometheus",
+      "datadog",
+      "new-relic"
+    ],
+    "tracing": [
+      "jaeger",
+      "zipkin",
+      "gcp-trace"
+    ],
+    "logging": [
+      "fluentd",
+      "elasticsearch",
+      "stackdriver"
+    ],
+    "dashboards": [
+      "grafana",
+      "datadog",
+      "new-relic"
+    ]
+  },
+  "security": {
+    "scanning": [
+      "trivy",
+      "snyk",
+      "twistlock"
+    ],
+    "policies": [
+      "opa-gatekeeper",
+      "kyverno",
+      "polaris"
+    ],
+    "secrets": [
+      "sealed-secrets",
+      "vault",
+      "google-secret-manager"
+    ],
+    "compliance": [
+      "cis-benchmarks",
+      "pci-dss",
+      "hipaa"
+    ]
+  }
+}

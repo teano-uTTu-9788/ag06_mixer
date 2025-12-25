@@ -1,0 +1,447 @@
+{
+  "passed": 88,
+  "failed": 0,
+  "percentage": 100.0,
+  "results": [
+    [
+      1,
+      "MixerConfiguration.swift exists",
+      "\u2705 PASS"
+    ],
+    [
+      2,
+      "MixerConfiguration struct defined",
+      "\u2705 PASS"
+    ],
+    [
+      3,
+      "SubscriptionTier enum defined",
+      "\u2705 PASS"
+    ],
+    [
+      4,
+      "BatteryMode enum defined",
+      "\u2705 PASS"
+    ],
+    [
+      5,
+      "AudioMetrics struct defined",
+      "\u2705 PASS"
+    ],
+    [
+      6,
+      "MixerSettings struct defined",
+      "\u2705 PASS"
+    ],
+    [
+      7,
+      "ConnectionStatus struct defined",
+      "\u2705 PASS"
+    ],
+    [
+      8,
+      "MixerError enum defined",
+      "\u2705 PASS"
+    ],
+    [
+      9,
+      "MixerService.swift exists",
+      "\u2705 PASS"
+    ],
+    [
+      10,
+      "MixerService class defined",
+      "\u2705 PASS"
+    ],
+    [
+      11,
+      "@Published audioMetrics property",
+      "\u2705 PASS"
+    ],
+    [
+      12,
+      "startMixer() function defined",
+      "\u2705 PASS"
+    ],
+    [
+      13,
+      "stopMixer() function defined",
+      "\u2705 PASS"
+    ],
+    [
+      14,
+      "updateSettings() function defined",
+      "\u2705 PASS"
+    ],
+    [
+      15,
+      "testConnection() function defined",
+      "\u2705 PASS"
+    ],
+    [
+      16,
+      "enterBackgroundMode() defined",
+      "\u2705 PASS"
+    ],
+    [
+      17,
+      "enterForegroundMode() defined",
+      "\u2705 PASS"
+    ],
+    [
+      18,
+      "Network monitoring setup",
+      "\u2705 PASS"
+    ],
+    [
+      19,
+      "URLSession configuration",
+      "\u2705 PASS"
+    ],
+    [
+      20,
+      "checkSubscriptionLimits() defined",
+      "\u2705 PASS"
+    ],
+    [
+      21,
+      "MixerControlView.swift exists",
+      "\u2705 PASS"
+    ],
+    [
+      22,
+      "MixerSettingsView.swift exists",
+      "\u2705 PASS"
+    ],
+    [
+      23,
+      "SubscriptionView.swift exists",
+      "\u2705 PASS"
+    ],
+    [
+      24,
+      "MixerControlView struct defined",
+      "\u2705 PASS"
+    ],
+    [
+      25,
+      "AudioMeter component defined",
+      "\u2705 PASS"
+    ],
+    [
+      26,
+      "ControlSlider component defined",
+      "\u2705 PASS"
+    ],
+    [
+      27,
+      "StatusIndicator component defined",
+      "\u2705 PASS"
+    ],
+    [
+      28,
+      "DeviceRow component defined",
+      "\u2705 PASS"
+    ],
+    [
+      29,
+      "SubscriptionLockedMeter defined",
+      "\u2705 PASS"
+    ],
+    [
+      30,
+      "startRealTimeUpdates() defined",
+      "\u2705 PASS"
+    ],
+    [
+      31,
+      "SubscriptionView struct defined",
+      "\u2705 PASS"
+    ],
+    [
+      32,
+      "SubscriptionTierCard defined",
+      "\u2705 PASS"
+    ],
+    [
+      33,
+      "FeatureRow component defined",
+      "\u2705 PASS"
+    ],
+    [
+      34,
+      "PurchaseFlowView defined",
+      "\u2705 PASS"
+    ],
+    [
+      35,
+      "MobileAG06App.swift exists",
+      "\u2705 PASS"
+    ],
+    [
+      36,
+      "ContentView struct defined",
+      "\u2705 PASS"
+    ],
+    [
+      37,
+      "/api/status endpoint used",
+      "\u2705 PASS"
+    ],
+    [
+      38,
+      "/api/start endpoint used",
+      "\u2705 PASS"
+    ],
+    [
+      39,
+      "/api/stop endpoint used",
+      "\u2705 PASS"
+    ],
+    [
+      40,
+      "/api/config endpoint used",
+      "\u2705 PASS"
+    ],
+    [
+      41,
+      "/healthz endpoint used",
+      "\u2705 PASS"
+    ],
+    [
+      42,
+      "JSONDecoder usage",
+      "\u2705 PASS"
+    ],
+    [
+      43,
+      "JSONSerialization usage",
+      "\u2705 PASS"
+    ],
+    [
+      44,
+      "URLRequest configuration",
+      "\u2705 PASS"
+    ],
+    [
+      45,
+      "Content-Type header set",
+      "\u2705 PASS"
+    ],
+    [
+      46,
+      "MixerError handling",
+      "\u2705 PASS"
+    ],
+    [
+      47,
+      "async/await pattern used",
+      "\u2705 PASS"
+    ],
+    [
+      48,
+      "HTTPURLResponse validation",
+      "\u2705 PASS"
+    ],
+    [
+      49,
+      "Timer-based metrics updates",
+      "\u2705 PASS"
+    ],
+    [
+      50,
+      "Update interval based on battery mode",
+      "\u2705 PASS"
+    ],
+    [
+      51,
+      "Log rotation implemented",
+      "\u2705 PASS"
+    ],
+    [
+      52,
+      "Background mode reduces updates",
+      "\u2705 PASS"
+    ],
+    [
+      53,
+      "Combine framework used",
+      "\u2705 PASS"
+    ],
+    [
+      54,
+      "@MainActor for UI updates",
+      "\u2705 PASS"
+    ],
+    [
+      55,
+      "TaskGroup for concurrent ops",
+      "\u2705 PASS"
+    ],
+    [
+      56,
+      "Weak self references",
+      "\u2705 PASS"
+    ],
+    [
+      57,
+      "Request timeout configured",
+      "\u2705 PASS"
+    ],
+    [
+      58,
+      "Set<AnyCancellable> for subscriptions",
+      "\u2705 PASS"
+    ],
+    [
+      59,
+      "API key property in configuration",
+      "\u2705 PASS"
+    ],
+    [
+      60,
+      "HTTPS URL support",
+      "\u2705 PASS"
+    ],
+    [
+      61,
+      "Settings validation",
+      "\u2705 PASS"
+    ],
+    [
+      62,
+      "Error types defined",
+      "\u2705 PASS"
+    ],
+    [
+      63,
+      "SecureField for sensitive input",
+      "\u2705 PASS"
+    ],
+    [
+      64,
+      "No hardcoded secrets",
+      "\u2705 PASS"
+    ],
+    [
+      65,
+      "Network error handling",
+      "\u2705 PASS"
+    ],
+    [
+      66,
+      "Timeout protection",
+      "\u2705 PASS"
+    ],
+    [
+      67,
+      "@main app entry point",
+      "\u2705 PASS"
+    ],
+    [
+      68,
+      "@StateObject for services",
+      "\u2705 PASS"
+    ],
+    [
+      69,
+      "@EnvironmentObject usage",
+      "\u2705 PASS"
+    ],
+    [
+      70,
+      "TabView for navigation",
+      "\u2705 PASS"
+    ],
+    [
+      71,
+      "Background notification handling",
+      "\u2705 PASS"
+    ],
+    [
+      72,
+      "Foreground notification handling",
+      "\u2705 PASS"
+    ],
+    [
+      73,
+      "Settings tab included",
+      "\u2705 PASS"
+    ],
+    [
+      74,
+      "Mixer tab included",
+      "\u2705 PASS"
+    ],
+    [
+      75,
+      "ConfigurationManager integrated",
+      "\u2705 PASS"
+    ],
+    [
+      76,
+      "AutomationService integrated",
+      "\u2705 PASS"
+    ],
+    [
+      77,
+      "AboutView defined",
+      "\u2705 PASS"
+    ],
+    [
+      78,
+      "NavigationView used",
+      "\u2705 PASS"
+    ],
+    [
+      79,
+      "MobileAG06Tests.swift exists",
+      "\u2705 PASS"
+    ],
+    [
+      80,
+      "XCTest framework imported",
+      "\u2705 PASS"
+    ],
+    [
+      81,
+      "MobileAG06Tests class defined",
+      "\u2705 PASS"
+    ],
+    [
+      82,
+      "setUp() method defined",
+      "\u2705 PASS"
+    ],
+    [
+      83,
+      "tearDown() method defined",
+      "\u2705 PASS"
+    ],
+    [
+      84,
+      "Exactly 88 test methods",
+      "\u2705 PASS"
+    ],
+    [
+      85,
+      "Async test support",
+      "\u2705 PASS"
+    ],
+    [
+      86,
+      "XCTestExpectation for async",
+      "\u2705 PASS"
+    ],
+    [
+      87,
+      "Performance tests included",
+      "\u2705 PASS"
+    ],
+    [
+      88,
+      "test_88_comprehensive_validation exists",
+      "\u2705 PASS"
+    ]
+  ]
+}

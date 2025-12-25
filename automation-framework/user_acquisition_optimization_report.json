@@ -1,0 +1,106 @@
+{
+  "timestamp": "2025-08-24T21:35:05.550079",
+  "performance_analysis": [
+    {
+      "channel": "Apple Search Ads",
+      "spend": 4313.956597611865,
+      "users": 1564,
+      "cac": 2.7570338881490137,
+      "ltv_cac_ratio": 56.58254716075816,
+      "roas": 5.205179503928276,
+      "scalability": "high"
+    },
+    {
+      "channel": "Google Ads (UAC)",
+      "spend": 3577.1581688933807,
+      "users": 719,
+      "cac": 4.970048206970222,
+      "ltv_cac_ratio": 31.388025528850708,
+      "roas": 2.614969007460598,
+      "scalability": "high"
+    },
+    {
+      "channel": "Facebook/Instagram",
+      "spend": 2780.4928199208757,
+      "users": 400,
+      "cac": 6.9362013277366925,
+      "ltv_cac_ratio": 22.490696654980653,
+      "roas": 1.5597831198094108,
+      "scalability": "high"
+    },
+    {
+      "channel": "TikTok Ads",
+      "spend": 5121.188011121636,
+      "users": 2751,
+      "cac": 1.8612944212607505,
+      "ltv_cac_ratio": 83.81264039588814,
+      "roas": 9.413500368060525,
+      "scalability": "high"
+    },
+    {
+      "channel": "YouTube Pre-roll",
+      "spend": 1904.2293087984651,
+      "users": 185,
+      "cac": 10.268816980019606,
+      "ltv_cac_ratio": 15.191623368449806,
+      "roas": 0.8483493416052884,
+      "scalability": "high"
+    }
+  ],
+  "optimizations": [
+    {
+      "channel": "Apple Search Ads",
+      "action": "MAINTAIN",
+      "old_budget": 5000,
+      "new_budget": 4666.297619593433,
+      "change": -333.7023804065666,
+      "change_percentage": -6.674047608131333
+    },
+    {
+      "channel": "Google Ads (UAC)",
+      "action": "MAINTAIN",
+      "old_budget": 4000,
+      "new_budget": 4059.0498637618166,
+      "change": 59.049863761816596,
+      "change_percentage": 1.476246594045415
+    },
+    {
+      "channel": "Facebook/Instagram",
+      "action": "MAINTAIN",
+      "old_budget": 3000,
+      "new_budget": 3473.5407508028024,
+      "change": 473.54075080280245,
+      "change_percentage": 15.784691693426748
+    },
+    {
+      "channel": "TikTok Ads",
+      "action": "SCALE DOWN",
+      "old_budget": 6000,
+      "new_budget": 4867.404126225253,
+      "change": -1132.595873774747,
+      "change_percentage": -18.87659789624578
+    },
+    {
+      "channel": "YouTube Pre-roll",
+      "action": "MAINTAIN",
+      "old_budget": 2000,
+      "new_budget": 2933.7076396166967,
+      "change": 933.7076396166967,
+      "change_percentage": 46.68538198083483
+    }
+  ],
+  "forecast": {
+    "total_budget": 20000.0,
+    "blended_cac": 4.335557953729734,
+    "expected_users": 5026,
+    "expected_revenue": 66644.76000000001,
+    "roi": 233.22380000000004
+  },
+  "new_allocations": {
+    "Apple Search Ads": 4666.297619593433,
+    "Google Ads (UAC)": 4059.0498637618166,
+    "Facebook/Instagram": 3473.5407508028024,
+    "TikTok Ads": 4867.404126225253,
+    "YouTube Pre-roll": 2933.7076396166967
+  }
+}

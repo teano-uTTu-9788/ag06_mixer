@@ -1,0 +1,14 @@
+{
+  "aioke_6F4gMU1CM6cEpgacWI6L-CiQ46zOp6dHI_ieFwfV6II": {
+    "user_id": "demo",
+    "api_key_hash": "2731a9950e79f2d9c6239c00e3a86c8e04f3ee3b357f0d0764226f9309adf65a",
+    "permissions": [
+      "read",
+      "write"
+    ],
+    "created_at": "2025-08-25T11:44:55.866350",
+    "last_used": "2025-08-25T13:15:05.584540",
+    "usage_count": 1,
+    "active": true
+  }
+}

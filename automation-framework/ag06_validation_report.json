@@ -1,0 +1,22 @@
+{
+  "validation_timestamp": "2025-08-23T18:41:23.768704",
+  "device_info": {
+    "index": 1,
+    "name": "AG06/AG03",
+    "channels": 2,
+    "sample_rate": 44100.0,
+    "hostapi": 0
+  },
+  "test_results": {
+    "timestamp": "2025-08-23T18:41:23.768443",
+    "device_index": 1,
+    "duration": 15,
+    "detections": 0,
+    "detection_rate": 0.0,
+    "classifications": {
+      "voice": 0,
+      "music": 0,
+      "ambient": 0,
+      "silent": 0
+    },
+    "average_level": 

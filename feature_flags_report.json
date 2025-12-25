@@ -1,0 +1,331 @@
+{
+  "dashboard_data": {
+    "dashboard_timestamp": "2025-08-25T01:25:02.123573",
+    "flag_statistics": {
+      "total_flags": 5,
+      "enabled_flags": 5,
+      "disabled_flags": 0
+    },
+    "rollout_strategies": {
+      "all_on": 0,
+      "all_off": 0,
+      "percentage": 2,
+      "user_targeting": 1,
+      "segment": 0,
+      "canary": 1,
+      "geographic": 1
+    },
+    "evaluation_statistics": {
+      "total_evaluations": 25,
+      "unique_users": 5,
+      "cache_hit_rate": 85.0
+    },
+    "experiment_statistics": {
+      "active_experiments": 2,
+      "total_experiments": 2
+    },
+    "flags_overview": [
+      {
+        "name": "ml_analytics_v2",
+        "type": "boolean",
+        "strategy": "percentage",
+        "percentage": 25.0,
+        "enabled": true,
+        "last_updated": "2025-08-25T01:25:02.120756"
+      },
+      {
+        "name": "dashboard_ui_v3",
+        "type": "multivariate",
+        "strategy": "canary",
+        "percentage": 10.0,
+        "enabled": true,
+        "last_updated": "2025-08-25T01:25:02.120762"
+      },
+      {
+        "name": "enhanced_rate_limiting",
+        "type": "percentage",
+        "strategy": "geographic",
+        "percentage": 50.0,
+        "enabled": true,
+        "last_updated": "2025-08-25T01:25:02.120766"
+      },
+      {
+        "name": "workflow_circuit_breaker",
+        "type": "boolean",
+        "strategy": "percentage",
+        "percentage": 75.0,
+        "enabled": true,
+        "last_updated": "2025-08-25T01:25:02.120768"
+      },
+      {
+        "name": "realtime_notifications",
+        "type": "multivariate",
+        "strategy": "user_targeting",
+        "percentage": 5.0,
+        "enabled": true,
+        "last_updated": "2025-08-25T01:25:02.120771"
+      }
+    ]
+  },
+  "user_flag_assignments": {
+    "user_001": {
+      "ml_analytics_v2": true,
+      "dashboard_ui_v3": "current",
+      "enhanced_rate_limiting": 2000,
+      "workflow_circuit_breaker": true,
+      "realtime_notifications": "disabled"
+    },
+    "user_002": {
+      "ml_analytics_v2": false,
+      "dashboard_ui_v3": "current",
+      "enhanced_rate_limiting": 2000,
+      "workflow_circuit_breaker": true,
+      "realtime_notifications": "disabled"
+    },
+    "user_003": {
+      "ml_analytics_v2": false,
+      "dashboard_ui_v3": "current",
+      "enhanced_rate_limiting": 1000,
+      "workflow_circuit_breaker": true,
+      "realtime_notifications": "disabled"
+    },
+    "user_004": {
+      "ml_analytics_v2": true,
+      "dashboard_ui_v3": "current",
+      "enhanced_rate_limiting": 1000,
+      "workflow_circuit_breaker": false,
+      "realtime_notifications": "disabled"
+    },
+    "user_005": {
+      "ml_analytics_v2": true,
+      "dashboard_ui_v3": "current",
+      "enhanced_rate_limiting": 1000,
+      "workflow_circuit_breaker": true,
+      "realtime_notifications": "disabled"
+    }
+  },
+  "experiment_results": {
+    "ml_analytics_performance": {
+      "experiment_name": "ml_analytics_performance",
+      "status": "running",
+      "start_date": "2025-08-18T01:25:02.120779",
+      "end_date": "2025-09-15T01:25:02.120783",
+      "total_events": 3,
+      "unique_users": 3,
+      "variants": {
+        "control": {
+          "users": 1,
+          "events": 6,
+          "metrics": {
+            "prediction_accuracy": 0.8435228326365648,
+            "response_time": 0.6158876129705173,
+            "user_engagement": 0.7178704808689779
+          }
+        },
+        "treatment": {
+          "users": 1,
+          "events": 2,
+          "metrics": {
+            "prediction_accuracy": 1.0,
+            "response_time": 0.6155624745351596,
+            "user_engagement": 0.716840832719984
+          }
+        }
+      },
+      "hypothesis": "New ML analytics engine improves prediction accuracy by 15%",
+      "success_metrics": [
+        "prediction_accuracy",
+        "response_time",
+        "user_engagement"
+      ],
+      "statistical_significance": 0.95,
+      "minimum_sample_size": 5000,
+      "analysis_timestamp": "2025-08-25T01:25:02.123684"
+    },
+    "dashboard_ui_conversion": {
+      "experiment_name": "dashboard_ui_conversion",
+      "status": "running",
+      "start_date": "2025-08-11T01:25:02.120971",
+      "end_date": "2025-09-08T01:25:02.120988",
+      "total_events": 3,
+      "unique_users": 3,
+      "variants": {
+        "current_ui": {
+          "users": 0,
+          "events": 0,
+          "metrics": {
+            "task_completion_rate": 0.6911083470100532,
+            "time_on_page": 0.7175310153713617,
+            "feature_adoption": 0.7121490906370095
+          }
+        },
+        "modern_ui": {
+          "users": 0,
+          "events": 0,
+          "metrics": {
+            "task_completion_rate": 0.9481641394619961,
+            "time_on_page": 0.6634621211107627,
+            "feature_adoption": 0.6338858094460015
+          }
+        },
+        "dark_mode": {
+          "users": 0,
+          "events": 0,
+          "metrics": {
+            "task_completion_rate": 0.7262237774424776,
+            "time_on_page": 0.5886716314508265,
+            "feature_adoption": 0.8109162813786351
+          }
+        }
+      },
+      "hypothesis": "Modern UI design increases user task completion by 20%",
+      "success_metrics": [
+        "task_completion_rate",
+        "time_on_page",
+        "feature_adoption"
+      ],
+      "statistical_significance": 0.95,
+      "minimum_sample_size": 2000,
+      "analysis_timestamp": "2025-08-25T01:25:02.123699"
+    }
+  },
+  "flag_configurations": {
+    "ml_analytics_v2": {
+      "flag_name": "ml_analytics_v2",
+      "flag_type": "FeatureFlagType.BOOLEAN",
+      "default_value": false,
+      "description": "Enable enhanced ML analytics with advanced prediction models",
+      "rollout_strategy": "RolloutStrategy.PERCENTAGE_BASED",
+      "percentage": 25.0,
+      "rules": [
+        {
+          "condition": "user_type == 'premium'",
+          "value": true,
+          "priority": 1,
+          "description": "Always enable for premium users"
+        },
+        {
+          "condition": "segment == 'beta_testers'",
+          "value": true,
+          "priority": 2,
+          "description": "Enable for beta testing segment"
+        }
+      ],
+      "variants": {},
+      "segment_filters": {},
+      "geographic_filters": [],
+      "enabled": true,
+      "created_at": "2025-08-25 01:25:02.120695",
+      "updated_at": "2025-08-25 01:25:02.120756"
+    },
+    "dashboard_ui_v3": {
+      "flag_name": "dashboard_ui_v3",
+      "flag_type": "FeatureFlagType.MULTIVARIATE",
+      "default_value": "current",
+      "description": "Dashboard UI redesign with multiple variants",
+      "rollout_strategy": "RolloutStrategy.CANARY",
+      "percentage": 10.0,
+      "rules": [],
+      "variants": {
+        "current": {
+          "ui_version": "v2",
+          "theme": "classic"
+        },
+        "modern": {
+          "ui_version": "v3",
+          "theme": "modern"
+        },
+        "dark": {
+          "ui_version": "v3",
+          "theme": "dark_mode"
+        }
+      },
+      "segment_filters": {},
+      "geographic_filters": [],
+      "enabled": true,
+      "created_at": "2025-08-25 01:25:02.120762",
+      "updated_at": "2025-08-25 01:25:02.120762"
+    },
+    "enhanced_rate_limiting": {
+      "flag_name": "enhanced_rate_limiting",
+      "flag_type": "FeatureFlagType.PERCENTAGE",
+      "default_value": 1000,
+      "description": "Enhanced rate limiting with dynamic scaling",
+      "rollout_strategy": "RolloutStrategy.GEOGRAPHIC",
+      "percentage": 50.0,
+      "rules": [
+        {
+          "condition": "country in ['US', 'CA']",
+          "value": 2000,
+          "priority": 1,
+          "description": "Higher rate limits for North America"
+        }
+      ],
+      "variants": {},
+      "segment_filters": {},
+      "geographic_filters": [
+        "US",
+        "CA",
+        "EU"
+      ],
+      "enabled": true,
+      "created_at": "2025-08-25 01:25:02.120765",
+      "updated_at": "2025-08-25 01:25:02.120766"
+    },
+    "workflow_circuit_breaker": {
+      "flag_name": "workflow_circuit_breaker",
+      "flag_type": "FeatureFlagType.BOOLEAN",
+      "default_value": false,
+      "description": "Enable circuit breaker pattern for workflow execution",
+      "rollout_strategy": "RolloutStrategy.PERCENTAGE_BASED",
+      "percentage": 75.0,
+      "rules": [
+        {
+          "condition": "user_type == 'enterprise'",
+          "value": true,
+          "priority": 1,
+          "description": "Always enable for enterprise users"
+        }
+      ],
+      "variants": {},
+      "segment_filters": {},
+      "geographic_filters": [],
+      "enabled": true,
+      "created_at": "2025-08-25 01:25:02.120768",
+      "updated_at": "2025-08-25 01:25:02.120768"
+    },
+    "realtime_notifications": {
+      "flag_name": "realtime_notifications",
+      "flag_type": "FeatureFlagType.MULTIVARIATE",
+      "default_value": "disabled",
+      "description": "Real-time notifications system with WebSocket/SSE",
+      "rollout_strategy": "RolloutStrategy.USER_TARGETING",
+      "percentage": 5.0,
+      "rules": [],
+      "variants": {
+        "disabled": {
+          "enabled": false
+        },
+        "websocket": {
+          "enabled": true,
+          "transport": "websocket"
+        },
+        "sse": {
+          "enabled": true,
+          "transport": "server_sent_events"
+        }
+      },
+      "segment_filters": {
+        "segment": [
+          "beta_testers",
+          "early_adopters"
+        ]
+      },
+      "geographic_filters": [],
+      "enabled": true,
+      "created_at": "2025-08-25 01:25:02.120771",
+      "updated_at": "2025-08-25 01:25:02.120771"
+    }
+  },
+  "timestamp": "2025-08-25T01:25:02.124261"
+}

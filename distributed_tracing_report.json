@@ -1,0 +1,33 @@
+{
+  "service_config": {
+    "name": "ag06-workflow-engine",
+    "version": "1.0.0",
+    "environment": "production"
+  },
+  "workflow_results": [
+    {
+      "status": "error",
+      "error": "'NoneType' object has no attribute 'get_tracer'"
+    },
+    {
+      "status": "error",
+      "error": "'NoneType' object has no attribute 'get_tracer'"
+    },
+    {
+      "status": "error",
+      "error": "'NoneType' object has no attribute 'get_tracer'"
+    },
+    {
+      "status": "error",
+      "error": "'NoneType' object has no attribute 'get_tracer'"
+    },
+    {
+      "status": "error",
+      "error": "'NoneType' object has no attribute 'get_tracer'"
+    }
+  ],
+  "performance_analysis": {
+    "error": "No trace data available"
+  },
+  "timestamp": "2025-08-25T01:23:10.597197"
+}

@@ -1,0 +1,16 @@
+application_backup:
+  frequency: daily
+  include_logs: true
+  retention_days: 7
+database_backup:
+  compression: true
+  encryption: true
+  frequency: hourly
+  retention_days: 30
+disaster_recovery:
+  backup_regions:
+  - us-west-2
+  - eu-west-1
+  enabled: true
+  rpo_minutes: 5
+  rto_minutes: 15

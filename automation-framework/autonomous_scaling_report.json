@@ -1,0 +1,55 @@
+{
+  "timestamp": "2025-08-24T21:43:31.506853",
+  "decisions_made": 2,
+  "scaling_actions": [
+    {
+      "timestamp": "2025-08-24T21:43:31.005651",
+      "component": "servers",
+      "action": "scale_up",
+      "from": 3,
+      "to": 5,
+      "cost_impact": 500
+    },
+    {
+      "timestamp": "2025-08-24T21:43:31.506831",
+      "component": "worker_pools",
+      "action": "scale_up",
+      "from": 4,
+      "to": 6,
+      "cost_impact": 400
+    }
+  ],
+  "cost_impact": 900,
+  "current_state": {
+    "servers": {
+      "current": 5,
+      "max": 20,
+      "min": 2,
+      "cost_per_unit": 250
+    },
+    "databases": {
+      "current": 2,
+      "max": 10,
+      "min": 1,
+      "cost_per_unit": 500
+    },
+    "cdn_nodes": {
+      "current": 5,
+      "max": 50,
+      "min": 3,
+      "cost_per_unit": 100
+    },
+    "cache_instances": {
+      "current": 2,
+      "max": 10,
+      "min": 1,
+      "cost_per_unit": 150
+    },
+    "worker_pools": {
+      "current": 6,
+      "max": 20,
+      "min": 2,
+      "cost_per_unit": 200
+    }
+  }
+}

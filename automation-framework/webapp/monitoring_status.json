@@ -1,0 +1,147 @@
+{
+  "timestamp": "2025-08-25T13:20:50.292866",
+  "uptime": 11123.777256011963,
+  "services": {
+    "backend": {
+      "service": "backend",
+      "status": "healthy",
+      "response_time": 0.00655364990234375,
+      "timestamp": "2025-08-25 13:18:44.341905",
+      "message": "Service responding normally",
+      "details": {
+        "error_count": 0,
+        "processing": true,
+        "status": "healthy",
+        "total_events": 32611,
+        "uptime": 3478.343763113022
+      }
+    },
+    "frontend": {
+      "service": "frontend",
+      "status": "critical",
+      "response_time": 0.14536118507385254,
+      "timestamp": "2025-08-25 13:18:44.487335",
+      "message": "HTTP 401: Unauthorized",
+      "details": {}
+    }
+  },
+  "system_metrics": null,
+  "availability_24h": {
+    "backend": 76.875,
+    "frontend": 0.0
+  },
+  "recent_alerts": [
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:24:07.238251"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:29:09.447686"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:34:11.624265"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:39:14.071040"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:44:16.524293"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:49:29.443941"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:54:32.144738"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T12:59:34.223940"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T13:04:36.332587"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T13:09:40.886604"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T13:14:42.824295"
+    },
+    {
+      "level": "critical",
+      "metric": "service_health",
+      "service": "frontend",
+      "value": "critical",
+      "threshold": "healthy",
+      "message": "Service frontend is critical: HTTP 401: Unauthorized",
+      "timestamp": "2025-08-25T13:19:44.859769"
+    }
+  ],
+  "alert_summary": {
+    "critical": 12,
+    "warning": 0
+  }
+}

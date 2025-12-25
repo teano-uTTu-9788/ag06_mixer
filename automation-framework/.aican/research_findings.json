@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-08-23T18:27:16.435798",
+  "best_practices": {
+    "google": {
+      "real_time_processing": "WebRTC Audio Processing Library",
+      "latency_reduction": "ALSA/CoreAudio direct access",
+      "freq_analysis": "FFT with Hann windowing, 2048 samples",
+      "hardware_integration": "Audio Unit framework on macOS"
+    },
+    "meta": {
+      "buffer_management": "256-512 sample buffers for low latency",
+      "threading": "Dedicated audio thread with real-time priority",
+      "device_detection": "CoreAudio device enumeration",
+      "format_conversion": "Float32 native processing"
+    },
+    "spotify": {
+      "feature_extraction": "Mel-frequency cepstral coefficients",
+      "onset_detection": "Spectral flux with adaptive threshold",
+      "tempo_detection": "Autocorrelation-based BPM estimation",
+      "classification": "Machine learning for music/voice separation"
+    },
+    "apple": {
+      "audio_units": "Real-time processing with Audio Units",
+      "core_audio": "HAL (Hardware Abstraction Layer) direct access",
+      "buffer_optimization": "Ring buffers with atomic operations",
+      "thread_safety": "Real-time thread with elevated priority"
+    },
+    "adobe": {
+      "multi_threading": "Lock-free audio processing threads",
+      "dsp_optimization": "SIMD instructions for batch processing",
+      "plugin_architecture": "VST/AU plugin system integration",
+      "real_time_effects": "Zero-latency monitoring chains"
+    }
+  },
+  "ag06_specs": {
+    "sampling_rate": 48000,
+    "bit_depth": 24,
+    "channels": 2,
+    "buffer_size": 256,
+    "interface": "CoreAudio on macOS",
+    "device_name": "AG06/AG03",
+    "latency_target": "<10ms total"
+  },
+  "recommendations": {
+    "audio_api": "PyAudio with CoreAudio backend",
+    "processing_chain": [
+      "Direct hardware access via CoreAudio",
+      "Float32 sample format",
+      "Real-time FFT processing",
+      "64-band spectrum analysis",
+      "Adaptive threshold detection"
+    ],
+    "tools_needed": [
+      "PyAudio",
+      "numpy",
+      "scipy",
+      "sounddevice",
+      "librosa",
+      "aubio",
+      "pyobjc-core"
+    ]
+  },
+  "implementation_plan": {
+    "phase_1_setup": [
+      "Install required audio processing libraries",
+      "Configure CoreAudio device access",
+      "Implement AG06 device detection",
+      "Set up real-time audio buffers"
+    ],
+    "phase_2_audio_capture": [
+      "Create dedicated audio input thread",
+      "Implement circular buffer system",
+      "Add real-time level monitoring",
+      "Configure optimal buffer sizes"
+    ],
+    "phase_3_analysis": [
+      "Implement FFT-based spectrum analysis",
+      "Add 64-band frequency decomposition",
+      "Create music vs voice classification",
+      "Add onset detection algorithms"
+    ],
+    "phase_4_integration": [
+      "Connect to existing Flask API",
+      "Replace simulated data with real input",
+      "Add WebSocket real-time updates",
+      "Implement error handling and recovery"
+    ]
+  }
+}

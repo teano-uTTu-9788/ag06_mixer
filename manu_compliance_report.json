@@ -1,0 +1,120 @@
+{
+  "timestamp": "2025-08-19T14:22:48.714735",
+  "overall_score": 63.67,
+  "production_ready": false,
+  "categories": {
+    "security": {
+      "score": 66.66666666666666,
+      "passed": 4,
+      "failed": 2,
+      "failed_checks": [
+        "encryption_active",
+        "secrets_management"
+      ],
+      "critical": true,
+      "weight": 0.25
+    },
+    "observability": {
+      "score": 40.0,
+      "passed": 2,
+      "failed": 3,
+      "failed_checks": [
+        "structured_logging",
+        "distributed_tracing",
+        "monitoring_dashboards"
+      ],
+      "critical": true,
+      "weight": 0.2
+    },
+    "reliability": {
+      "score": 60.0,
+      "passed": 3,
+      "failed": 2,
+      "failed_checks": [
+        "circuit_breakers",
+        "timeout_management"
+      ],
+      "critical": true,
+      "weight": 0.2
+    },
+    "performance": {
+      "score": 100.0,
+      "passed": 5,
+      "failed": 0,
+      "failed_checks": [],
+      "critical": false,
+      "weight": 0.15
+    },
+    "architecture": {
+      "score": 80.0,
+      "passed": 4,
+      "failed": 1,
+      "failed_checks": [
+        "testing_coverage"
+      ],
+      "critical": false,
+      "weight": 0.1
+    },
+    "operations": {
+      "score": 40.0,
+      "passed": 2,
+      "failed": 3,
+      "failed_checks": [
+        "configuration_management",
+        "rollback_capability",
+        "monitoring_alerts"
+      ],
+      "critical": true,
+      "weight": 0.1
+    }
+  },
+  "critical_issues": [
+    {
+      "category": "security",
+      "score": 66.66666666666666,
+      "failed_checks": [
+        "encryption_active",
+        "secrets_management"
+      ]
+    },
+    {
+      "category": "observability",
+      "score": 40.0,
+      "failed_checks": [
+        "structured_logging",
+        "distributed_tracing",
+        "monitoring_dashboards"
+      ]
+    },
+    {
+      "category": "reliability",
+      "score": 60.0,
+      "failed_checks": [
+        "circuit_breakers",
+        "timeout_management"
+      ]
+    },
+    {
+      "category": "operations",
+      "score": 40.0,
+      "failed_checks": [
+        "configuration_management",
+        "rollback_capability",
+        "monitoring_alerts"
+      ]
+    }
+  ],
+  "recommendations": [
+    "[CRITICAL] Implement encryption_active in security",
+    "[CRITICAL] Implement secrets_management in security",
+    "[CRITICAL] Implement structured_logging in observability",
+    "[CRITICAL] Implement distributed_tracing in observability",
+    "[CRITICAL] Implement monitoring_dashboards in observability",
+    "[CRITICAL] Implement circuit_breakers in reliability",
+    "[CRITICAL] Implement timeout_management in reliability",
+    "[CRITICAL] Implement configuration_management in operations",
+    "[CRITICAL] Implement rollback_capability in operations",
+    "[CRITICAL] Implement monitoring_alerts in operations",
+    "[OPTIONAL] Implement testing_coverage in architecture"
+  ]
+}

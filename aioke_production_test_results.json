@@ -1,0 +1,357 @@
+{
+  "total": 92,
+  "passed": 47,
+  "failed": 45,
+  "percentage": 51.08695652173913,
+  "results": [
+    {
+      "name": "Liveness endpoint accessible",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Liveness returns JSON",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Liveness has status field",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Liveness status is healthy",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Readiness endpoint accessible",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Readiness returns JSON",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Readiness has checks field",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Startup endpoint accessible",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Startup test 1",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Startup test 2",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Startup test 3",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Status endpoint accessible",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Status returns JSON",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Status test 1",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Status test 2",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Status test 3",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Status test 4",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Status test 5",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Process endpoint accessible",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Process returns JSON",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Process test 1",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Process test 2",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Process test 3",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features endpoint accessible",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features test 1",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features test 2",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features test 3",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Metrics endpoint accessible",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Metrics returns Prometheus format",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Metrics contains request counter",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Stereo audio shape valid",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Mono audio shape valid",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Stereo processing succeeds",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Stereo returns processed data",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Stereo processing maintains shape",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Mono processing succeeds",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Vocal removal algorithm present",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Phase cancellation implemented",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Quality metrics tracked",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Audio devices detected",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Sample rate configured",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Invalid audio handled gracefully",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Invalid audio handled gracefully",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Error response has message",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features for user1",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features for user2",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features for user3",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Features for anonymous",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Feature flags consistent for same user",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Feature test 1",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Feature test 2",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Feature test 3",
+      "passed": false,
+      "details": "",
+      "status": "\u001b[91m\u274c FAIL\u001b[0m"
+    },
+    {
+      "name": "Health latency <100ms (1.8ms)",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Health latency <100ms (2.7ms)",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Health latency <100ms (2.1ms)",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Health latency <100ms (2.2ms)",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Health latency <100ms (1.6ms)",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "Throughput >10 RPS (505.1 RPS)",
+      "passed": true,
+      "details": "",
+      "status": "\u001b[92m\u2705 PASS\u001b[0m"
+    },
+    {
+      "name": "P50 latency <50ms (2.1ms)",
+      "passed": 

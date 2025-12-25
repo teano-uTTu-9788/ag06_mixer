@@ -1,0 +1,177 @@
+{
+  "demo_summary": {
+    "processing_time_seconds": 3.879068,
+    "alerts_created": 3,
+    "metric_tiles_updated": 4,
+    "dashboard_url": "http://localhost:8081"
+  },
+  "dashboard_status": {
+    "dashboard_id": "dashboard_001",
+    "status": "operational",
+    "port": 8081,
+    "active_connections": 0,
+    "total_alerts": 4,
+    "metric_tiles": 4,
+    "websocket_support": true,
+    "config": {
+      "max_alerts": 100,
+      "max_sparkline_points": 50,
+      "auto_refresh_enabled": true,
+      "theme": "dark",
+      "show_debug_info": false
+    },
+    "uptime_seconds": -1e-06
+  },
+  "current_data": {
+    "metrics": {
+      "system_health": "Healthy",
+      "active_workflows": "0",
+      "cpu_usage": "100.0%",
+      "memory_usage": "83.7%",
+      "ml_predictions": "0",
+      "response_time": "124ms"
+    },
+    "metric_tiles": {
+      "system_health": {
+        "tile_id": "system_health",
+        "title": "System Health",
+        "value": "98.5%",
+        "change_percent": 0.2,
+        "trend": "up",
+        "status": "good",
+        "sparkline_data": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          98.5
+        ],
+        "last_updated": "2025-08-25 00:51:17.666827"
+      },
+      "active_workflows": {
+        "tile_id": "active_workflows",
+        "title": "Active Workflows",
+        "value": "7",
+        "change_percent": 16.7,
+        "trend": "up",
+        "status": "good",
+        "sparkline_data": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          7.0
+        ],
+        "last_updated": "2025-08-25 00:51:17.666844"
+      },
+      "cpu_usage": {
+        "tile_id": "cpu_usage",
+        "title": "CPU Usage",
+        "value": "100.0%",
+        "change_percent": 12.5,
+        "trend": "up",
+        "status": "good",
+        "sparkline_data": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          45.0,
+          0.0
+        ],
+        "last_updated": "2025-08-25 00:51:17.768517"
+      },
+      "memory_usage": {
+        "tile_id": "memory_usage",
+        "title": "Memory Usage",
+        "value": "83.7%",
+        "change_percent": -3.2,
+        "trend": "down",
+        "status": "good",
+        "sparkline_data": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          67.0,
+          83.7
+        ],
+        "last_updated": "2025-08-25 00:51:17.768537"
+      }
+    },
+    "alerts": [
+      {
+        "alert_id": "alert_1756057873_0",
+        "severity": "AlertSeverity.SUCCESS",
+        "title": "Dashboard Initialized",
+        "message": "Interactive dashboard system is now online and collecting data",
+        "component": "system",
+        "timestamp": "2025-08-25 00:51:13.787368",
+        "auto_dismiss": true,
+        "dismiss_after_seconds": 10
+      },
+      {
+        "alert_id": "alert_1756057873_1",
+        "severity": "AlertSeverity.SUCCESS",
+        "title": "System Online",
+        "message": "Dashboard system successfully initialized",
+        "component": "system",
+        "timestamp": "2025-08-25 00:51:13.787798",
+        "auto_dismiss": true,
+        "dismiss_after_seconds": 30
+      },
+      {
+        "alert_id": "alert_1756057876_2",
+        "severity": "AlertSeverity.INFO",
+        "title": "Data Collection",
+        "message": "Starting real-time metrics collection",
+        "component": "monitoring",
+        "timestamp": "2025-08-25 00:51:16.662585",
+        "auto_dismiss": true,
+        "dismiss_after_seconds": 30
+      },
+      {
+        "alert_id": "alert_1756057877_3",
+        "severity": "AlertSeverity.WARNING",
+        "title": "Resource Monitor",
+        "message": "CPU usage trending upward",
+        "component": "performance",
+        "timestamp": "2025-08-25 00:51:17.165416",
+        "auto_dismiss": true,
+        "dismiss_after_seconds": 30
+      }
+    ],
+    "timestamp": "2025-08-25T00:51:17.768984",
+    "config": {
+      "max_alerts": 100,
+      "max_sparkline_points": 50,
+      "auto_refresh_enabled": true,
+      "theme": "dark",
+      "show_debug_info": false
+    }
+  }
+}
