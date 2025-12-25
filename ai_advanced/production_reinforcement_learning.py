@@ -52,7 +52,7 @@ Key Algorithms
 
 State Representation
 --------------------
-The mixer state is represented as a 69-dimensional feature vector:
+The mixer state is represented as a 74-dimensional feature vector:
 
     Dimensions 0-63:  Channel parameters (8 channels × 8 parameters each)
                       - volume (0-1): Channel fader position
@@ -419,7 +419,7 @@ class MixerState:
     ...            "stereo_correlation": 0.6, "spectral_centroid": 0.5}
     >>> state = MixerState(channels=channels, master=master, audio_metrics=metrics)
     >>> vector = state.to_vector()
-    >>> print(f"State vector shape: {vector.shape}")  # (69,) or (74,)
+    >>> print(f"State vector shape: {vector.shape}")  # (74,)
 
     See Also
     --------
@@ -442,7 +442,7 @@ class MixerState:
 
         Vector Layout
         -------------
-        The 69-74 dimensional output vector is organized as follows:
+        The 74-dimensional output vector is organized as follows:
 
             Indices 0-63 (64 values):
                 8 channels × 8 parameters per channel
@@ -468,7 +468,7 @@ class MixerState:
         Returns
         -------
         np.ndarray
-            Float32 array of shape (69,) to (74,) depending on metrics.
+            Float32 array of shape (74,) - fixed size regardless of channel count.
             Fixed-size representation of the mixer state.
 
         Notes
@@ -1424,7 +1424,7 @@ class ProductionQNetwork(IQNetwork):
     --------------------
     The network uses a 3-layer MLP with ReLU activations:
 
-        Input Layer:    state_size neurons (69 for mixer state)
+        Input Layer:    state_size neurons (74 for mixer state)
               |
               v
         Hidden Layer 1: 128 neurons + ReLU activation
@@ -1510,7 +1510,7 @@ class ProductionQNetwork(IQNetwork):
     Example
     -------
     >>> network = ProductionQNetwork(
-    ...     state_size=69,     # Mixer state dimension
+    ...     state_size=74,     # Mixer state dimension
     ...     action_size=64,    # 8 actions × 8 channels
     ...     learning_rate=0.001
     ... )
@@ -1866,7 +1866,7 @@ class ProductionRLMixer:
     Hyperparameter Tuning Guide
     ---------------------------
     - **learning_rate**: Start with 0.001; reduce if training unstable
-    - **epsilon_decay**: 0.995 for ~400 step decay; 0.999 for slower exploration
+    - **epsilon_decay**: 0.995 for ~920 step decay; 0.999 for slower exploration
     - **gamma**: 0.95 typical; higher values for long-horizon optimization
     - **batch_size**: 32 typical; increase for more stable gradients
     - **target_update_frequency**: 100 typical; increase for more stability
@@ -1879,7 +1879,7 @@ class ProductionRLMixer:
     """
 
     def __init__(self,
-                 state_size: int = 69,  # 8 channels * 8 params + 5 master + 5 audio metrics
+                 state_size: int = 74,  # 8 channels * 8 params + 5 master + 5 audio metrics = 74
                  action_size: int = 64,  # 8 actions * 8 channels
                  learning_rate: float = 0.001,
                  epsilon: float = 1.0,
@@ -1891,9 +1891,9 @@ class ProductionRLMixer:
 
         Parameters
         ----------
-        state_size : int, default=69
-            Dimension of state vectors. Default is 69:
-            (8 channels × 8 params) + 5 master params + 5 audio metrics = 69
+        state_size : int, default=74
+            Dimension of state vectors. Default is 74:
+            (8 channels × 8 params) + 5 master params + 5 audio metrics = 74
 
         action_size : int, default=64
             Number of discrete actions. Default is 64:
@@ -1909,8 +1909,8 @@ class ProductionRLMixer:
 
         epsilon_decay : float, default=0.995
             Decay multiplier applied after each training step.
-            0.995 → epsilon reaches 0.01 in ~400 steps.
-            0.999 → epsilon reaches 0.01 in ~4000 steps.
+            0.995 → epsilon reaches 0.01 in ~920 steps.
+            0.999 → epsilon reaches 0.01 in ~9200 steps.
 
         epsilon_min : float, default=0.01
             Minimum exploration rate. Prevents fully greedy behavior.
