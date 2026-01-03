@@ -1,10 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Platform, TextInput, ScrollView, SafeAreaView, Switch } from 'react-native';
 import { useState, useEffect } from 'react';
-import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
-
-// Retrieve keys from environment
-const STRIPE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_12345';
+// Stripe removed - see Purchases import below
 // Default API URL - changeable in app
 const DEFAULT_API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.X:8899';
 
@@ -119,32 +116,71 @@ function HardwareControl({ serverUrl, isDemoMode }) {
   );
 }
 
-function PaymentScreen() {
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+// IAP Integration via RevenueCat
+import Purchases, { LOG_LEVEL } from 'react-native-purchases';
+
+// RevenueCat Keys (Public SDK Keys are safe to expose in client)
+const RC_KEY = process.env.EXPO_PUBLIC_RC_API_KEY || 'appl_placeholder_key';
+
+function SubscriptionScreen() {
   const [loading, setLoading] = useState(false);
+  const [proStatus, setProStatus] = useState('Free Plan');
+  const [packages, setPackages] = useState([]);
 
-  const subscribe = async () => {
+  useEffect(() => {
+    const initIAP = async () => {
+      try {
+        Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+        if (Platform.OS === 'ios') {
+          Purchases.configure({ apiKey: RC_KEY });
+        }
+
+        // Get current offerings
+        const offerings = await Purchases.getOfferings();
+        if (offerings.current && offerings.current.availablePackages.length !== 0) {
+          setPackages(offerings.current.availablePackages);
+        }
+
+        // Check active entitlement
+        const customerInfo = await Purchases.getCustomerInfo();
+        if (customerInfo.entitlements.active['Pro Access']) {
+          setProStatus('Pro Unlocked 🌟');
+        }
+      } catch (e) {
+        console.log('IAP Init Error:', e);
+      }
+    };
+    initIAP();
+  }, []);
+
+  const purchase = async (pkg) => {
     setLoading(true);
-    // 1. Initialize the Payment Sheet (Mock Mode for MVP)
-    const { error: initError } = await initPaymentSheet({
-      merchantDisplayName: 'AiOke Inc.',
-      customerId: 'cus_mock_ignored',
-      customerEphemeralKeySecret: 'ek_mock_ignored',
-      paymentIntentClientSecret: 'pi_mock_ignored',
-    });
-
-    if (initError) {
-      Alert.alert('Stripe Error', initError.message);
-      setLoading(false);
-      return;
+    try {
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
+      if (customerInfo.entitlements.active['Pro Access']) {
+        setProStatus('Pro Unlocked 🌟');
+        Alert.alert('Success', 'Welcome to Pro!');
+      }
+    } catch (e) {
+      if (!e.userCancelled) {
+        Alert.alert('Purchase Error', e.message);
+      }
     }
+    setLoading(false);
+  };
 
-    // 2. Present the Payment Sheet
-    const { error } = await presentPaymentSheet();
-    if (error) {
-      Alert.alert(`Error: ${error.code}`, error.message);
-    } else {
-      Alert.alert('Success', 'Subscription Confirmed!');
+  const restore = async () => {
+    setLoading(true);
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      if (customerInfo.entitlements.active['Pro Access']) {
+        setProStatus('Pro Unlocked 🌟');
+        Alert.alert('Restored', 'Your purchases have been restored.');
+      } else {
+        Alert.alert('Notice', 'No active subscriptions found to restore.');
+      }
+    } catch (e) {
+      Alert.alert('Error', e.message);
     }
     setLoading(false);
   };
@@ -152,13 +188,38 @@ function PaymentScreen() {
   return (
     <View style={styles.paymentContainer}>
       <Text style={styles.sectionTitle}>Unlock Pro Features</Text>
-      <TouchableOpacity
-        style={[styles.button, styles.subscribeButton]}
-        onPress={subscribe}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? 'Processing...' : 'Subscribe ($9.99/mo)'}
+      <Text style={styles.statusLabel}>Status: {proStatus}</Text>
+
+      {/* Dynamic Package List or Default Button */}
+      {packages.length > 0 ? (
+        packages.map((pkg) => (
+          <TouchableOpacity
+            key={pkg.identifier}
+            style={[styles.button, styles.subscribeButton, { marginBottom: 10 }]}
+            onPress={() => purchase(pkg)}
+            disabled={loading || proStatus.includes('Unlocked')}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Processing...' : `Subscribe ${pkg.product.priceString}`}
+            </Text>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <TouchableOpacity
+          style={[styles.button, styles.subscribeButton]}
+          onPress={() => Alert.alert('Config Missing', 'Connecting to App Store...')}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            Subscribe ($9.99/mo)
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Mandatory Restore Button */}
+      <TouchableOpacity onPress={restore} style={{ marginTop: 15 }}>
+        <Text style={{ color: '#aaa', textDecorationLine: 'underline' }}>
+          Restore Purchases
         </Text>
       </TouchableOpacity>
     </View>
@@ -198,61 +259,59 @@ export default function App() {
   };
 
   return (
-    <StripeProvider publishableKey={STRIPE_KEY}>
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>AiOke Studio</Text>
-          <Text style={styles.subtitle}>AG06 Mobile Controller</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>AiOke Studio</Text>
+        <Text style={styles.subtitle}>AG06 Mobile Controller</Text>
 
-          {/* Network Configuration */}
-          <View style={styles.configContainer}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Server URL:</Text>
-              <View style={styles.demoContainer}>
-                <Text style={styles.demoLabel}>Demo Mode</Text>
-                <Switch
-                  value={isDemoMode}
-                  onValueChange={setIsDemoMode}
-                  trackColor={{ false: "#767577", true: "#81b0ff" }}
-                  thumbColor={isDemoMode ? "#f5dd4b" : "#f4f3f4"}
-                />
-              </View>
+        {/* Network Configuration */}
+        <View style={styles.configContainer}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Server URL:</Text>
+            <View style={styles.demoContainer}>
+              <Text style={styles.demoLabel}>Demo Mode</Text>
+              <Switch
+                value={isDemoMode}
+                onValueChange={setIsDemoMode}
+                trackColor={{ false: "#767577", true: "#81b0ff" }}
+                thumbColor={isDemoMode ? "#f5dd4b" : "#f4f3f4"}
+              />
             </View>
-
-            <TextInput
-              style={[styles.input, isDemoMode && styles.disabledInput]}
-              value={serverUrl}
-              onChangeText={setServerUrl}
-              placeholder="http://192.168.1.X:8899"
-              placeholderTextColor="#666"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isDemoMode}
-            />
-            {isDemoMode && <Text style={styles.hintText}>Demo Mode enabled for App Store Review</Text>}
           </View>
 
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusLabel}>Backend Status:</Text>
-            <Text style={styles.statusValue}>{status}</Text>
-          </View>
+          <TextInput
+            style={[styles.input, isDemoMode && styles.disabledInput]}
+            value={serverUrl}
+            onChangeText={setServerUrl}
+            placeholder="http://192.168.1.X:8899"
+            placeholderTextColor="#666"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!isDemoMode}
+          />
+          {isDemoMode && <Text style={styles.hintText}>Demo Mode enabled for App Store Review</Text>}
+        </View>
 
-          <TouchableOpacity style={styles.button} onPress={testConnection}>
-            <Text style={styles.buttonText}>{isDemoMode ? 'Test Connection (Simulated)' : 'Test Connection'}</Text>
-          </TouchableOpacity>
+        <View style={styles.statusContainer}>
+          <Text style={styles.statusLabel}>Backend Status:</Text>
+          <Text style={styles.statusValue}>{status}</Text>
+        </View>
 
-          <View style={styles.divider} />
+        <TouchableOpacity style={styles.button} onPress={testConnection}>
+          <Text style={styles.buttonText}>{isDemoMode ? 'Test Connection (Simulated)' : 'Test Connection'}</Text>
+        </TouchableOpacity>
 
-          <HardwareControl serverUrl={serverUrl} isDemoMode={isDemoMode} />
+        <View style={styles.divider} />
 
-          <View style={styles.divider} />
+        <HardwareControl serverUrl={serverUrl} isDemoMode={isDemoMode} />
 
-          <PaymentScreen />
+        <View style={styles.divider} />
 
-          <StatusBar style="light" />
-        </ScrollView>
-      </SafeAreaView>
-    </StripeProvider>
+        <SubscriptionScreen />
+
+        <StatusBar style="light" />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

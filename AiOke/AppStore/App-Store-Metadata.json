@@ -105,8 +105,8 @@
     "provisioning_profile": "AiOke App Store Distribution"
   },
   "submission_checklist": {
-    "privacy_policy_url_configured": true,
-    "support_url_configured": true,
+    "privacy_policy_url_configured": false,
+    "support_url_configured": false,
     "app_review_information_complete": true,
     "screenshots_uploaded": false,
     "app_icon_uploaded": false,
