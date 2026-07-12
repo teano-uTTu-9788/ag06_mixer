@@ -215,30 +215,62 @@ class VocalChain:
         return self.lim.process(y)
 
 
-class Ducker:
-    """The adaptive bit. Detect singing, pull the backing track down under it,
-    let it swell back in the gaps. This is what a human sound engineer does."""
+class DynamicEQ:
+    """The honest AI bit. Detect singing and apply a gentle, time-varying peaking cut
+    to the music bus ONLY in the vocal presence band. Preserves music energy and rhythm
+    so the singer doesn't lose their anchor."""
 
-    def __init__(self, sr: int, thresh_db=-38.0, duck_db=-11.0,
-                 attack_ms=12.0, release_ms=420.0):
+    def __init__(self, sr: int, thresh_db=-38.0, duck_db=-4.0,
+                 attack_ms=10.0, release_ms=200.0, bleed=None):
+        self.sr = sr
         self.thresh = 10 ** (thresh_db / 20.0)
-        self.duck = 10 ** (duck_db / 20.0)
+        self.duck_db = duck_db
         self.a_att = np.exp(-1.0 / (sr * attack_ms / 1000.0))
         self.a_rel = np.exp(-1.0 / (sr * release_ms / 1000.0))
-        self.g = 1.0
+        self.env = 0.0
         self.singing = False
+        self.bleed = bleed
+        self.eff_thresh = self.thresh
+        
+        self.zi = np.zeros(2)
+        # 1-3kHz presence band
+        self.f0 = 2000.0
+        self.q = 0.7
+        self.w0 = 2 * np.pi * self.f0 / self.sr
+        self.alpha = np.sin(self.w0) / (2 * self.q)
+        self.cw = np.cos(self.w0)
 
-    def gain_for(self, vocal: np.ndarray) -> float:
+    def get_coefs(self, gain_db):
+        A = 10 ** (gain_db / 40.0)
+        b0 = 1 + self.alpha * A
+        b1 = -2 * self.cw
+        b2 = 1 - self.alpha * A
+        a0 = 1 + self.alpha / A
+        a1 = -2 * self.cw
+        a2 = 1 - self.alpha / A
+        return np.array([b0, b1, b2]) / a0, np.array([a0, a1, a2]) / a0
+
+    def process(self, vocal: np.ndarray, music: np.ndarray, music_rms: float = 0.0) -> np.ndarray:
         rms = float(np.sqrt(np.mean(vocal * vocal) + 1e-20))
-        self.singing = rms > self.thresh
-        target = self.duck if self.singing else 1.0
-        a = self.a_att if target < self.g else self.a_rel
-        # Per-sample coefficient applied once per block -> raise to block length,
-        # otherwise the duck moves ~0.2% per block and never actually ducks.
+        
+        t = self.thresh
+        if self.bleed is not None:
+            t = max(t, self.bleed.floor(music_rms))
+        self.eff_thresh = t
+            
+        self.singing = rms > t
+        if self.bleed is not None:
+            self.bleed.observe(rms, music_rms, self.singing)
+            
+        target = 1.0 if self.singing else 0.0
+        a = self.a_att if target > self.env else self.a_rel
         a = a ** len(vocal)
-        self.g = a * self.g + (1 - a) * target
-        return self.g
-
+        self.env = a * self.env + (1 - a) * target
+        
+        current_cut_db = self.env * self.duck_db
+        b, a_coef = self.get_coefs(current_cut_db)
+        y, self.zi = signal.lfilter(b, a_coef, music, zi=self.zi)
+        return y
 
 # ----------------------------------------------------------------------------
 class Ring:
@@ -379,8 +411,8 @@ def main() -> int:
                     help="how loud you must sing before the music ducks. MUST sit above "
                          "the speaker-into-mic bleed level, or the music ducks ITSELF "
                          "and the duck pumps. Use headphones and you can lower this.")
-    ap.add_argument("--duck-db", type=float, default=-11.0,
-                    help="how far the music drops under your voice, in dB")
+    ap.add_argument("--vocal-space", type=float, default=-4.0,
+                    help="how far the music drops in the 2kHz presence band when you sing, in dB")
     ap.add_argument("--music-boost", type=float, default=0.0,
                     help="gain (dB) on the captured music bus. macOS applies its "
                          "output volume BEFORE writing into BlackHole, so the capture "
@@ -484,7 +516,10 @@ def main() -> int:
     chain = VocalChain(sr, reverb_mix=args.reverb)
     chain.gate.thresh = 10 ** (args.gate / 20.0)
     boost = 10 ** (args.boost / 20.0)
-    ducker = Ducker(sr, thresh_db=args.duck_thresh, duck_db=args.duck_db)
+    # The mic hears the speakers. Learn how much, so the music cannot duck itself.
+    bleed = BleedEstimator(sr)
+    dynamic_eq = DynamicEQ(sr, thresh_db=args.duck_thresh, duck_db=args.vocal_space,
+                           bleed=bleed)
 
     music = load_music(args.music, sr) if args.music else None
     mpos = 0
@@ -554,7 +589,12 @@ def main() -> int:
 
             bed = bed * mgain["g"]
             stats["mpeak"] = max(stats["mpeak"], float(np.abs(bed).max()))
-            bed = bed * args.music_gain * ducker.gain_for(vocal)
+            # Feed the ducker the level of the music we are ABOUT TO PLAY, so it can
+            # predict how much of that will come back through the mic as bleed and
+            # refuse to mistake it for singing.
+            m_rms = float(np.sqrt(np.mean(bed * bed) + 1e-20)) * args.music_gain
+            bed = bed * args.music_gain
+            bed = dynamic_eq.process(vocal, bed, m_rms)
             mix = vocal + bed
         elif music is not None:
             end = mpos + frames
@@ -572,10 +612,11 @@ def main() -> int:
                     bed[:tail] = music[mpos:]
                 mpos = len(music)
             stats["mpeak"] = max(stats["mpeak"], float(np.abs(bed).max()))
-            bed = bed * args.music_gain * ducker.gain_for(vocal)
+            bed = bed * args.music_gain
+            bed = dynamic_eq.process(vocal, bed)
             mix = vocal + bed
         else:
-            ducker.gain_for(vocal)
+            dynamic_eq.process(vocal, np.zeros_like(vocal))
             mix = vocal
 
         mix = np.clip(mix, -0.99, 0.99)
@@ -628,7 +669,7 @@ def main() -> int:
                     warn = "  << CLIPPING! turn AG06 GAIN down (or drop --boost)"
                 elif ring is not None and m < 1e-6:
                     warn = "  << NO MUSIC — press play (see hint above)"
-                elif (has_music and db(m) > -50.0 and not ducker.singing
+                elif (has_music and db(m) > -50.0 and not dynamic_eq.singing
                       and db(p) > args.duck_thresh - 8):
                     # Mic is hearing the speakers while REAL music plays -> duck pumps.
                     # -50 dB floor: below that the "music" is just the noise floor and
@@ -636,9 +677,9 @@ def main() -> int:
                     warn = "  << SPEAKER BLEED into mic — raise --duck-thresh"
                 else:
                     warn = ""
-                duck = f" duck {db(ducker.g):+5.1f}dB" if has_music else ""
+                duck = f" eq {dynamic_eq.env * args.vocal_space:+5.1f}dB" if has_music else ""
                 mus = f" music {db(m):6.1f}dB" if has_music else ""
-                sing = "SINGING" if ducker.singing else "  ---  "
+                sing = "SINGING" if dynamic_eq.singing else "  ---  "
                 print(f"\rin {db(p):6.1f}dB [{bar}]{mus}{duck}  "
                       f"gr {chain.comp.gr_db:+5.1f}dB  {sing}  "
                       f"xruns {stats['xruns']}{warn}   ", end="", flush=True)
@@ -690,17 +731,43 @@ def selftest(sr: int, bs: int, seconds: float) -> int:
     ok &= good
     print(f"[{'PASS' if good else 'FAIL'}] noise gate: silence {quiet:.2e} << signal {loud:.2e}")
 
-    # 4. Ducking: music must drop while the singer sings, recover in the gaps.
-    d = Ducker(sr)
+    # 4. Dynamic EQ: music 2kHz energy drops while singer sings, broadband stays close.
+    deq = DynamicEQ(sr, duck_db=-5.0)
     voice = np.sin(2 * np.pi * 200 * np.arange(bs) / sr) * 0.4
-    for _ in range(120):
-        gd_sing = d.gain_for(voice)
-    for _ in range(400):
-        gd_rest = d.gain_for(np.zeros(bs))
-    good = gd_sing < 0.55 and gd_rest > 0.85
+    n_blocks = 40
+    n = n_blocks * bs
+    music_band = np.sin(2 * np.pi * 2000 * np.arange(n) / sr) * 0.1
+    music_base = np.random.randn(n) * 0.3
+    music = music_band + music_base
+    
+    out_silence = []
+    for i in range(n_blocks):
+        out_silence.append(deq.process(np.zeros(bs), music[i*bs:(i+1)*bs]))
+    out_silence = np.concatenate(out_silence)
+    
+    out_singing = []
+    for i in range(n_blocks):
+        out_singing.append(deq.process(voice, music[i*bs:(i+1)*bs]))
+    out_singing = np.concatenate(out_singing)
+    
+    def band_energy(sig):
+        f = np.fft.rfft(sig[-bs*8:])
+        freqs = np.fft.rfftfreq(bs*8, 1/sr)
+        idx = np.argmin(np.abs(freqs - 2000))
+        return np.abs(f[idx])
+        
+    e_silence = band_energy(out_silence)
+    e_singing = band_energy(out_singing)
+    
+    rms_silence = np.sqrt(np.mean(out_silence[-bs*8:]**2))
+    rms_singing = np.sqrt(np.mean(out_singing[-bs*8:]**2))
+    
+    cut_db = 20 * np.log10(e_singing / e_silence)
+    broad_diff = 20 * np.log10(rms_singing / rms_silence)
+    
+    good = -6.0 < cut_db < -4.0 and abs(broad_diff) < 1.0
     ok &= good
-    print(f"[{'PASS' if good else 'FAIL'}] auto-duck: singing {db(gd_sing):+.1f} dB, "
-          f"silence {db(gd_rest):+.1f} dB")
+    print(f"[{'PASS' if good else 'FAIL'}] dynamic-eq: 2kHz cut {cut_db:.1f} dB, broadband diff {broad_diff:.1f} dB")
 
     # 5. Full chain must be stable and not blow up.
     ch = VocalChain(sr)
