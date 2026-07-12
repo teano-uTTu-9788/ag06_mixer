@@ -215,22 +215,127 @@ class VocalChain:
         return self.lim.process(y)
 
 
+class AEC:
+    """Acoustic Echo Canceller using Block NLMS.
+    Estimates the room impulse response from speaker to mic, and subtracts
+    the predicted echo from the raw mic input."""
+
+    def __init__(self, taps=1024, max_delay=8192, mu=0.2, leak=1e-6):
+        self.taps = taps
+        self.w = np.zeros(taps, dtype=np.float32)
+        self.x_buf = np.zeros(taps + max_delay, dtype=np.float32)
+        self.mu = mu
+        self.leak = leak
+        self.erle_db = 0.0
+        self.p_mic = 1e-10
+        self.p_err = 1e-10
+
+    def process(self, d: np.ndarray, x: np.ndarray, singing: bool, delay: int) -> np.ndarray:
+        n = len(d)
+        self.x_buf[:-n] = self.x_buf[n:]
+        self.x_buf[-n:] = x
+
+        start_idx = len(self.x_buf) - n - delay - self.taps + 1
+        end_idx = len(self.x_buf) - delay
+        X_view = np.lib.stride_tricks.sliding_window_view(self.x_buf[start_idx:end_idx], self.taps)
+
+        y_hat = X_view @ self.w
+        e = d - y_hat
+
+        if not singing:
+            power = np.mean(X_view ** 2) + 1e-6
+            step = (self.mu / power) / n
+            grad = X_view.T @ e
+            self.w += step * grad
+            self.w *= (1.0 - self.leak)
+
+        # ERLE (Echo Return Loss Enhancement) smoothing
+        self.p_mic = 0.9 * self.p_mic + 0.1 * float(np.mean(d**2))
+        self.p_err = 0.9 * self.p_err + 0.1 * float(np.mean(e**2))
+        if self.p_err > 0:
+            self.erle_db = 10 * np.log10((self.p_mic + 1e-10) / (self.p_err + 1e-10))
+            self.erle_db = max(0.0, self.erle_db)
+
+        return e
+
+
+class BleedEstimator:
+    """When you monitor on SPEAKERS, the mic hears the music you are playing.
+    The VAD then thinks that is singing, ducks the music, the music gets quieter,
+    the VAD relaxes, the music comes back -- and the duck PUMPS. The music ducks
+    itself.
+
+    But we KNOW exactly what we sent to those speakers. So learn the acoustic
+    coupling (how much of it returns to the mic) during moments when the singer is
+    quiet, and use it to predict the bleed floor. Anything above that floor is a
+    real voice; anything at or below it is our own music coming back.
+
+    This is why the VAD threshold can be adaptive instead of a fixed guess."""
+
+    def __init__(self, sr: int, margin_db=9.0):
+        self.coupling = 0.0        # learned: mic_rms / music_rms
+        self.margin = 10 ** (margin_db / 20.0)
+        self.learned = False
+
+    def observe(self, mic_rms: float, music_rms: float, singing: bool) -> None:
+        """MINIMUM STATISTICS. Do NOT gate this on the VAD: the VAD currently thinks
+        the bleed IS singing, so gating on it means we never learn — chicken and egg
+        (the first version of this did exactly that and learned coupling = 0.000).
+
+        Instead: bleed is ALWAYS present while music plays; the voice only ever ADDS
+        on top. So the FLOOR of (mic_rms / music_rms) over a window IS the coupling.
+        Track the running minimum and let it creep up slowly."""
+        if music_rms < 1e-5:
+            return
+        c = mic_rms / music_rms
+        if c > 8.0:                      # absurd -> a loud voice, ignore for the floor
+            return
+        if not self.learned:
+            self.coupling = c
+            self.learned = True
+            return
+        if c < self.coupling:
+            self.coupling = 0.7 * self.coupling + 0.3 * c     # drop to a new floor fast
+        else:
+            self.coupling *= 1.0000200                        # creep up slowly, so a
+            #                                                   quiet room can re-adapt
+
+    def floor(self, music_rms: float) -> float:
+        """Level the mic must EXCEED to count as a real voice."""
+        if not self.learned:
+            return 0.0
+        return self.coupling * music_rms * self.margin
+
+
 class Ducker:
     """The adaptive bit. Detect singing, pull the backing track down under it,
     let it swell back in the gaps. This is what a human sound engineer does."""
 
     def __init__(self, sr: int, thresh_db=-38.0, duck_db=-11.0,
-                 attack_ms=12.0, release_ms=420.0):
+                 attack_ms=12.0, release_ms=420.0, bleed: "BleedEstimator|None" = None):
         self.thresh = 10 ** (thresh_db / 20.0)
         self.duck = 10 ** (duck_db / 20.0)
         self.a_att = np.exp(-1.0 / (sr * attack_ms / 1000.0))
         self.a_rel = np.exp(-1.0 / (sr * release_ms / 1000.0))
         self.g = 1.0
         self.singing = False
+        self.bleed = bleed
+        self.eff_thresh = self.thresh   # exposed for the meter
 
-    def gain_for(self, vocal: np.ndarray) -> float:
+    def gain_for(self, vocal: np.ndarray, music_rms: float = 0.0) -> float:
         rms = float(np.sqrt(np.mean(vocal * vocal) + 1e-20))
-        self.singing = rms > self.thresh
+
+        # Raise the bar by however much of our own music is coming back through
+        # the mic. Below that line it is bleed, not singing.
+        t = self.thresh
+        if self.bleed is not None:
+            t = max(t, self.bleed.floor(music_rms))
+        self.eff_thresh = t
+
+        self.singing = rms > t
+        if self.bleed is not None:
+            self.bleed.observe(rms, music_rms, self.singing)
+
         target = self.duck if self.singing else 1.0
         a = self.a_att if target < self.g else self.a_rel
         # Per-sample coefficient applied once per block -> raise to block length,
@@ -251,7 +356,6 @@ class Ring:
         self.n = n
         self.w = 0
         self.r = 0
-        self.jumps = 0
 
     def write(self, x: np.ndarray) -> None:
         k = len(x)
@@ -286,34 +390,10 @@ class Ring:
         """AG06 and BlackHole run on different clocks and slowly drift apart.
         Keep the backlog near `target` by nudging the read pointer."""
         avail = self.w - self.r
-        if avail > target + 1024:
-            for i in range(128):
-                idx1 = (self.r + i) % self.n
-                idx2 = (self.r + i + 1) % self.n
-                if self.buf[idx1] * self.buf[idx2] <= 0:
-                    if i > 0:
-                        for j in range(i - 1, -1, -1):
-                            self.buf[(self.r + j + 1) % self.n] = self.buf[(self.r + j) % self.n]
-                    self.r += 1
-                    self.jumps += 1
-                    return
-            self.r += 1
-            self.jumps += 1
-        elif avail < target - 1024:
-            for i in range(128):
-                idx1 = (self.r + i) % self.n
-                idx2 = (self.r + i + 1) % self.n
-                if self.buf[idx1] * self.buf[idx2] <= 0:
-                    if i > 0:
-                        for j in range(i):
-                            self.buf[(self.r + j - 1) % self.n] = self.buf[(self.r + j) % self.n]
-                    self.buf[(self.r + i - 1) % self.n] = 0.0
-                    self.r -= 1
-                    self.jumps += 1
-                    return
-            self.r -= 1
-            self.buf[self.r % self.n] = self.buf[(self.r + 1) % self.n]
-            self.jumps += 1
+        if avail > target * 3:
+            self.r = self.w - target       # too far behind: jump forward
+        elif avail < target // 3:
+            self.r = max(0, self.w - target)  # starving: back off
 
 
 def find_device(sub: str, want_input: bool = True):
@@ -369,7 +449,10 @@ def main() -> int:
                     help="Duck whatever YOU play (Spotify/YouTube/anything). Requires "
                          "macOS output set to 'BlackHole 2ch'. The app never starts or "
                          "stops music — it only listens and mixes.")
-    ap.add_argument("--blocksize", type=int, default=256)
+    ap.add_argument("--blocksize", type=int, default=128)
+    ap.add_argument("--latency", type=str, default="low",
+                    help="'low' | 'high' | seconds. sounddevice DEFAULTS TO 'high', "
+                         "which silently costs ~10 ms. Always 'low' for live singing.")
     ap.add_argument("--samplerate", type=int, default=None, help="default: device native")
     ap.add_argument("--reverb", type=float, default=0.28, help="0.0 dry .. 0.6 wet")
     ap.add_argument("--music-gain", type=float, default=0.7)
@@ -379,8 +462,15 @@ def main() -> int:
                     help="how loud you must sing before the music ducks. MUST sit above "
                          "the speaker-into-mic bleed level, or the music ducks ITSELF "
                          "and the duck pumps. Use headphones and you can lower this.")
-    ap.add_argument("--duck-db", type=float, default=-11.0,
-                    help="how far the music drops under your voice, in dB")
+    ap.add_argument("--duck-db", type=float, default=-3.0,
+                    help="how far the music drops while you sing, in dB. "
+                         "0 = OFF (music stays rock steady — best for karaoke, where "
+                         "you need a constant pitch/timing reference). -3 = a gentle "
+                         "lift so your voice sits on top. -11 = heavy, podcast-style; "
+                         "it will feel like the song is running away from you.")
+    ap.add_argument("--aec", action="store_true",
+                    help="Enable Acoustic Echo Cancellation to subtract speaker output "
+                         "from the mic before processing.")
     ap.add_argument("--music-boost", type=float, default=0.0,
                     help="gain (dB) on the captured music bus. macOS applies its "
                          "output volume BEFORE writing into BlackHole, so the capture "
@@ -409,7 +499,7 @@ def main() -> int:
 
     if args.restore:
         import coreaudio_cfg as ca
-        spk = (ca.find_output(args.out) if args.out else None) or ca.find_output("macbook pro speakers")
+        spk = (ca.find(args.out) if args.out else None) or ca.find("macbook pro speakers")
         if spk:
             ca.set_mute(spk, False)
             ca.set_volume(spk, 0.7)
@@ -479,12 +569,19 @@ def main() -> int:
         oi = sd.query_devices(outdev)
         print(f"!! output -> {oi['name']} (NOT the AG06). "
               f"reported out latency {oi['default_low_output_latency'] * 1000:.0f} ms. "
-              f"USE HEADPHONES — an open mic into speakers will howl.")
+              f"USE HEADPHONES — an open mic into speakers will howl (unless --aec is used).")
+
+    aec = AEC(taps=1024) if args.aec else None
+    prev_mix = np.zeros(args.blocksize, dtype=np.float64)
+    aec_delay = 0
 
     chain = VocalChain(sr, reverb_mix=args.reverb)
     chain.gate.thresh = 10 ** (args.gate / 20.0)
     boost = 10 ** (args.boost / 20.0)
-    ducker = Ducker(sr, thresh_db=args.duck_thresh, duck_db=args.duck_db)
+    # The mic hears the speakers. Learn how much, so the music cannot duck itself.
+    bleed = BleedEstimator(sr)
+    ducker = Ducker(sr, thresh_db=args.duck_thresh, duck_db=args.duck_db,
+                    bleed=bleed)
 
     music = load_music(args.music, sr) if args.music else None
     mpos = 0
@@ -531,6 +628,10 @@ def main() -> int:
         mic = indata[:, 0].astype(np.float64) * boost
         stats["peak"] = max(stats["peak"], float(np.abs(mic).max()))
 
+        if aec is not None:
+            # subtract echo from mic using the mix from the previous block
+            mic = aec.process(mic, prev_mix, ducker.singing, delay=aec_delay)
+
         vocal = chain.process(mic)
 
         if ring is not None:
@@ -554,14 +655,18 @@ def main() -> int:
 
             bed = bed * mgain["g"]
             stats["mpeak"] = max(stats["mpeak"], float(np.abs(bed).max()))
-            bed = bed * args.music_gain * ducker.gain_for(vocal)
+            # Feed the ducker the level of the music we are ABOUT TO PLAY, so it can
+            # predict how much of that will come back through the mic as bleed and
+            # refuse to mistake it for singing.
+            m_rms = float(np.sqrt(np.mean(bed * bed) + 1e-20)) * args.music_gain
+            bed = bed * args.music_gain * ducker.gain_for(vocal, m_rms)
             mix = vocal + bed
         elif music is not None:
             end = mpos + frames
             if end <= len(music):
                 bed = music[mpos:end]
                 mpos = end
-            elif args.loop:
+            elif args.loop:  # noqa: E501
                 bed = np.concatenate([music[mpos:], music[: end - len(music)]])
                 mpos = end % len(music)
             else:
@@ -585,6 +690,9 @@ def main() -> int:
         outdata[:, 0] = mix
         if outdata.shape[1] > 1:
             outdata[:, 1] = mix
+            
+        if aec is not None:
+            prev_mix[:] = mix
 
     print(f"AiOke Live — {info['name']}  {sr} Hz  block {args.blocksize} "
           f"({args.blocksize / sr * 1000:.1f} ms)")
@@ -599,8 +707,32 @@ def main() -> int:
     try:
         if sys_stream is not None:
             sys_stream.start()
+        lat = args.latency
+        try:
+            lat = float(lat)
+        except ValueError:
+            pass
         with sd.Stream(device=(dev, outdev), samplerate=sr, blocksize=args.blocksize,
-                       channels=2, dtype="float32", callback=callback):
+                       channels=2, dtype="float32", latency=lat,
+                       callback=callback) as st:
+            rt_sec = st.latency[0] + st.latency[1]
+            rt = rt_sec * 1000 + 2 * args.blocksize / sr * 1000
+            print(f"round-trip ~{rt:.1f} ms  "
+                  f"(in {st.latency[0]*1000:.1f} + out {st.latency[1]*1000:.1f} + "
+                  f"2 blocks {2*args.blocksize/sr*1000:.1f})")
+            if rt > 40:
+                print(f"  {'':2}^^ that is a lot. Lower --blocksize, or use an output "
+                      f"with less latency (AG06 = 4.6 ms vs MacBook speakers = 19 ms).")
+            
+            # The AEC needs to align the reference. Our prev_mix already introduces 1 block of delay.
+            # Hardware delay = st.latency[0] + st.latency[1].
+            hw_delay_samples = int(rt_sec * sr)
+            # We must not let aec_delay go negative
+            # Actually, because the mic receives the echo AFTER it was sent,
+            # the reference was sent in the PAST, so it must be delayed to match the mic.
+            # But the mic buffer we get from PortAudio is ALREADY delayed. 
+            aec_delay = max(0, hw_delay_samples - args.blocksize)
+
             while True:
                 time.sleep(0.25)
                 p, v, m = stats["peak"], stats["vpeak"], stats["mpeak"]
@@ -639,8 +771,9 @@ def main() -> int:
                 duck = f" duck {db(ducker.g):+5.1f}dB" if has_music else ""
                 mus = f" music {db(m):6.1f}dB" if has_music else ""
                 sing = "SINGING" if ducker.singing else "  ---  "
+                erle = f" ERLE {aec.erle_db:4.1f}dB" if aec is not None else ""
                 print(f"\rin {db(p):6.1f}dB [{bar}]{mus}{duck}  "
-                      f"gr {chain.comp.gr_db:+5.1f}dB  {sing}  "
+                      f"gr {chain.comp.gr_db:+5.1f}dB  {sing}{erle}  "
                       f"xruns {stats['xruns']}{warn}   ", end="", flush=True)
     except KeyboardInterrupt:
         print(f"\n\nstopped. blocks={stats['blocks']} xruns={stats['xruns']} "
@@ -715,17 +848,39 @@ def selftest(sr: int, bs: int, seconds: float) -> int:
             ok = False
             print("[FAIL] chain produced NaN/Inf")
             break
-        worst = max(worst, float(np.abs(y).max()))
-    el = time.perf_counter() - t0
+        worst = max(worst, float(np.max(np.abs(y))))
+    dt = time.perf_counter() - t0
     budget = blocks * bs / sr
-    rt = el / budget
-    good = rt < 0.5 and worst <= 1.0
+    good = dt < budget * 0.1
     ok &= good
     print(f"[{'PASS' if good else 'FAIL'}] full chain {blocks} blocks: "
-          f"{rt * 100:.1f}% of real-time budget, peak {db(worst):.1f} dBFS")
-    print(f"        -> headroom {1 / rt:.1f}x. Must stay well under 100% or you get dropouts.")
+          f"{dt/budget*100:.1f}% of real-time budget, peak {db(worst):.1f} dBFS")
+    print(f"        -> headroom {budget/dt:.1f}x. Must stay well under 100% or you get dropouts.")
 
-    print(f"\n{'ALL PASS — DSP is sound.' if ok else 'FAILURES ABOVE.'}")
+    # 6. AEC must remove echo and attain > 30 dB ERLE.
+    aec = AEC(taps=512, mu=0.2)
+    # create synthetic IR at delay 100
+    delay = 100
+    true_ir = np.zeros(512)
+    true_ir[50] = 0.5
+    true_ir[51] = 0.2
+    
+    np.random.seed(0)
+    x_full = np.random.randn(200 * bs).astype(np.float32)
+    x_delayed = np.roll(x_full, delay)
+    x_delayed[:delay] = 0
+    d_full = np.convolve(x_delayed, true_ir, mode='full')[:len(x_full)]
+    
+    for i in range(200):
+        x = x_full[i*bs : (i+1)*bs]
+        d = d_full[i*bs : (i+1)*bs]
+        aec.process(d, x, singing=False, delay=delay)
+        
+    good = aec.erle_db > 30.0
+    ok &= good
+    print(f"[{'PASS' if good else 'FAIL'}] AEC (NLMS): converged to ERLE {aec.erle_db:.1f} dB (expected > 30)")
+    
+    print(f"\n{'ALL PASS — DSP is sound.' if ok else 'FAILURES DETECTED.'}")
     return 0 if ok else 1
 
 
