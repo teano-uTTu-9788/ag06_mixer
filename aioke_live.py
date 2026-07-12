@@ -521,6 +521,11 @@ def main() -> int:
         pf = preflight.run(sd, engine_rate=args.samplerate,
                            want_capture=args.capture_system,
                            out_match=args.out, set_defaults=True, fix=True)
+        if pf.get("aggregate"):
+            args.device = pf["aggregate"]
+            args.out = None
+            args.out_device = None
+            args.out_ch = pf.get("out_ch", args.out_ch)
         if args.check:
             print(f"\n  engine rate : {int(pf['engine_rate'])} Hz")
             print(f"  mic         : {pf['ag06']}")
